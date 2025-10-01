@@ -33,3 +33,9 @@ flutter:
 
   assets:
     - assets/
+    - assets/fonts/
+
+  fonts:
+    - family: Adelia
+      fonts:
+        - asset: assets/fonts/adelia.ttf

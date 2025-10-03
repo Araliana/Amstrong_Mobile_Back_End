@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'menulist.dart';
+import 'package:flutter_application_1/model/menu.dart';
 
 class MenuPage extends StatefulWidget {
   const MenuPage({super.key});
@@ -9,7 +9,7 @@ class MenuPage extends StatefulWidget {
 }
 
 class _MenuPageState extends State<MenuPage> {
-  List<MenuList> menus = [];
+  List<Menu> menus = [];
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -33,7 +33,7 @@ class _MenuPageState extends State<MenuPage> {
 
     setState(() {
       menus.add(
-        MenuList(
+        Menu(
           id: menus.length + 1,
           name: name,
           img: img,

@@ -1,3 +1,3 @@
-# flutter_application_1
+# Amstrong
 
 A new Flutter project.

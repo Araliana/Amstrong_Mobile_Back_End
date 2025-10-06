@@ -111,34 +111,336 @@ class _AppShellState extends State<_AppShell> {
         title: const Text("KJM Admin", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.brown[700],
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: actions,
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Center(
-                child: Text(
-                  "KJM Navigation",
-                  style: TextStyle(color: Colors.white, fontSize: 20),
+      drawer: _buildDrawer(context),
+      body: widget.child,
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    final currentPath = widget.state.uri.path;
+
+    return Drawer(
+      child: Column(
+        children: [
+          // Header dengan gradient
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.brown[700]!, Colors.brown[500]!],
+              ),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 20,
+                ),
+                child: Column(
+                  children: [
+                    // Logo Cafe
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset("assets/logo.png"),
+                    ),
+                    const SizedBox(height: 16),
+                    // Nama Cafe
+                    const Text(
+                      'KJM Cafe',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Admin Dashboard',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Divider(color: Colors.white30, thickness: 1),
+                    const SizedBox(height: 10),
+                    // Profile User
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.brown[700],
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Admin User',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'admin@kjmcafe.com',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text("Dashboard"),
-              onTap: () => context.go('/dashboard', extra: selectedPeriod),
+          ),
+
+          // Menu Items
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              children: [
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.dashboard_rounded,
+                  title: 'Dashboard',
+                  path: '/dashboard',
+                  isSelected: currentPath == '/dashboard',
+                  onTap: () {
+                    Navigator.pop(context); // Tutup drawer
+                    context.go('/dashboard', extra: selectedPeriod);
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.shopping_cart,
+                  title: 'Order',
+                  path: '/order',
+                  isSelected: currentPath == '/order',
+                  onTap: () {
+                    Navigator.pop(context);
+                    // context.go('/inventory');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Halaman Order belum tersedia'),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.coffee_maker,
+                  title: 'Product',
+                  path: '/product',
+                  isSelected: currentPath == '/product',
+                  onTap: () {
+                    Navigator.pop(context);
+                    // context.go('/inventory');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Halaman Product belum tersedia'),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.inventory_2_rounded,
+                  title: 'Inventory',
+                  path: '/inventory',
+                  isSelected: currentPath == '/inventory',
+                  onTap: () {
+                    Navigator.pop(context);
+                    // context.go('/inventory');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Halaman Inventory belum tersedia'),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.restaurant_menu_rounded,
+                  title: 'Menu',
+                  path: '/menu',
+                  isSelected: currentPath == '/menu',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/menu');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.image,
+                  title: 'Gallery',
+                  path: '/Gallery',
+                  isSelected: currentPath == '/gallery',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Halaman Gallery belum tersedia'),
+                      ),
+                    );
+                  },
+                ),
+                // _buildDrawerItem(
+                //   context: context,
+                //   icon: Icons.analytics_rounded,
+                //   title: 'Reports',
+                //   path: '/reports',
+                //   isSelected: currentPath == '/reports',
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     ScaffoldMessenger.of(context).showSnackBar(
+                //       const SnackBar(
+                //         content: Text('Halaman Reports belum tersedia'),
+                //       ),
+                //     );
+                //   },
+                // ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(),
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.settings_rounded,
+                  title: 'Settings',
+                  path: '/settings',
+                  isSelected: currentPath == '/settings',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Halaman Settings belum tersedia'),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.list_alt),
-              title: const Text("Menu"),
-              onTap: () => context.go('/menu'),
+          ),
+
+          // Logout Button
+          Container(
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.grey[300]!, width: 1),
+              ),
+            ),
+            child: ListTile(
+              leading: Icon(Icons.logout_rounded, color: Colors.red[700]),
+              title: Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.red[700],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showLogoutDialog(context);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String path,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.brown[50] : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected ? Colors.brown[700] : Colors.grey[600],
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.brown[700] : Colors.grey[800],
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        trailing: isSelected
+            ? Icon(Icons.chevron_right, color: Colors.brown[700])
+            : null,
+        onTap: onTap,
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Apakah Anda yakin ingin keluar?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Logout berhasil')),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
+              child: const Text('Logout'),
             ),
           ],
-        ),
-      ),
-      body: widget.child,
+        );
+      },
     );
   }
 }

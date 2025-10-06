@@ -253,7 +253,8 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildCategoryChart() {
-    final maxValue = categorySales.values.reduce((a, b) => a > b ? a : b);
+    // final maxValue = categorySales.values.reduce((a, b) => a > b ? a : b);
+    final totalSales = categorySales.values.reduce((a, b) => a + b);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -270,7 +271,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       child: Column(
         children: categorySales.entries.map((entry) {
-          final percentage = (entry.value / maxValue);
+          final percentage = (entry.value / totalSales);
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(

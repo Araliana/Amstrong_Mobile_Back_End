@@ -42,9 +42,9 @@ class AppRoutes {
             const SizedBox(height: 30),
             ElevatedButton.icon(
               icon: const Icon(Icons.home),
-              label: const Text("Kembali ke Menu"),
+              label: const Text("Kembali ke Dashboard"),
               onPressed: () {
-                context.go('/menu');
+                context.go('/dashboard');
               },
             ),
           ],
@@ -95,8 +95,6 @@ class _AppShellState extends State<_AppShell> {
                   setState(() {
                     selectedPeriod = newValue;
                   });
-
-                  // kirim value ke DashboardPage via GoRouter extra
                   context.go('/dashboard', extra: newValue);
                 }
               },
@@ -232,6 +230,8 @@ class _AppShellState extends State<_AppShell> {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
+                // MAIN MENU
+                _buildMenuCategory('MAIN'),
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.dashboard_rounded,
@@ -239,38 +239,89 @@ class _AppShellState extends State<_AppShell> {
                   path: '/dashboard',
                   isSelected: currentPath == '/dashboard',
                   onTap: () {
-                    Navigator.pop(context); // Tutup drawer
+                    Navigator.pop(context);
                     context.go('/dashboard', extra: selectedPeriod);
                   },
                 ),
+
+                // ORDERS
+                _buildMenuCategory('ORDERS'),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.shopping_cart,
-                  title: 'Order',
-                  path: '/order',
-                  isSelected: currentPath == '/order',
+                  icon: Icons.shopping_cart_rounded,
+                  title: 'All Orders',
+                  path: '/orders',
+                  isSelected: currentPath == '/orders',
                   onTap: () {
                     Navigator.pop(context);
-                    // context.go('/inventory');
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Halaman Order belum tersedia'),
+                        content: Text('All Orders page not available yet'),
                       ),
                     );
                   },
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.coffee_maker,
-                  title: 'Product',
-                  path: '/product',
-                  isSelected: currentPath == '/product',
+                  icon: Icons.hourglass_empty_rounded,
+                  title: 'Pending Orders',
+                  path: '/orders/pending',
+                  isSelected: currentPath == '/orders/pending',
                   onTap: () {
                     Navigator.pop(context);
-                    // context.go('/inventory');
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Halaman Product belum tersedia'),
+                        content: Text('Pending Orders page not available yet'),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.check_circle_rounded,
+                  title: 'Completed Orders',
+                  path: '/orders/completed',
+                  isSelected: currentPath == '/orders/completed',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Completed Orders page not available yet',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
+                // PRODUCTS & STOCK
+                _buildMenuCategory('PRODUCTS & STOCK'),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.coffee_maker_rounded,
+                  title: 'Products',
+                  path: '/products',
+                  isSelected: currentPath == '/products',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Products page not available yet'),
+                      ),
+                    );
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.category_rounded,
+                  title: 'Categories',
+                  path: '/categories',
+                  isSelected: currentPath == '/categories',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Categories page not available yet'),
                       ),
                     );
                   },
@@ -283,18 +334,53 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/inventory',
                   onTap: () {
                     Navigator.pop(context);
-                    // context.go('/inventory');
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Halaman Inventory belum tersedia'),
+                        content: Text('Inventory page not available yet'),
+                      ),
+                    );
+                  },
+                ),
+
+                // FINANCE
+                _buildMenuCategory('FINANCE'),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.account_balance_wallet_rounded,
+                  title: 'Cash Flow',
+                  path: '/cashflow',
+                  isSelected: currentPath == '/cashflow',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Cash Flow page not available yet'),
                       ),
                     );
                   },
                 ),
                 _buildDrawerItem(
                   context: context,
+                  icon: Icons.assessment_rounded,
+                  title: 'Report',
+                  path: '/report',
+                  isSelected: currentPath == '/report',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Report page not available yet'),
+                      ),
+                    );
+                  },
+                ),
+
+                // CONTENT & MEDIA
+                _buildMenuCategory('CONTENT & MEDIA'),
+                _buildDrawerItem(
+                  context: context,
                   icon: Icons.restaurant_menu_rounded,
-                  title: 'Menu',
+                  title: 'Menu Display',
                   path: '/menu',
                   isSelected: currentPath == '/menu',
                   onTap: () {
@@ -304,37 +390,36 @@ class _AppShellState extends State<_AppShell> {
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.image,
+                  icon: Icons.collections_rounded,
                   title: 'Gallery',
-                  path: '/Gallery',
+                  path: '/gallery',
                   isSelected: currentPath == '/gallery',
                   onTap: () {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Halaman Gallery belum tersedia'),
+                        content: Text('Gallery page not available yet'),
                       ),
                     );
                   },
                 ),
-                // _buildDrawerItem(
-                //   context: context,
-                //   icon: Icons.analytics_rounded,
-                //   title: 'Reports',
-                //   path: '/reports',
-                //   isSelected: currentPath == '/reports',
-                //   onTap: () {
-                //     Navigator.pop(context);
-                //     ScaffoldMessenger.of(context).showSnackBar(
-                //       const SnackBar(
-                //         content: Text('Halaman Reports belum tersedia'),
-                //       ),
-                //     );
-                //   },
-                // ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Divider(),
+
+                // MANAGEMENT
+                _buildMenuCategory('MANAGEMENT'),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.people_rounded,
+                  title: 'Admin Users',
+                  path: '/admin-users',
+                  isSelected: currentPath == '/admin-users',
+                  onTap: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Admin Users page not available yet'),
+                      ),
+                    );
+                  },
                 ),
                 _buildDrawerItem(
                   context: context,
@@ -346,38 +431,45 @@ class _AppShellState extends State<_AppShell> {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Halaman Settings belum tersedia'),
+                        content: Text('Settings page not available yet'),
                       ),
                     );
+                  },
+                ),
+
+                Divider(height: 2, indent: 16, endIndent: 16),
+
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.logout_rounded,
+                  title: 'Logout',
+                  path: '/logout',
+                  isSelected: false,
+                  isLogout: true,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showLogoutDialog(context);
                   },
                 ),
               ],
             ),
           ),
-
-          // Logout Button
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.grey[300]!, width: 1),
-              ),
-            ),
-            child: ListTile(
-              leading: Icon(Icons.logout_rounded, color: Colors.red[700]),
-              title: Text(
-                'Logout',
-                style: TextStyle(
-                  color: Colors.red[700],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showLogoutDialog(context);
-              },
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMenuCategory(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey[600],
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -389,6 +481,7 @@ class _AppShellState extends State<_AppShell> {
     required String path,
     required bool isSelected,
     required VoidCallback onTap,
+    bool isLogout = false,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -399,12 +492,16 @@ class _AppShellState extends State<_AppShell> {
       child: ListTile(
         leading: Icon(
           icon,
-          color: isSelected ? Colors.brown[700] : Colors.grey[600],
+          color: isLogout
+              ? Colors.red[700]
+              : (isSelected ? Colors.brown[700] : Colors.grey[600]),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color: isSelected ? Colors.brown[700] : Colors.grey[800],
+            color: isLogout
+                ? Colors.red[700]
+                : (isSelected ? Colors.brown[700] : Colors.grey[800]),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),

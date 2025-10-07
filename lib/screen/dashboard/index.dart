@@ -103,7 +103,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 Colors.orange,
               ),
               _buildSummaryCard(
-                'Rata-rata/Transaksi',
+                'Rata-rata',
                 'Rp ${_formatNumber(salesData['avgTransaksi'])}',
                 Icons.trending_up,
                 Colors.purple,

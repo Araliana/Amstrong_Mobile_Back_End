@@ -39,6 +39,9 @@ class _MenuPageState extends State<MenuPage> {
           img: img,
           price: price,
           description: desc,
+          category: MenuType.makanan,
+          isActive: true,
+          createdAt: DateTime.now(),
         ),
       );
     });
@@ -126,7 +129,7 @@ class _MenuPageState extends State<MenuPage> {
                               if (menu.img.isNotEmpty)
                                 Image.network(menu.img, height: 120),
                               const SizedBox(height: 10),
-                              Text(menu.description ?? "Tidak ada deskripsi"),
+                              Text(menu.description),
                               const SizedBox(height: 10),
                               Text("Harga: Rp ${menu.price}"),
                             ],

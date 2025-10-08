@@ -51,13 +51,21 @@ class Join {
 class DBHelper {
   static Database? _db;
 
+  static const int _dbVersion = 0; //setiap ada perubahan pada table naikin 1
+
   // Definisi schema
   static final Map<Tables, String> tableSchemas = {};
+
+  // Perubahan Schema
+  static final Map<int, List<String>> tableMigrations = {
+    // 1: ['ALTER TABLE order ADD COLUMN totalAmount REAL'],
+  };
 
   // Mapping enum ke nama tabel
   static final Map<Tables, String> tableNames = {};
 
   Future<Database> get database async {
+    if (_db != null) return _db!;
     _db = await _initDB();
     return _db!;
   }
@@ -67,10 +75,19 @@ class DBHelper {
     await deleteDatabase(path);
     return await openDatabase(
       path,
-      version: 1,
+      version: _dbVersion,
       onCreate: (db, version) async {
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
+        }
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        for (int i = oldVersion + 1; i <= newVersion; i++) {
+          if (tableMigrations.containsKey(i)) {
+            for (var script in tableMigrations[i]!) {
+              await db.execute(script);
+            }
+          }
         }
       },
     );

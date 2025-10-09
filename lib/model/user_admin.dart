@@ -1,17 +1,17 @@
 class UserAdmin {
   final int id;
   final String username;
-  final String img;
-  final int password;
-  final DateTime lastLogin;
+  final String? img;
+  final String password;
+  final DateTime? lastLogin;
   final DateTime? createdAt;
 
   UserAdmin({
     required this.id,
     required this.username,
-    required this.img,
+    this.img,
     required this.password,
-    required this.lastLogin,
+    this.lastLogin,
     required this.createdAt,
   });
 

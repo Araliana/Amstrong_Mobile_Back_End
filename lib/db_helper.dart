@@ -54,7 +54,18 @@ class DBHelper {
   static const int _dbVersion = 0; //setiap ada perubahan pada table naikin 1
 
   // Definisi schema
-  static final Map<Tables, String> tableSchemas = {};
+  static final Map<Tables, String> tableSchemas = {
+    Tables.userAdmin: '''
+      CREATE TABLE user_admin(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        img VARCHAR,
+        password VARCHAR,
+        last_login DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    ''',
+  };
 
   // Perubahan Schema
   static final Map<int, List<String>> tableMigrations = {
@@ -62,7 +73,9 @@ class DBHelper {
   };
 
   // Mapping enum ke nama tabel
-  static final Map<Tables, String> tableNames = {};
+  static final Map<Tables, String> tableNames = {
+    Tables.userAdmin: "user_admin",
+  };
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -120,7 +133,7 @@ class DBHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getAll(
+  Future<List<Map<String, dynamic>>> get(
     Tables table, {
     Join? join,
     String? where,

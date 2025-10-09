@@ -1,5 +1,3 @@
-import 'package:flutter_application_1/utils/index.dart';
-
 enum MenuType { makanan, minuman, cemilan, desert }
 
 class Menu {
@@ -43,7 +41,7 @@ class Menu {
       img: map['img'],
       price: map['price'],
       description: map['description'],
-      category: enumFromString(MenuType.values, map['category']),
+      category: map['category'],
       isActive: map['is_active'],
       createdAt: map['created_at'],
     );

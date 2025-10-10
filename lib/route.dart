@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
@@ -10,6 +11,7 @@ class AppRoutes {
         builder: (context, state, child) =>
             _AppShell(child: child, state: state),
         routes: [
+          //MAIN
           GoRoute(
             path: '/dashboard',
             builder: (context, state) {
@@ -17,7 +19,16 @@ class AppRoutes {
               return DashboardPage(selectedPeriod: selectedPeriod);
             },
           ),
+          //ORDERS
+          //PRODUCTS & STOCK
+          //FINANCE
+          //CONTENT & MEDIA
           GoRoute(path: '/menu', builder: (context, state) => const MenuPage()),
+          //MANAGEMENT
+          GoRoute(
+            path: '/admin-users',
+            builder: (context, state) => const UserAdminScreen(),
+          ),
         ],
       ),
     ],
@@ -414,11 +425,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/admin-users',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Admin Users page not available yet'),
-                      ),
-                    );
+                    context.go('/admin-users');
                   },
                 ),
                 _buildDrawerItem(

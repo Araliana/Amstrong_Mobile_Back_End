@@ -1,13 +1,15 @@
 class UserAdmin {
   final int id;
+  final String fullname;
   final String username;
   final String? img;
   final String password;
   final DateTime? lastLogin;
-  final DateTime? createdAt;
+  final DateTime createdAt;
 
   UserAdmin({
     required this.id,
+    required this.fullname,
     required this.username,
     this.img,
     required this.password,
@@ -18,22 +20,26 @@ class UserAdmin {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'fullname': fullname,
       'username': username,
       'img': img,
       'password': password,
-      'last_login': lastLogin,
-      'created_at': createdAt,
+      'last_login': lastLogin?.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
     return UserAdmin(
-      id: map['id'],
-      username: map['username'],
-      img: map['img'],
-      password: map['password'],
-      lastLogin: map['last_login'],
-      createdAt: map['created_at'],
+      id: map['id'] as int,
+      fullname: map['fullname'] as String,
+      username: map['username'] as String,
+      img: map['img'] as String?,
+      password: map['password'] as String,
+      lastLogin: map['last_login'] != null
+          ? DateTime.parse(map['last_login'])
+          : null,
+      createdAt: DateTime.parse(map['created_at']),
     );
   }
 }

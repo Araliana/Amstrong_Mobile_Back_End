@@ -51,14 +51,15 @@ class Join {
 class DBHelper {
   static Database? _db;
 
-  static const int _dbVersion = 0; //setiap ada perubahan pada table naikin 1
+  static const int _dbVersion = 1; //setiap ada perubahan pada table naikin 1
 
   // Definisi schema
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
       CREATE TABLE user_admin(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR,
+        fullname VARCHAR,
+        username VARCHAR,
         img VARCHAR,
         password VARCHAR,
         last_login DATETIME,

@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:bcrypt/bcrypt.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
 
 T enumFromString<T extends Enum>(Iterable<T> values, String value) {
   return values.firstWhere(
@@ -43,4 +47,21 @@ String formatDateTime(DateTime dateTime) {
 
 String formatDate(DateTime dateTime) {
   return DateFormat('dd MMM yyyy').format(dateTime);
+}
+
+Future<String?> uploadFile(File file) async {
+  try {
+    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final ext = p.extension(file.path); // contoh: .jpg / .png / .pdf
+
+    final ref = FirebaseStorage.instance.ref().child(
+      'images/$fileName$ext',
+    ); // pakai ext asli
+
+    await ref.putFile(file);
+    return await ref.getDownloadURL();
+  } catch (e) {
+    print("Error: $e");
+    return null;
+  }
 }

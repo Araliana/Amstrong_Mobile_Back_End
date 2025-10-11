@@ -1,3 +1,4 @@
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -94,6 +95,14 @@ class DBHelper {
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
         }
+
+        await db.insert(tableNames[Tables.userAdmin]!, {
+          "fullname": "Master",
+          "username": "admin",
+          "img": null,
+          "password": hashPassword("Asdf1234!"),
+          "last_login": null,
+        });
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         for (int i = oldVersion + 1; i <= newVersion; i++) {

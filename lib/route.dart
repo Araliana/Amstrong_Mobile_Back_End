@@ -13,7 +13,7 @@ class AppRoutes {
         routes: [
           //MAIN
           GoRoute(
-            path: '/dashboard',
+            path: '/',
             builder: (context, state) {
               final selectedPeriod = state.extra as String? ?? 'Hari Ini';
               return DashboardPage(selectedPeriod: selectedPeriod);
@@ -55,7 +55,7 @@ class AppRoutes {
               icon: const Icon(Icons.home),
               label: const Text("Kembali ke Dashboard"),
               onPressed: () {
-                context.go('/dashboard');
+                context.go('/');
               },
             ),
           ],
@@ -145,93 +145,153 @@ class _AppShellState extends State<_AppShell> {
               ),
             ),
             child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 20,
-                ),
-                child: Column(
-                  children: [
-                    // Logo Cafe
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset("assets/logo.png"),
-                    ),
-                    const SizedBox(height: 16),
-                    // Nama Cafe
-                    const Text(
-                      'KJM Cafe',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Admin Dashboard',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 13,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Divider(color: Colors.white30, thickness: 1),
-                    const SizedBox(height: 10),
-                    // Profile User
-                    Row(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.brown[700],
-                            size: 26,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Admin User',
-                                style: TextStyle(
+                        // Logo Cafe dengan Settings Button
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
                                   color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset("assets/logo.png"),
+                              ),
+                            ),
+                            Positioned(
+                              right: -10,
+                              top: -12,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: IconButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    context.go("/");
+                                  },
+                                  splashColor: Colors.white.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  highlightColor: Colors.white.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.settings,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
                                 ),
                               ),
-                              Text(
-                                'admin@kjmcafe.com',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: 12,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Nama Cafe
+                        const Text(
+                          'KJM Cafe',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Admin Dashboard',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 13,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Divider(color: Colors.white30, thickness: 1),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                  // Profile User Section - Padding horizontal 10
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => {},
+                        borderRadius: BorderRadius.circular(8),
+                        splashColor: Colors.white.withValues(alpha: 0.2),
+                        highlightColor: Colors.white.withValues(alpha: 0.1),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  Icons.person,
+                                  color: Colors.brown[700],
+                                  size: 26,
                                 ),
-                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Admin User',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'admin@kjmcafe.com',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.8,
+                                        ),
+                                        fontSize: 12,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.white,
+                                size: 20,
                               ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -251,7 +311,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/dashboard',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/dashboard', extra: selectedPeriod);
+                    context.go('//', extra: selectedPeriod);
                   },
                 ),
 
@@ -430,17 +490,24 @@ class _AppShellState extends State<_AppShell> {
                 ),
                 _buildDrawerItem(
                   context: context,
-                  icon: Icons.settings_rounded,
-                  title: 'Settings',
-                  path: '/settings',
-                  isSelected: currentPath == '/settings',
+                  icon: Icons.manage_accounts,
+                  title: 'Roles',
+                  path: '/roles',
+                  isSelected: currentPath == '/roles',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Settings page not available yet'),
-                      ),
-                    );
+                    context.go('/roles');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.lock,
+                  title: 'Access',
+                  path: '/access',
+                  isSelected: currentPath == '/access',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/access');
                   },
                 ),
 
@@ -529,18 +596,31 @@ class _AppShellState extends State<_AppShell> {
           content: const Text('Apakah Anda yakin ingin keluar?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
+              onPressed: false ? null : () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Logout berhasil')),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
-              child: const Text('Logout'),
+              onPressed: false ? null : () async {},
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: false
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Reset', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

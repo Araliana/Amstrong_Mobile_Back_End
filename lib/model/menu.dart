@@ -8,7 +8,7 @@ class Menu {
   final String description;
   final MenuType category;
   final bool isActive;
-  final DateTime? createdAt;
+  final DateTime createdAt;
 
   Menu({
     required this.id,
@@ -30,7 +30,7 @@ class Menu {
       'description': description,
       'category': category.name,
       'is_active': isActive,
-      'created_at': createdAt,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
@@ -43,7 +43,7 @@ class Menu {
       description: map['description'],
       category: map['category'],
       isActive: map['is_active'],
-      createdAt: map['created_at'],
+      createdAt: DateTime.parse(map['created_at']),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
+import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +20,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     final userAdmins = adminProvider.userAdmins;
     return Scaffold(
       body: userAdmins.isEmpty
-          ? _buildEmptyState()
+          ? buildEmptyState("User Admin")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: userAdmins.length,
@@ -31,32 +33,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
         backgroundColor: Colors.brown,
         onPressed: () => _showCreateDialog(context),
         child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people_outline, size: 100, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text(
-            'No Admin Users',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the + button to add your first admin user',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
@@ -245,16 +221,18 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Create Admin
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool obscurePassword = true;
+    int? selectedRole;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -267,7 +245,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildInput(
+                buildInput(
                   controller: nameController,
                   label: 'Fullname',
                   icon: Icons.badge,
@@ -279,7 +257,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildInput(
+                buildInput(
                   controller: usernameController,
                   label: 'Username',
                   icon: Icons.alternate_email,
@@ -294,7 +272,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildInput(
+                buildInput(
                   controller: passwordController,
                   label: 'Password',
                   icon: Icons.lock,
@@ -319,6 +297,29 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
+                buildDropdownField(
+                  label: 'Role',
+                  value: selectedRole.toString(),
+                  items: roleProvider.roles
+                      .map(
+                        (role) =>
+                            ({"label": role.name, "value": role.id.toString()}),
+                      )
+                      .toList(),
+                  prefixIcon: Icons.manage_accounts,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedRole = int.parse(value!);
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a category';
+                    }
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
@@ -326,64 +327,37 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
             horizontal: 16,
             vertical: 8,
           ),
-          actions: [
-            TextButton(
-              onPressed: adminProvider.isLoading
-                  ? null
-                  : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: adminProvider.isLoading
-                  ? null
-                  : () async {
-                      if (formKey.currentState!.validate()) {
-                        final userAdmin = await adminProvider.checkUsername(
-                          username: usernameController.text,
-                        );
-                        if (userAdmin != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Username already existed!'),
-                            ),
-                          );
-                          return;
-                        }
-                        await adminProvider.addUserAdmin(
-                          fullname: nameController.text,
-                          username: usernameController.text,
-                          password: passwordController.text,
-                        );
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Admin user created successfully'),
-                          ),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                backgroundColor: Colors.purple,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: adminProvider.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Create', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+          actions: buildDialogActions(
+            context: context,
+            confirmText: "Create",
+            confirmColor: Colors.purple,
+            isLoading: adminProvider.isLoading,
+            onConfirm: () async {
+              if (formKey.currentState!.validate()) {
+                final userAdmin = await adminProvider.checkUsername(
+                  username: usernameController.text,
+                );
+                if (userAdmin != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Username already existed!')),
+                  );
+                  return;
+                }
+                await adminProvider.addUserAdmin(
+                  fullname: nameController.text,
+                  username: usernameController.text,
+                  password: passwordController.text,
+                  roleId: selectedRole!,
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Admin user created successfully'),
+                  ),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
@@ -392,104 +366,106 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Edit Admin (name only)
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
+    int? selectedRole;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Admin User'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildInput(
-                controller: nameController,
-                label: 'Fullname',
-                icon: Icons.badge,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Fullname is required';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildInput(
-                controller: usernameController,
-                label: 'Username',
-                icon: Icons.alternate_email,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Username is required';
-                  }
-                  if (value.length < 3) {
-                    return 'Username must be at least 3 characters';
-                  }
-                  return null;
-                },
-              ),
-            ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Admin User'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                buildInput(
+                  controller: nameController,
+                  label: 'Fullname',
+                  icon: Icons.badge,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Fullname is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                buildInput(
+                  controller: usernameController,
+                  label: 'Username',
+                  icon: Icons.alternate_email,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Username is required';
+                    }
+                    if (value.length < 3) {
+                      return 'Username must be at least 3 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                buildDropdownField(
+                  label: 'Role',
+                  value: selectedRole.toString(),
+                  items: roleProvider.roles
+                      .map(
+                        (role) =>
+                            ({"label": role.name, "value": role.id.toString()}),
+                      )
+                      .toList(),
+                  prefixIcon: Icons.manage_accounts,
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedRole = int.parse(value!);
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a category';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: buildDialogActions(
+            context: context,
+            confirmText: "Edit",
+            confirmColor: Colors.indigoAccent,
+            isLoading: adminProvider.isLoading,
+            onConfirm: () async {
+              if (formKey.currentState!.validate()) {
+                final userAdmin = await adminProvider.checkUsername(
+                  username: usernameController.text,
+                  id: user.id,
+                );
+                if (userAdmin != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Username already existed!')),
+                  );
+                  return;
+                }
+                await adminProvider.editUserAdmin(
+                  id: user.id,
+                  fullname: nameController.text,
+                  username: usernameController.text,
+                );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Admin user edited successfully'),
+                  ),
+                );
+              }
+            },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: adminProvider.isLoading
-                ? null
-                : () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: adminProvider.isLoading
-                ? null
-                : () async {
-                    if (formKey.currentState!.validate()) {
-                      final userAdmin = await adminProvider.checkUsername(
-                        username: usernameController.text,
-                        id: user.id,
-                      );
-                      if (userAdmin != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Username already existed!'),
-                          ),
-                        );
-                        return;
-                      }
-                      await adminProvider.editItem(
-                        id: user.id,
-                        fullname: nameController.text,
-                        username: usernameController.text,
-                      );
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Admin user edited successfully'),
-                        ),
-                      );
-                    }
-                  },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              backgroundColor: Colors.indigoAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: adminProvider.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Edit', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
@@ -513,7 +489,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildInput(
+                buildInput(
                   controller: newPasswordController,
                   label: 'Password',
                   icon: Icons.lock_outline,
@@ -537,7 +513,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                _buildInput(
+                buildInput(
                   controller: confirmPasswordController,
                   label: 'Password',
                   icon: Icons.lock,
@@ -554,8 +530,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Confirm Password is required';
                     }
-                    if (value.length < 6) {
-                      return 'Confirm Password must be at least 6 characters';
+                    if (value != newPasswordController.text) {
+                      return 'Passwords do not match';
                     }
                     return null;
                   },
@@ -563,87 +539,23 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: adminProvider.isLoading
-                  ? null
-                  : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: adminProvider.isLoading
-                  ? null
-                  : () async {
-                      if (formKey.currentState!.validate()) {
-                        // Implement reset password logic here
-                        await adminProvider.editItem(
-                          id: user.id,
-                          password: newPasswordController.text,
-                        );
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Password reset successfully'),
-                          ),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                backgroundColor: Colors.deepOrange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: adminProvider.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Reset', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInput({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool obscure = false,
-    Widget? suffix,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        suffixIcon: suffix,
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+          actions: buildDialogActions(
+            context: context,
+            confirmText: "Reset",
+            confirmColor: Colors.deepOrange,
+            isLoading: adminProvider.isLoading,
+            onConfirm: () async {
+              if (formKey.currentState!.validate()) {
+                await adminProvider.editUserAdmin(
+                  id: user.id,
+                  password: newPasswordController.text,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password reset successfully')),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
@@ -657,44 +569,19 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Admin User'),
         content: Text('Are you sure you want to delete "${user.username}"?'),
-        actions: [
-          TextButton(
-            onPressed: adminProvider.isLoading
-                ? null
-                : () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: adminProvider.isLoading
-                ? null
-                : () async {
-                    await adminProvider.deleteItem(user.id);
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Admin user deleted successfully'),
-                      ),
-                    );
-                  },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: adminProvider.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Reset', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+        actions: buildDialogActions(
+          context: context,
+          confirmText: "Delete",
+          confirmColor: Colors.red,
+          isLoading: adminProvider.isLoading,
+          onConfirm: () async {
+            await adminProvider.deleteUserAdmin(user.id);
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Admin user deleted successfully')),
+            );
+          },
+        ),
       ),
     );
   }

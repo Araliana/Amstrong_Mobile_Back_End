@@ -1,3 +1,5 @@
+import 'package:flutter_application_1/model/role.dart';
+
 class UserAdmin {
   final int id;
   final String fullname;
@@ -6,6 +8,7 @@ class UserAdmin {
   final String password;
   final DateTime? lastLogin;
   final DateTime createdAt;
+  final Role role;
 
   UserAdmin({
     required this.id,
@@ -15,6 +18,7 @@ class UserAdmin {
     required this.password,
     this.lastLogin,
     required this.createdAt,
+    required this.role,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +30,7 @@ class UserAdmin {
       'password': password,
       'last_login': lastLogin?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
+      'role': role.toMap(),
     };
   }
 
@@ -40,6 +45,7 @@ class UserAdmin {
           ? DateTime.parse(map['last_login'])
           : null,
       createdAt: DateTime.parse(map['created_at']),
+      role: Role.fromMap((map['role'] as Map).cast<String, dynamic>()),
     );
   }
 }

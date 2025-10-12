@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:bcrypt/bcrypt.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';

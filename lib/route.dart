@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
@@ -21,6 +22,10 @@ class AppRoutes {
           ),
           //ORDERS
           //PRODUCTS & STOCK
+          GoRoute(
+            path: '/products',
+            builder: (context, state) => const ProductPage(),
+          ),
           //FINANCE
           //CONTENT & MEDIA
           GoRoute(path: '/menu', builder: (context, state) => const MenuPage()),
@@ -375,11 +380,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/products',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Products page not available yet'),
-                      ),
-                    );
+                    context.go('/products', extra: selectedPeriod);
                   },
                 ),
                 _buildDrawerItem(

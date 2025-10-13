@@ -27,7 +27,7 @@ class AppRoutes {
           GoRoute(path: '/menu', builder: (context, state) => const MenuPage()),
           //MANAGEMENT
           GoRoute(
-            path: '/admin-users',
+            path: '/user-admin',
             builder: (context, state) => const UserAdminScreen(),
           ),
           GoRoute(
@@ -496,12 +496,12 @@ class _AppShellState extends State<_AppShell> {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.people_rounded,
-                  title: 'Admin Users',
-                  path: '/admin-users',
-                  isSelected: currentPath == '/admin-users',
+                  title: 'User Admin',
+                  path: '/user-admin',
+                  isSelected: currentPath == '/user-admin',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/admin-users');
+                    context.go('/user-admin');
                   },
                 ),
                 _buildDrawerItem(

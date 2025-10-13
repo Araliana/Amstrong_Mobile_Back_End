@@ -23,9 +23,12 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
           ? buildEmptyState("User Admin")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: userAdmins.length,
+              itemCount: userAdmins.length + 1,
               itemBuilder: (context, index) {
-                final user = userAdmins[index];
+                if (index == 0) {
+                  return buildHeader("User Admin", Icons.people_rounded);
+                }
+                final user = userAdmins[index - 1];
                 return _buildUserAdminCard(user);
               },
             ),
@@ -76,29 +79,48 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Nama dan Role
                     Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Text(
+                            user.fullname,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                user.fullname,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Icon(
+                                Icons.manage_accounts,
+                                size: 14,
+                                color: Colors.blue.shade700,
                               ),
+                              const SizedBox(width: 4),
                               Text(
-                                '@${user.username}',
+                                user.role.name.toUpperCase(),
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade700,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -120,8 +142,14 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                         ),
                       ],
                     ),
+                    Text(
+                      '@${user.username}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-
                     if (user.lastLogin != null)
                       Row(
                         children: [

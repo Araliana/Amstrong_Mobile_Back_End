@@ -46,12 +46,14 @@ enum OrderType {
 
 class Join {
   final Tables joinTable;
+  final Tables? fromTable;
   final String fromKey;
   final String toKey;
   final JoinType joinType;
 
-  const Join({
+  Join({
     required this.joinTable,
+    this.fromTable,
     required this.fromKey,
     required this.toKey,
     this.joinType = JoinType.inner,
@@ -195,49 +197,57 @@ class DBHelper {
     final baseTable = tableNames[table]!;
     final query = StringBuffer();
 
-    // Ambil seluruh kolom baseTable
-    final baseColumns = await _getColumns(baseTable);
+    // SELECT base columns
+    final baseCols = await _getColumns(baseTable);
+
     query.write("SELECT ");
+
     query.write(
-      baseColumns.map((c) => "$baseTable.$c AS ${baseTable}_$c").join(", "),
+      baseCols.map((c) => "$baseTable.$c AS ${baseTable}_$c").join(", "),
     );
 
-    // Ambil seluruh kolom joinTable
     final joinTables = <String>[];
+
+    // SELECT join columns
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
         joinTables.add(jt);
 
-        final jtColumns = await _getColumns(jt);
-        query.write(", ");
-        query.write(jtColumns.map((c) => "$jt.$c AS ${jt}_$c").join(", "));
+        final jtCols = await _getColumns(jt);
+        query.write(', ');
+        query.write(jtCols.map((c) => '$jt.$c AS ${jt}_$c').join(', '));
       }
     }
 
-    // FROM + JOIN
-    query.write(" FROM $baseTable");
+    // FROM
+    query.write(' FROM $baseTable');
+
+    // JOIN
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
+        final fromTbl = j.fromTable != null
+            ? tableNames[j.fromTable]!
+            : baseTable; // default base
         query.write(
-          " ${j.joinType.sql} $jt ON $baseTable.${j.fromKey} = $jt.${j.toKey}",
+          ' ${j.joinType.sql} $jt ON $fromTbl.${j.fromKey} = $jt.${j.toKey}',
         );
       }
     }
 
     // WHERE
-    if (where != null) query.write(" WHERE $where");
+    if (where != null) query.write(' WHERE $where');
 
     // ORDER BY
     if (orderBy != null) {
-      query.write(" ORDER BY $orderBy ${orderType.sql}");
+      query.write(' ORDER BY $orderBy ${orderType.sql}');
     } else {
-      query.write(" ORDER BY $baseTable.id ${orderType.sql}");
+      query.write(' ORDER BY $baseTable.id ${orderType.sql}');
     }
 
-    final rawRows = await db.rawQuery(query.toString(), whereArgs);
-    return _toNested(rawRows, baseTable: baseTable, joinTables: joinTables);
+    final rows = await db.rawQuery(query.toString(), whereArgs);
+    return _toNested(rows, baseTable: baseTable, joinTables: joinTables);
   }
 
   Future<List<String>> _getColumns(String table) async {

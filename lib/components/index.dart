@@ -161,3 +161,26 @@ Widget buildEmptyState(String title) {
     ),
   );
 }
+
+Widget buildHeader(String title, IconData icon) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 16.0),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Expanded(child: Divider(thickness: 1, endIndent: 10)),
+        Icon(icon, size: 28),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const Expanded(child: Divider(thickness: 1, indent: 10)),
+      ],
+    ),
+  );
+}

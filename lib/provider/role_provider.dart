@@ -25,7 +25,15 @@ class RoleProvider with ChangeNotifier {
     _setLoading(true);
     final res = await db.get(
       roleTable,
-      joins: [Join(joinTable: Tables.role, fromKey: 'id', toKey: 'role_id')],
+      joins: [
+        Join(joinTable: roleAccessTable, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          fromTable: roleAccessTable,
+          joinTable: accessTable,
+          fromKey: 'access_id',
+          toKey: 'id',
+        ),
+      ],
     );
     roles
       ..clear()

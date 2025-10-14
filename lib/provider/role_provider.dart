@@ -105,12 +105,4 @@ class RoleProvider with ChangeNotifier {
     roles.removeWhere((item) => item.id == id);
     _setLoading(false);
   }
-
-  Future<void> deleteAllRolees() async {
-    _setLoading(true);
-    await db.delete(roleTable);
-    await db.delete(roleAccessTable);
-    roles.clear();
-    _setLoading(false);
-  }
 }

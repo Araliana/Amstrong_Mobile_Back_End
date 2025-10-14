@@ -582,7 +582,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
           actions: buildDialogActions(
             context: context,
             confirmText: "Reset",
-            confirmColor: Colors.deepOrange,
+            confirmColor: Colors.amber,
             isLoading: adminProvider.isLoading,
             onConfirm: () async {
               if (formKey.currentState!.validate()) {

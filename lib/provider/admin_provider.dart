@@ -135,11 +135,4 @@ class AdminProvider with ChangeNotifier {
     userAdmins.removeWhere((item) => item.id == id);
     _setLoading(false);
   }
-
-  Future<void> deleteAllUserAdmins() async {
-    _setLoading(true);
-    await db.delete(adminTables);
-    userAdmins.clear();
-    _setLoading(false);
-  }
 }

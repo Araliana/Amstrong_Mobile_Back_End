@@ -23,9 +23,12 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
           ? buildEmptyState("User Admin")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: userAdmins.length,
+              itemCount: userAdmins.length + 1,
               itemBuilder: (context, index) {
-                final user = userAdmins[index];
+                if (index == 0) {
+                  return buildHeader("User Admin", Icons.people_rounded);
+                }
+                final user = userAdmins[index - 1];
                 return _buildUserAdminCard(user);
               },
             ),
@@ -76,29 +79,48 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Nama dan Role
                     Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Text(
+                            user.fullname,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                user.fullname,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Icon(
+                                Icons.manage_accounts,
+                                size: 14,
+                                color: Colors.blue.shade700,
                               ),
+                              const SizedBox(width: 4),
                               Text(
-                                '@${user.username}',
+                                user.role.name.toUpperCase(),
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade600,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade700,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                        const SizedBox(width: 10),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -120,8 +142,14 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                         ),
                       ],
                     ),
+                    Text(
+                      '@${user.username}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-
                     if (user.lastLogin != null)
                       Row(
                         children: [
@@ -221,7 +249,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Create Admin
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
@@ -298,26 +325,33 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                buildDropdownField(
-                  label: 'Role',
-                  value: selectedRole.toString(),
-                  items: roleProvider.roles
-                      .map(
-                        (role) =>
-                            ({"label": role.name, "value": role.id.toString()}),
-                      )
-                      .toList(),
-                  prefixIcon: Icons.manage_accounts,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedRole = int.parse(value!);
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
+                Consumer<RoleProvider>(
+                  builder: (context, roleProvider, child) {
+                    return buildDropdownField(
+                      label: 'Role',
+                      isLoading: roleProvider.isLoading,
+                      value: selectedRole.toString(),
+                      items: roleProvider.roles
+                          .map(
+                            (role) => ({
+                              "label": role.name,
+                              "value": role.id.toString(),
+                            }),
+                          )
+                          .toList(),
+                      prefixIcon: Icons.manage_accounts,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedRole = int.parse(value!);
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a category';
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
               ],
@@ -366,11 +400,10 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Edit Admin (name only)
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
-    int? selectedRole;
+    int? selectedRole = user.role.id;
 
     showDialog(
       context: context,
@@ -409,26 +442,33 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                buildDropdownField(
-                  label: 'Role',
-                  value: selectedRole.toString(),
-                  items: roleProvider.roles
-                      .map(
-                        (role) =>
-                            ({"label": role.name, "value": role.id.toString()}),
-                      )
-                      .toList(),
-                  prefixIcon: Icons.manage_accounts,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedRole = int.parse(value!);
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
+                Consumer<RoleProvider>(
+                  builder: (context, roleProvider, child) {
+                    return buildDropdownField(
+                      label: 'Role',
+                      isLoading: roleProvider.isLoading,
+                      value: selectedRole.toString(),
+                      items: roleProvider.roles
+                          .map(
+                            (role) => ({
+                              "label": role.name,
+                              "value": role.id.toString(),
+                            }),
+                          )
+                          .toList(),
+                      prefixIcon: Icons.manage_accounts,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedRole = int.parse(value!);
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a category';
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
               ],

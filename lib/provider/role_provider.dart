@@ -24,8 +24,16 @@ class RoleProvider with ChangeNotifier {
   Future<void> _loadRole() async {
     _setLoading(true);
     final res = await db.get(
-      roleTable,
-      joins: [Join(joinTable: Tables.role, fromKey: 'id', toKey: 'role_id')],
+      Tables.role,
+      joins: [
+        Join(joinTable: Tables.roleAccess, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          joinTable: Tables.access,
+          fromKey: 'access_id',
+          toKey: 'id',
+          fromTable: Tables.roleAccess,
+        ),
+      ],
     );
     roles
       ..clear()

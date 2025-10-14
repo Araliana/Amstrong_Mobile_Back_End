@@ -25,7 +25,14 @@ class AdminProvider with ChangeNotifier {
     _setLoading(true);
     final res = await db.get(
       adminTables,
-      joins: [Join(joinTable: roleTable, fromKey: "role_id", toKey: "id")],
+      joins: [
+        Join(
+          joinTable: roleTable,
+          fromKey: "role_id",
+          toKey: "id",
+          isList: false,
+        ),
+      ],
     );
     userAdmins
       ..clear()

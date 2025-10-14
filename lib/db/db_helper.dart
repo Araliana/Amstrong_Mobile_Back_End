@@ -49,12 +49,16 @@ class Join {
   final String fromKey;
   final String toKey;
   final JoinType joinType;
+  final bool isList;
+  final Tables? fromTable;
 
-  const Join({
+  Join({
     required this.joinTable,
     required this.fromKey,
     required this.toKey,
     this.joinType = JoinType.inner,
+    this.isList = true,
+    this.fromTable,
   });
 }
 
@@ -195,49 +199,65 @@ class DBHelper {
     final baseTable = tableNames[table]!;
     final query = StringBuffer();
 
-    // Ambil seluruh kolom baseTable
-    final baseColumns = await _getColumns(baseTable);
+    // ==== SELECT BASE COLUMNS ====
+    final baseCols = await _getColumns(baseTable);
     query.write("SELECT ");
     query.write(
-      baseColumns.map((c) => "$baseTable.$c AS ${baseTable}_$c").join(", "),
+      baseCols.map((c) => "$baseTable.$c AS ${baseTable}_$c").join(", "),
     );
 
-    // Ambil seluruh kolom joinTable
+    // ==== SELECT JOIN COLUMNS ====
     final joinTables = <String>[];
+    final listTables = <String>[]; // tabel yang isList=true
+
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
         joinTables.add(jt);
+        if (j.isList) listTables.add(jt);
 
-        final jtColumns = await _getColumns(jt);
+        final jtCols = await _getColumns(jt);
         query.write(", ");
-        query.write(jtColumns.map((c) => "$jt.$c AS ${jt}_$c").join(", "));
+        query.write(jtCols.map((c) => "$jt.$c AS ${jt}_$c").join(", "));
       }
     }
 
-    // FROM + JOIN
+    // ==== FROM BASE TABLE ====
     query.write(" FROM $baseTable");
+
+    // ==== JOIN CLAUSES ====
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
+        final fromTbl = j.fromTable != null
+            ? tableNames[j.fromTable]!
+            : baseTable;
         query.write(
-          " ${j.joinType.sql} $jt ON $baseTable.${j.fromKey} = $jt.${j.toKey}",
+          " ${j.joinType.sql} $jt ON $fromTbl.${j.fromKey} = $jt.${j.toKey}",
         );
       }
     }
 
-    // WHERE
+    // ==== WHERE ====
     if (where != null) query.write(" WHERE $where");
 
-    // ORDER BY
+    // ==== ORDER BY ====
     if (orderBy != null) {
       query.write(" ORDER BY $orderBy ${orderType.sql}");
     } else {
       query.write(" ORDER BY $baseTable.id ${orderType.sql}");
     }
 
-    final rawRows = await db.rawQuery(query.toString(), whereArgs);
-    return _toNested(rawRows, baseTable: baseTable, joinTables: joinTables);
+    // Jalankan query
+    final rows = await db.rawQuery(query.toString(), whereArgs);
+
+    // Convert hasil ke nested
+    return _toNested(
+      rows,
+      baseTable: baseTable,
+      joinTables: joinTables,
+      listTables: listTables,
+    );
   }
 
   Future<List<String>> _getColumns(String table) async {
@@ -250,27 +270,56 @@ class DBHelper {
     List<Map<String, dynamic>> rows, {
     required String baseTable,
     required List<String> joinTables,
+    required List<String> listTables,
   }) {
     final result = <Map<String, dynamic>>[];
+    final seen = <dynamic, Map<String, dynamic>>{}; // id base -> row
 
     for (var row in rows) {
       final baseData = <String, dynamic>{};
-      final nested = <String, dynamic>{};
+      final nestedData = <String, dynamic>{};
 
+      // Pisahkan base dan nested per baris SQL
       row.forEach((key, value) {
         if (key.startsWith("${baseTable}_")) {
           baseData[key.replaceFirst("${baseTable}_", "")] = value;
         } else {
           for (var jt in joinTables) {
             if (key.startsWith("${jt}_")) {
-              nested[jt] ??= {};
-              nested[jt]![key.replaceFirst("${jt}_", "")] = value;
+              final col = key.replaceFirst("${jt}_", "");
+              if (!nestedData.containsKey(jt)) nestedData[jt] = {};
+              nestedData[jt][col] = value;
             }
           }
         }
       });
 
-      result.add({...baseData, ...nested});
+      final baseId = baseData['id'];
+
+      if (!seen.containsKey(baseId)) {
+        final newRow = Map<String, dynamic>.from(baseData);
+        for (var jt in joinTables) {
+          newRow[jt] = listTables.contains(jt)
+              ? <Map<String, dynamic>>[]
+              : null;
+        }
+        seen[baseId] = newRow;
+        result.add(newRow);
+      }
+
+      final current = seen[baseId]!;
+
+      nestedData.forEach((jt, data) {
+        if (listTables.contains(jt)) {
+          if (!(data['id'] == null)) {
+            final list = current[jt] as List<Map<String, dynamic>>;
+            final exists = list.any((e) => e['id'] == data['id']);
+            if (!exists) list.add(data.cast<String, dynamic>());
+          }
+        } else {
+          current[jt] = data;
+        }
+      });
     }
 
     return result;

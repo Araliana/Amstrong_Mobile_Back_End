@@ -26,17 +26,16 @@ class _AccessScreenState extends State<AccessScreen> {
     final acceseProvider = Provider.of<AccessProvider>(context);
     final accesses = acceseProvider.accesses;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Access Permissions'),
-        backgroundColor: Colors.deepPurple,
-      ),
       body: accesses.isEmpty
           ? buildEmptyState("Access")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: accesses.length,
+              itemCount: accesses.length + 1,
               itemBuilder: (context, index) {
-                final access = accesses[index];
+                if (index == 0) {
+                  return buildHeader("Access", Icons.lock);
+                }
+                final access = accesses[index - 1];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   elevation: 2,
@@ -120,8 +119,8 @@ class _AccessScreenState extends State<AccessScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(),
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.brown,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -130,7 +129,7 @@ class _AccessScreenState extends State<AccessScreen> {
     final isEdit = access != null;
     final nameController = TextEditingController(text: access?.name ?? '');
     final pathController = TextEditingController(
-      text: access?.accessPath ?? '',
+      text: access?.accessPath.substring(1) ?? '',
     );
     String? selectedCategory = access?.category ?? categories.first;
 
@@ -166,9 +165,6 @@ class _AccessScreenState extends State<AccessScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Access path is required';
-                    }
-                    if (!value.startsWith('/') && value.isNotEmpty) {
-                      return 'Path must start with /';
                     }
                     return null;
                   },

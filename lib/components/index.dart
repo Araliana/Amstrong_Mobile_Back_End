@@ -43,31 +43,60 @@ Widget buildDropdownField({
   IconData? prefixIcon,
   String labelKey = 'label',
   String valueKey = 'value',
+  bool isLoading = false,
 }) {
   assert(
     items != null || simpleItems != null,
     'Either items or simpleItems must be provided',
   );
 
-  List<DropdownMenuItem<String>> dropdownItems;
-
-  if (simpleItems != null) {
-    // Simple mode: List<String>
-    dropdownItems = simpleItems.map((item) {
-      return DropdownMenuItem(value: item, child: Text(item));
-    }).toList();
-  } else {
-    // Advanced mode: List<Map<String, String>>
-    dropdownItems = items!.map((item) {
-      return DropdownMenuItem(
-        value: item[valueKey],
-        child: Text(item[labelKey] ?? ''),
-      );
-    }).toList();
+  if (isLoading) {
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(14),
+          child: SizedBox(
+            width: 4,
+            height: 4,
+            child: const CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
+      child: const Text("Loading..."),
+    );
   }
 
+  List<DropdownMenuItem<String>> dropdownItems;
+  if (simpleItems != null) {
+    dropdownItems = simpleItems
+        .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+        .toList();
+  } else {
+    dropdownItems = items!
+        .map(
+          (item) => DropdownMenuItem(
+            value: item[valueKey],
+            child: Text(item[labelKey] ?? ''),
+          ),
+        )
+        .toList();
+  }
+
+  final isValueValid = dropdownItems.any((e) => e.value == value);
+
   return DropdownButtonFormField<String>(
-    initialValue: value,
+    initialValue: isValueValid ? value : null,
     decoration: InputDecoration(
       labelText: label,
       prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
@@ -97,7 +126,6 @@ List<Widget> buildDialogActions({
   String confirmText = "OK",
   Color confirmColor = Colors.brown,
   bool isLoading = false,
-  bool autoClose = true,
 }) {
   return [
     TextButton(
@@ -113,9 +141,6 @@ List<Widget> buildDialogActions({
           ? null
           : () async {
               await onConfirm();
-              if (autoClose) {
-                Navigator.pop(context);
-              }
             },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

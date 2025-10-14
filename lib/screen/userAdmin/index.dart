@@ -249,7 +249,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Create Admin
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
@@ -326,26 +325,33 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                buildDropdownField(
-                  label: 'Role',
-                  value: selectedRole.toString(),
-                  items: roleProvider.roles
-                      .map(
-                        (role) =>
-                            ({"label": role.name, "value": role.id.toString()}),
-                      )
-                      .toList(),
-                  prefixIcon: Icons.manage_accounts,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedRole = int.parse(value!);
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
+                Consumer<RoleProvider>(
+                  builder: (context, roleProvider, child) {
+                    return buildDropdownField(
+                      label: 'Role',
+                      isLoading: roleProvider.isLoading,
+                      value: selectedRole.toString(),
+                      items: roleProvider.roles
+                          .map(
+                            (role) => ({
+                              "label": role.name,
+                              "value": role.id.toString(),
+                            }),
+                          )
+                          .toList(),
+                      prefixIcon: Icons.manage_accounts,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedRole = int.parse(value!);
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a category';
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
               ],
@@ -394,11 +400,10 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   // Dialog Edit Admin (name only)
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
-    int? selectedRole;
+    int? selectedRole = user.role.id;
 
     showDialog(
       context: context,
@@ -437,26 +442,33 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                buildDropdownField(
-                  label: 'Role',
-                  value: selectedRole.toString(),
-                  items: roleProvider.roles
-                      .map(
-                        (role) =>
-                            ({"label": role.name, "value": role.id.toString()}),
-                      )
-                      .toList(),
-                  prefixIcon: Icons.manage_accounts,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedRole = int.parse(value!);
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
+                Consumer<RoleProvider>(
+                  builder: (context, roleProvider, child) {
+                    return buildDropdownField(
+                      label: 'Role',
+                      isLoading: roleProvider.isLoading,
+                      value: selectedRole.toString(),
+                      items: roleProvider.roles
+                          .map(
+                            (role) => ({
+                              "label": role.name,
+                              "value": role.id.toString(),
+                            }),
+                          )
+                          .toList(),
+                      prefixIcon: Icons.manage_accounts,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedRole = int.parse(value!);
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a category';
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
               ],

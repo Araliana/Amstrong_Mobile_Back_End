@@ -1,4 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/model/product.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../db/product.dart';
+import '../../utils/index.dart';
+import 'package:provider/provider.dart';
+import '../../provider/product_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -8,6 +17,19 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
+  // Moved DB access to ProductProvider
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    // defer loading to provider consumer (or load when screen mounts via provider)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final prov = Provider.of<ProductProvider>(context, listen: false);
+      prov.load();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -73,6 +95,22 @@ class _ProductPageState extends State<ProductPage> {
               ),
             ),
             SizedBox(height: spacing * 1.5),
+            if (Provider.of<ProductProvider>(context).loading)
+              const Center(child: CircularProgressIndicator()),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: () => _showProductForm(),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Product'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.brown,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
             // Product Grid
             LayoutBuilder(
               builder: (context, constraints) {
@@ -90,11 +128,19 @@ class _ProductPageState extends State<ProductPage> {
                     mainAxisSpacing: 16,
                     childAspectRatio: 0.75,
                   ),
-                  itemCount: 8, // Jumlah produk
+                  itemCount: Provider.of<ProductProvider>(
+                    context,
+                  ).products.length,
                   itemBuilder: (context, index) {
+                    final product = Provider.of<ProductProvider>(
+                      context,
+                    ).products[index];
                     return _buildProductCard(
+                      product: product,
                       cardWidth: cardWidth,
                       isMobile: isMobile,
+                      onEdit: () => _showProductForm(editProduct: product),
+                      onDelete: () => _confirmDelete(product.id!),
                     );
                   },
                 );
@@ -107,7 +153,6 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   void _viewProductDetail() {
-    // Tampilkan dialog atau navigate ke halaman detail
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -128,8 +173,11 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Widget _buildProductCard({
+    required Product product,
     required double cardWidth,
     required bool isMobile,
+    VoidCallback? onEdit,
+    VoidCallback? onDelete,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -139,34 +187,68 @@ class _ProductPageState extends State<ProductPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Eye Button
+          // Top buttons
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Align(
               alignment: Alignment.topCenter,
               child: Container(
-                width: 40,
                 height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white, width: 1),
                 ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.remove_red_eye_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    _viewProductDetail();
-                  },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                      icon: const Icon(
+                        Icons.remove_red_eye_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      onPressed: () => _viewProductDetail(),
+                    ),
+                    IconButton(
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                      icon: const Icon(
+                        Icons.edit_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      onPressed: onEdit,
+                    ),
+                    IconButton(
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 28,
+                        minHeight: 28,
+                      ),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      onPressed: onDelete,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          Expanded(
-            flex: 3,
+          SizedBox(
+            height: cardWidth * (isMobile ? 0.75 : 0.65),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Container(
@@ -175,11 +257,49 @@ class _ProductPageState extends State<ProductPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
-                  child: Icon(
-                    Icons.coffee,
-                    size: isMobile ? 60 : 80,
-                    color: Colors.brown[300],
-                  ),
+                  child: product.img == null
+                      ? Icon(
+                          Icons.coffee,
+                          size: isMobile ? 60 : 80,
+                          color: Colors.brown[300],
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            color: Colors.white,
+                            padding: const EdgeInsets.all(6),
+                            child: Center(
+                              child: SizedBox(
+                                width: cardWidth * 0.8,
+                                height: cardWidth * 0.8,
+                                child: Image.network(
+                                  product.img!,
+                                  fit: BoxFit.contain,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -188,7 +308,7 @@ class _ProductPageState extends State<ProductPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Text(
-              'Coffee Beans\nArabica 100%',
+              product.name,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -217,26 +337,173 @@ class _ProductPageState extends State<ProductPage> {
             child: Column(
               children: [
                 Text(
-                  'IDR 50K',
+                  'IDR ${product.price.toStringAsFixed(0)}',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'IDR 89K',
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: isMobile ? 12 : 14,
-                    decoration: TextDecoration.lineThrough,
+                if (product.discountPrice != null)
+                  Text(
+                    'IDR ${product.discountPrice!.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: isMobile ? 12 : 14,
+                      decoration: TextDecoration.lineThrough,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(int id) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Delete Product'),
+        content: const Text('Are you sure to delete this product?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      await Provider.of<ProductProvider>(
+        context,
+        listen: false,
+      ).deleteProduct(id);
+    }
+  }
+
+  Future<void> _showProductForm({Product? editProduct}) async {
+    final nameCtl = TextEditingController(text: editProduct?.name ?? '');
+    final priceCtl = TextEditingController(
+      text: editProduct?.price.toString() ?? '',
+    );
+    final stockCtl = TextEditingController(
+      text: editProduct?.stock.toString() ?? '0',
+    );
+    final descCtl = TextEditingController(text: editProduct?.description ?? '');
+    File? pickedFile;
+
+    await showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(editProduct == null ? 'Add Product' : 'Edit Product'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtl,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: priceCtl,
+                decoration: const InputDecoration(labelText: 'Price'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: stockCtl,
+                decoration: const InputDecoration(labelText: 'Stock'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: descCtl,
+                decoration: const InputDecoration(labelText: 'Description'),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final XFile? image = await _picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 80,
+                      );
+                      if (image != null) {
+                        pickedFile = File(image.path);
+                      }
+                    },
+                    icon: const Icon(Icons.image),
+                    label: const Text('Pick Image'),
+                  ),
+                  const SizedBox(width: 8),
+                  if (editProduct?.img != null)
+                    Expanded(child: Text('Current: ${editProduct!.img}')),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(c).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameCtl.text.trim();
+              final price = double.tryParse(priceCtl.text.trim()) ?? 0.0;
+              final stock = int.tryParse(stockCtl.text.trim()) ?? 0;
+              final desc = descCtl.text.trim();
+
+              String? imageUrl = editProduct?.img;
+              if (pickedFile != null) {
+                final uploaded = await uploadFile(pickedFile!);
+                if (uploaded != null) imageUrl = uploaded;
+              }
+
+              final provider = Provider.of<ProductProvider>(
+                context,
+                listen: false,
+              );
+
+              if (editProduct == null) {
+                final newProduct = Product(
+                  name: name,
+                  price: price,
+                  stock: stock,
+                  description: desc,
+                  img: imageUrl,
+                );
+                await provider.addProduct(newProduct, imageFile: pickedFile);
+              } else {
+                final updated = Product(
+                  id: editProduct.id,
+                  name: name,
+                  price: price,
+                  stock: stock,
+                  description: desc,
+                  img: imageUrl,
+                );
+                await provider.updateProduct(updated, imageFile: pickedFile);
+              }
+
+              Navigator.of(c).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

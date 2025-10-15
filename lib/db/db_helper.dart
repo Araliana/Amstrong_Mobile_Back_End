@@ -97,6 +97,19 @@ class DBHelper {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     ''',
+    Tables.product: '''
+      CREATE TABLE product(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        slug VARCHAR,
+        price REAL,
+        discount_price REAL,
+        stock INTEGER,
+        img VARCHAR,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    ''',
     Tables.roleAccess: '''
       CREATE TABLE role_access(
         role_id INTEGER,
@@ -116,6 +129,7 @@ class DBHelper {
     Tables.userAdmin: "user_admin",
     Tables.role: "role",
     Tables.access: "access",
+    Tables.product: "product",
     Tables.roleAccess: "role_access",
   };
 

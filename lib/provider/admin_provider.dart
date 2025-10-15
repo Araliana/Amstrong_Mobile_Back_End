@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/db_helper.dart';
+import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
 
 class AdminProvider with ChangeNotifier {
   final List<UserAdmin> userAdmins = [];
   final DBHelper db = DBHelper();
-  final Tables tables = Tables.userAdmin;
+  final Tables adminTables = Tables.userAdmin;
+  final Tables roleTable = Tables.role;
 
   bool isLoading = false;
 
@@ -21,7 +23,10 @@ class AdminProvider with ChangeNotifier {
 
   Future<void> _loadUserAdmin() async {
     _setLoading(true);
-    final res = await db.get(tables);
+    final res = await db.get(
+      adminTables,
+      joins: [Join(joinTable: roleTable, fromKey: "role_id", toKey: "id")],
+    );
     userAdmins
       ..clear()
       ..addAll(res.map((e) => UserAdmin.fromMap(e)).toList());
@@ -32,13 +37,18 @@ class AdminProvider with ChangeNotifier {
     required String fullname,
     required String username,
     required String password,
+    required int roleId,
   }) async {
     _setLoading(true);
-    final res = await db.insert(tables, {
+    final res = await db.insert(adminTables, {
       'fullname': fullname,
       'username': username,
       'password': hashPassword(password),
+      'role_id': roleId,
     });
+    final role = Role.fromMap(
+      (await db.get(roleTable, where: "id = ?", whereArgs: [roleId]))[0],
+    );
 
     userAdmins.add(
       UserAdmin(
@@ -47,30 +57,40 @@ class AdminProvider with ChangeNotifier {
         username: username,
         password: hashPassword(password),
         createdAt: DateTime.now(),
+        role: role,
       ),
     );
     _setLoading(false);
   }
 
-  Future<void> editItem({
+  Future<void> editUserAdmin({
     String? fullname,
     String? username,
     String? password,
     String? img,
+    int? roleId,
     required int id,
   }) async {
     _setLoading(true);
     final userAdmin = UserAdmin.fromMap(
-      (await db.get(tables, where: "id = ?", whereArgs: [id]))[0],
+      (await db.get(adminTables, where: "id = ?", whereArgs: [id]))[0],
+    );
+    final role = Role.fromMap(
+      (await db.get(
+        roleTable,
+        where: "id = ?",
+        whereArgs: [roleId ?? userAdmin.role.id],
+      ))[0],
     );
 
-    await db.update(tables, id, {
+    await db.update(adminTables, id, {
       'fullname': fullname ?? userAdmin.fullname,
       'username': username ?? userAdmin.username,
+      'img': img ?? userAdmin.img,
       'password': password != null
           ? hashPassword(password)
           : userAdmin.password,
-      'img': img ?? userAdmin.img,
+      "role_id": roleId ?? userAdmin.role.id,
     });
 
     final index = userAdmins.indexWhere((item) => item.id == id);
@@ -78,10 +98,11 @@ class AdminProvider with ChangeNotifier {
       id: id,
       fullname: fullname ?? userAdmin.fullname,
       username: username ?? userAdmin.username,
-      password: password != null ? hashPassword(password) : userAdmin.password,
       img: img ?? userAdmin.img,
+      password: password != null ? hashPassword(password) : userAdmin.password,
       lastLogin: userAdmin.lastLogin,
       createdAt: userAdmin.createdAt,
+      role: role,
     );
     _setLoading(false);
   }
@@ -89,7 +110,7 @@ class AdminProvider with ChangeNotifier {
   Future<UserAdmin?> checkUsername({required String username, int? id}) async {
     _setLoading(true);
     final userAdmin = await db.get(
-      tables,
+      adminTables,
       where: "username = ? ${id != null ? "AND id != ?" : ""}",
       whereArgs: [username],
     );
@@ -101,16 +122,16 @@ class AdminProvider with ChangeNotifier {
     return UserAdmin.fromMap(userAdmin[0]);
   }
 
-  Future<void> deleteItem(int id) async {
+  Future<void> deleteUserAdmin(int id) async {
     _setLoading(true);
-    await db.delete(tables, id);
+    await db.delete(adminTables, id: id);
     userAdmins.removeWhere((item) => item.id == id);
     _setLoading(false);
   }
 
   Future<void> deleteAllUserAdmins() async {
     _setLoading(true);
-    await db.delete(tables);
+    await db.delete(adminTables);
     userAdmins.clear();
     _setLoading(false);
   }

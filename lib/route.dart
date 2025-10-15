@@ -34,10 +34,14 @@ class AppRoutes {
             path: '/admin-users',
             builder: (context, state) => const UserAdminScreen(),
           ),
+          GoRoute(
+            path: '/accesses',
+            builder: (context, state) => const AccessScreen(),
+          ),
         ],
       ),
     ],
-    initialLocation: '/dashboard',
+    initialLocation: '/',
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text("Page Not Found"), centerTitle: true),
       body: Center(
@@ -90,7 +94,7 @@ class _AppShellState extends State<_AppShell> {
 
     // AppBar dinamis
     switch (widget.state.uri.path) {
-      case '/dashboard':
+      case '/':
         actions = [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -111,7 +115,7 @@ class _AppShellState extends State<_AppShell> {
                   setState(() {
                     selectedPeriod = newValue;
                   });
-                  context.go('/dashboard', extra: newValue);
+                  context.go('/', extra: newValue);
                 }
               },
             ),
@@ -245,7 +249,7 @@ class _AppShellState extends State<_AppShell> {
                         highlightColor: Colors.white.withValues(alpha: 0.1),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            vertical: 8,
+                            vertical: 12,
                             horizontal: 10,
                           ),
                           child: Row(
@@ -312,11 +316,11 @@ class _AppShellState extends State<_AppShell> {
                   context: context,
                   icon: Icons.dashboard_rounded,
                   title: 'Dashboard',
-                  path: '/dashboard',
-                  isSelected: currentPath == '/dashboard',
+                  path: '/',
+                  isSelected: currentPath == '/',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('//', extra: selectedPeriod);
+                    context.go('/', extra: selectedPeriod);
                   },
                 ),
 
@@ -452,12 +456,23 @@ class _AppShellState extends State<_AppShell> {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.restaurant_menu_rounded,
-                  title: 'Menu Display',
+                  title: 'Menu',
                   path: '/menu',
                   isSelected: currentPath == '/menu',
                   onTap: () {
                     Navigator.pop(context);
                     context.go('/menu');
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Icons.fastfood,
+                  title: 'Dish Types',
+                  path: '/dish-types',
+                  isSelected: currentPath == '/dish-types',
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/dish-types');
                   },
                 ),
                 _buildDrawerItem(
@@ -503,12 +518,12 @@ class _AppShellState extends State<_AppShell> {
                 _buildDrawerItem(
                   context: context,
                   icon: Icons.lock,
-                  title: 'Access',
-                  path: '/access',
-                  isSelected: currentPath == '/access',
+                  title: 'Accesses',
+                  path: '/accesses',
+                  isSelected: currentPath == '/accesses',
                   onTap: () {
                     Navigator.pop(context);
-                    context.go('/access');
+                    context.go('/accesses');
                   },
                 ),
 
@@ -522,7 +537,6 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: false,
                   isLogout: true,
                   onTap: () {
-                    Navigator.pop(context);
                     _showLogoutDialog(context);
                   },
                 ),

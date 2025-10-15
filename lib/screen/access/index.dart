@@ -41,12 +41,36 @@ class _AccessScreenState extends State<AccessScreen> {
                   elevation: 2,
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(16),
-                    title: Text(
-                      access.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                    title: Row(
+                      children: [
+                        Text(
+                          access.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.green.shade200),
+                          ),
+                          child: Text(
+                            'ID: ${access.id}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,6 +157,7 @@ class _AccessScreenState extends State<AccessScreen> {
       text: access?.accessPath.substring(1) ?? '',
     );
     String? selectedCategory = access?.category;
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
@@ -140,80 +165,90 @@ class _AccessScreenState extends State<AccessScreen> {
         builder: (context, setDialogState) => AlertDialog(
           title: Text(isEdit ? 'Edit Permission' : 'Add Permission'),
           content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                buildInput(
-                  controller: nameController,
-                  label: 'Name',
-                  icon: Icons.label,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Name is required';
-                    }
-                    if (value.length < 3) {
-                      return 'Name must be at least 3 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                buildInput(
-                  controller: pathController,
-                  label: 'Access Path',
-                  icon: Icons.link,
-                  prefixText: '/',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Access path is required';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                buildDropdownField(
-                  label: 'Category',
-                  value: selectedCategory,
-                  simpleItems: categories,
-                  prefixIcon: Icons.category,
-                  onChanged: (value) {
-                    setDialogState(() {
-                      selectedCategory = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  buildInput(
+                    controller: nameController,
+                    label: 'Name',
+                    icon: Icons.label,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Name is required';
+                      }
+                      if (value.length < 3) {
+                        return 'Name must be at least 3 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  buildInput(
+                    controller: pathController,
+                    label: 'Access Path',
+                    icon: Icons.link,
+                    prefixText: '/',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Access path is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  buildDropdownField(
+                    label: 'Category',
+                    value: selectedCategory,
+                    simpleItems: categories,
+                    prefixIcon: Icons.category,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedCategory = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a category';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           actions: buildDialogActions(
             context: context,
-            confirmText: "Edit",
-            confirmColor: Colors.indigoAccent,
+            confirmText: isEdit ? "Edit" : "Create",
+            confirmColor: isEdit ? Colors.indigoAccent : Colors.purple,
             isLoading: accessProvider.isLoading,
-            onConfirm: () {
-              if (nameController.text.isEmpty ||
-                  pathController.text.isEmpty ||
-                  selectedCategory == null) {
+            onConfirm: () async {
+              if (formKey.currentState!.validate()) {
+                if (!isEdit) {
+                  await accessProvider.addAccess(
+                    name: nameController.text,
+                    accessPath: pathController.text,
+                    category: selectedCategory!,
+                  );
+                } else {
+                  await accessProvider.editAccess(
+                    name: nameController.text,
+                    accessPath: pathController.text,
+                    category: selectedCategory!,
+                    id: access.id,
+                  );
+                }
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please fill all fields')),
-                );
-                return;
-              }
-
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isEdit ? 'Permission updated' : 'Permission added',
+                  SnackBar(
+                    content: Text(
+                      isEdit ? 'Permission updated' : 'Permission added',
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
           ),
         ),

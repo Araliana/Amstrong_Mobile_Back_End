@@ -24,8 +24,16 @@ class RoleProvider with ChangeNotifier {
   Future<void> _loadRole() async {
     _setLoading(true);
     final res = await db.get(
-      roleTable,
-      joins: [Join(joinTable: Tables.role, fromKey: 'id', toKey: 'role_id')],
+      Tables.role,
+      joins: [
+        Join(joinTable: Tables.roleAccess, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          joinTable: Tables.access,
+          fromKey: 'access_id',
+          toKey: 'id',
+          fromTable: Tables.roleAccess,
+        ),
+      ],
     );
     roles
       ..clear()
@@ -95,14 +103,6 @@ class RoleProvider with ChangeNotifier {
     await db.delete(roleTable, id: id);
     await db.delete(roleAccessTable, where: "role_id", whereArgs: [id]);
     roles.removeWhere((item) => item.id == id);
-    _setLoading(false);
-  }
-
-  Future<void> deleteAllRolees() async {
-    _setLoading(true);
-    await db.delete(roleTable);
-    await db.delete(roleAccessTable);
-    roles.clear();
     _setLoading(false);
   }
 }

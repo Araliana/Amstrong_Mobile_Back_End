@@ -25,7 +25,14 @@ class AdminProvider with ChangeNotifier {
     _setLoading(true);
     final res = await db.get(
       adminTables,
-      joins: [Join(joinTable: roleTable, fromKey: "role_id", toKey: "id")],
+      joins: [
+        Join(
+          joinTable: roleTable,
+          fromKey: "role_id",
+          toKey: "id",
+          isList: false,
+        ),
+      ],
     );
     userAdmins
       ..clear()
@@ -126,13 +133,6 @@ class AdminProvider with ChangeNotifier {
     _setLoading(true);
     await db.delete(adminTables, id: id);
     userAdmins.removeWhere((item) => item.id == id);
-    _setLoading(false);
-  }
-
-  Future<void> deleteAllUserAdmins() async {
-    _setLoading(true);
-    await db.delete(adminTables);
-    userAdmins.clear();
     _setLoading(false);
   }
 }

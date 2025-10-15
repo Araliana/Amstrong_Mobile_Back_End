@@ -26,17 +26,16 @@ class _AccessScreenState extends State<AccessScreen> {
     final acceseProvider = Provider.of<AccessProvider>(context);
     final accesses = acceseProvider.accesses;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Access Permissions'),
-        backgroundColor: Colors.deepPurple,
-      ),
       body: accesses.isEmpty
           ? buildEmptyState("Access")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: accesses.length,
+              itemCount: accesses.length + 1,
               itemBuilder: (context, index) {
-                final access = accesses[index];
+                if (index == 0) {
+                  return buildHeader("Access", Icons.lock);
+                }
+                final access = accesses[index - 1];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   elevation: 2,
@@ -106,11 +105,11 @@ class _AccessScreenState extends State<AccessScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showAddEditDialog(access),
+                          onPressed: () => _showAddEditDialog(context, access),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deletePermission(access),
+                          onPressed: () => _deletePermission(context, access),
                         ),
                       ],
                     ),
@@ -119,20 +118,21 @@ class _AccessScreenState extends State<AccessScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditDialog(),
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add),
+        onPressed: () => _showAddEditDialog(context),
+        backgroundColor: Colors.brown,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  void _showAddEditDialog([Access? access]) {
+  void _showAddEditDialog(BuildContext context, [Access? access]) {
+    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
     final isEdit = access != null;
     final nameController = TextEditingController(text: access?.name ?? '');
     final pathController = TextEditingController(
-      text: access?.accessPath ?? '',
+      text: access?.accessPath.substring(1) ?? '',
     );
-    String? selectedCategory = access?.category ?? categories.first;
+    String? selectedCategory = access?.category;
 
     showDialog(
       context: context,
@@ -167,9 +167,6 @@ class _AccessScreenState extends State<AccessScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Access path is required';
                     }
-                    if (!value.startsWith('/') && value.isNotEmpty) {
-                      return 'Path must start with /';
-                    }
                     return null;
                   },
                 ),
@@ -194,61 +191,56 @@ class _AccessScreenState extends State<AccessScreen> {
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isEmpty ||
-                    pathController.text.isEmpty ||
-                    selectedCategory == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all fields')),
-                  );
-                  return;
-                }
-
-                Navigator.pop(context);
+          actions: buildDialogActions(
+            context: context,
+            confirmText: "Edit",
+            confirmColor: Colors.indigoAccent,
+            isLoading: accessProvider.isLoading,
+            onConfirm: () {
+              if (nameController.text.isEmpty ||
+                  pathController.text.isEmpty ||
+                  selectedCategory == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isEdit ? 'Permission updated' : 'Permission added',
-                    ),
-                  ),
+                  const SnackBar(content: Text('Please fill all fields')),
                 );
-              },
-              child: Text(isEdit ? 'Update' : 'Add'),
-            ),
-          ],
+                return;
+              }
+
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isEdit ? 'Permission updated' : 'Permission added',
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
-  void _deletePermission(Access access) {
+  void _deletePermission(BuildContext context, Access access) {
+    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Permission'),
         content: Text('Are you sure you want to delete "${access.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Permission deleted')),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
+        actions: buildDialogActions(
+          context: context,
+          confirmText: "Delete",
+          confirmColor: Colors.red,
+          isLoading: accessProvider.isLoading,
+          onConfirm: () async {
+            await accessProvider.deleteAccess(access.id);
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Admin user deleted successfully')),
+            );
+          },
+        ),
       ),
     );
   }

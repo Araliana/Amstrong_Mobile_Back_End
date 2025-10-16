@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
   final String selectedPeriod;
-  const DashboardPage({Key? key, required this.selectedPeriod})
-    : super(key: key);
+  const DashboardPage({super.key, required this.selectedPeriod});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();

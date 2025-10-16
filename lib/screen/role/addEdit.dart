@@ -1,7 +1,7 @@
-// Add Role Dialog - Improved UI
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -10,10 +10,10 @@ class AddEditRoleScreen extends StatefulWidget {
   final int? roleId;
 
   const AddEditRoleScreen({
-    Key? key,
+    super.key,
     required this.availableAccesses,
     this.roleId,
-  }) : super(key: key);
+  });
 
   @override
   State<AddEditRoleScreen> createState() => _AddEditRoleScreenState();
@@ -22,7 +22,8 @@ class AddEditRoleScreen extends StatefulWidget {
 class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  late Set<int> _selectedAccessIds = {};
+  late Set<int> _selectedAccessIds;
+  late Role initRole;
 
   @override
   void dispose() {
@@ -45,6 +46,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
     setState(() {
       _nameController.text = role.name;
       _selectedAccessIds = role.access?.map((item) => item.id).toSet() ?? {};
+      initRole = role;
     });
   }
 
@@ -116,7 +118,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  isEdit ? 'Edit Role' : 'Add New Role',
+                  isEdit ? "Edit Role (${initRole.name})" : 'Add New Role',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

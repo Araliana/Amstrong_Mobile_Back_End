@@ -10,7 +10,7 @@ class AppRoutes {
     routes: [
       ShellRoute(
         builder: (context, state, child) =>
-            _AppShell(child: child, state: state),
+            _AppShell(state: state, child: child),
         routes: [
           //MAIN
           GoRoute(

@@ -6,7 +6,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class AccessScreen extends StatefulWidget {
-  const AccessScreen({Key? key}) : super(key: key);
+  const AccessScreen({super.key});
 
   @override
   State<AccessScreen> createState() => _AccessScreenState();

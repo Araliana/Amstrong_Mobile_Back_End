@@ -33,16 +33,22 @@ Widget buildInput({
   );
 }
 
+class DropdownItem {
+  final String label;
+  final String value;
+  final IconData? icon;
+
+  DropdownItem({required this.label, required this.value, this.icon});
+}
+
 Widget buildDropdownField({
   required String label,
   required String? value,
-  List<Map<String, String>>? items,
+  List<DropdownItem>? items,
   List<String>? simpleItems,
   required Function(String?) onChanged,
   String? Function(String?)? validator,
   IconData? prefixIcon,
-  String labelKey = 'label',
-  String valueKey = 'value',
   bool isLoading = false,
 }) {
   assert(
@@ -86,8 +92,10 @@ Widget buildDropdownField({
     dropdownItems = items!
         .map(
           (item) => DropdownMenuItem(
-            value: item[valueKey],
-            child: Text(item[labelKey] ?? ''),
+            value: item.value,
+            child: Row(
+              children: [Icon(item.icon), SizedBox(width: 5), Text(item.label)],
+            ),
           ),
         )
         .toList();
@@ -206,6 +214,25 @@ Widget buildHeader(String title, IconData icon) {
         ),
         const Expanded(child: Divider(thickness: 1, indent: 10)),
       ],
+    ),
+  );
+}
+
+Widget idRenderer(int id) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: Colors.green.shade50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.green.shade200),
+    ),
+    child: Text(
+      'ID: $id',
+      style: TextStyle(
+        fontSize: 12,
+        color: Colors.green.shade700,
+        fontWeight: FontWeight.w500,
+      ),
     ),
   );
 }

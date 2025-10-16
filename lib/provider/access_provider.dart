@@ -5,7 +5,8 @@ import 'package:flutter_application_1/model/access.dart';
 class AccessProvider with ChangeNotifier {
   final List<Access> accesses = [];
   final DBHelper db = DBHelper();
-  final Tables tables = Tables.access;
+  final Tables accessTables = Tables.access;
+  final Tables roleAccessTable = Tables.roleAccess;
 
   bool isLoading = false;
 
@@ -20,7 +21,11 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> _loadAccess() async {
     _setLoading(true);
-    final res = await db.get(tables);
+    final res = await db.get(
+      accessTables,
+      orderBy: "name",
+      orderType: OrderType.asc,
+    );
     accesses
       ..clear()
       ..addAll(res.map((e) => Access.fromMap(e)).toList());
@@ -31,9 +36,10 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required String icon,
   }) async {
     _setLoading(true);
-    final res = await db.insert(tables, {
+    final res = await db.insert(accessTables, {
       'name': name,
       'access_path': accessPath,
       'category': category,
@@ -45,6 +51,7 @@ class AccessProvider with ChangeNotifier {
         name: name,
         accessPath: accessPath,
         category: category,
+        icon: appIcons.firstWhere((item) => item.name == icon).icon,
         createdAt: DateTime.now(),
       ),
     );
@@ -55,17 +62,19 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required String icon,
     required int id,
   }) async {
     _setLoading(true);
     final access = Access.fromMap(
-      (await db.get(tables, where: "id = ?", whereArgs: [id]))[0],
+      (await db.get(accessTables, where: "id = ?", whereArgs: [id]))[0],
     );
 
-    await db.update(tables, id, {
+    await db.update(accessTables, id, {
       'name': name,
       'access_path': accessPath,
       'category': category,
+      'icon': icon,
     });
 
     final index = accesses.indexWhere((item) => item.id == id);
@@ -74,6 +83,7 @@ class AccessProvider with ChangeNotifier {
       name: name,
       accessPath: accessPath,
       category: category,
+      icon: appIcons.firstWhere((item) => item.name == icon).icon,
       createdAt: access.createdAt,
     );
     _setLoading(false);
@@ -81,15 +91,9 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> deleteAccess(int id) async {
     _setLoading(true);
-    await db.delete(tables, id: id);
+    await db.delete(accessTables, id: id);
+    await db.delete(roleAccessTable, where: "access_id", whereArgs: [id]);
     accesses.removeWhere((item) => item.id == id);
-    _setLoading(false);
-  }
-
-  Future<void> deleteAllAccesses() async {
-    _setLoading(true);
-    await db.delete(tables);
-    accesses.clear();
     _setLoading(false);
   }
 }

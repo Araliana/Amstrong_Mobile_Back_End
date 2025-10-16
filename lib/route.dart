@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/provider/access_provider.dart';
+import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/role/addEdit.dart';
+import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
+import 'package:provider/provider.dart';
 
 class AppRoutes {
   static final GoRouter router = GoRouter(
@@ -30,6 +35,23 @@ class AppRoutes {
             path: '/user-admin',
             builder: (context, state) => const UserAdminScreen(),
           ),
+          GoRoute(
+            path: '/roles',
+            builder: (context, state) => const RoleScreen(),
+          ),
+          GoRoute(
+            path: '/add-role',
+            builder: (context, state) {
+              final id = state.extra as int?;
+              final accessProvider = Provider.of<AccessProvider>(context);
+
+              return AddEditRoleScreen(
+                roleId: id,
+                availableAccesses: accessProvider.accesses,
+              );
+            },
+          ),
+
           GoRoute(
             path: '/accesses',
             builder: (context, state) => const AccessScreen(),

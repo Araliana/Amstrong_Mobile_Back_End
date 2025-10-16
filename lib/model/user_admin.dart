@@ -21,19 +21,6 @@ class UserAdmin {
     required this.role,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'fullname': fullname,
-      'username': username,
-      'img': img,
-      'password': password,
-      'last_login': lastLogin?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'role': role.toMap(),
-    };
-  }
-
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
     return UserAdmin(
       id: map['id'] as int,

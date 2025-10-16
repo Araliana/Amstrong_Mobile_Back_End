@@ -94,6 +94,7 @@ class DBHelper {
         name VARCHAR,
         access_path VARCHAR,
         category VARCHAR,
+        icon VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     ''',

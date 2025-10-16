@@ -21,19 +21,6 @@ class Menu {
     required this.createdAt,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'img': img,
-      'price': price,
-      'description': description,
-      'category': category.name,
-      'is_active': isActive,
-      'created_at': createdAt.toIso8601String(),
-    };
-  }
-
   factory Menu.fromMap(Map<String, dynamic> map) {
     return Menu(
       id: map['id'],

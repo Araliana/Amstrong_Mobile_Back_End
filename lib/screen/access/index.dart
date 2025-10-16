@@ -43,6 +43,19 @@ class _AccessScreenState extends State<AccessScreen> {
                     contentPadding: const EdgeInsets.all(16),
                     title: Row(
                       children: [
+                        Container(
+                          padding: EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            access.icon,
+                            size: 16,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        SizedBox(width: 10),
                         Text(
                           access.name,
                           style: const TextStyle(
@@ -50,26 +63,8 @@ class _AccessScreenState extends State<AccessScreen> {
                             fontSize: 16,
                           ),
                         ),
-                        SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Text(
-                            'ID: ${access.id}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green.shade700,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
+                        SizedBox(width: 12),
+                        idRenderer(access.id),
                       ],
                     ),
                     subtitle: Column(
@@ -157,6 +152,9 @@ class _AccessScreenState extends State<AccessScreen> {
       text: access?.accessPath.substring(1) ?? '',
     );
     String? selectedCategory = access?.category;
+    String? selectedIcon = appIcons
+        .firstWhereOrNull((item) => item.icon == access?.icon)
+        ?.name;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -215,6 +213,32 @@ class _AccessScreenState extends State<AccessScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  buildDropdownField(
+                    label: 'Icon',
+                    value: selectedCategory,
+                    items: appIcons
+                        .map(
+                          (item) => DropdownItem(
+                            label: item.name,
+                            value: item.name,
+                            icon: item.icon,
+                          ),
+                        )
+                        .toList(),
+                    prefixIcon: Icons.image,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        selectedCategory = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a icon';
+                      }
+                      return null;
+                    },
+                  ),
                 ],
               ),
             ),
@@ -230,6 +254,7 @@ class _AccessScreenState extends State<AccessScreen> {
                   await accessProvider.addAccess(
                     name: nameController.text,
                     accessPath: pathController.text,
+                    icon: selectedIcon!,
                     category: selectedCategory!,
                   );
                 } else {
@@ -237,6 +262,7 @@ class _AccessScreenState extends State<AccessScreen> {
                     name: nameController.text,
                     accessPath: pathController.text,
                     category: selectedCategory!,
+                    icon: selectedIcon!,
                     id: access.id,
                   );
                 }

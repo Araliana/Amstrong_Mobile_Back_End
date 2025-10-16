@@ -1,327 +1,45 @@
 import 'package:flutter/material.dart';
-
-// Models
-class Access {
-  final int id;
-  final String name;
-  final String accessPath;
-  final String category;
-  final DateTime createdAt;
-
-  Access({
-    required this.id,
-    required this.name,
-    required this.accessPath,
-    required this.category,
-    required this.createdAt,
-  });
-}
-
-class Role {
-  final int id;
-  final String name;
-  final List<Access>? access;
-
-  Role({required this.id, required this.name, this.access});
-}
+import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/model/role.dart';
+import 'package:flutter_application_1/provider/role_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 // Main Page
-class RolePage extends StatefulWidget {
-  const RolePage({Key? key}) : super(key: key);
+class RoleScreen extends StatefulWidget {
+  const RoleScreen({Key? key}) : super(key: key);
 
   @override
-  State<RolePage> createState() => _RolePageState();
+  State<RoleScreen> createState() => _RoleScreenState();
 }
 
-class _RolePageState extends State<RolePage> {
-  List<Role> roles = [];
-  List<Access> availableAccesses = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDummyData();
-  }
-
-  void _loadDummyData() {
-    // Dummy data untuk testing
-    availableAccesses = [
-      Access(
-        id: 1,
-        name: 'View Dashboard',
-        accessPath: '/dashboard',
-        category: 'Dashboard',
-        createdAt: DateTime.now(),
-      ),
-      Access(
-        id: 2,
-        name: 'View Users',
-        accessPath: '/users',
-        category: 'User Management',
-        createdAt: DateTime.now(),
-      ),
-      Access(
-        id: 3,
-        name: 'Create User',
-        accessPath: '/users/create',
-        category: 'User Management',
-        createdAt: DateTime.now(),
-      ),
-      Access(
-        id: 4,
-        name: 'Edit User',
-        accessPath: '/users/edit',
-        category: 'User Management',
-        createdAt: DateTime.now(),
-      ),
-      Access(
-        id: 5,
-        name: 'View Reports',
-        accessPath: '/reports',
-        category: 'Reports',
-        createdAt: DateTime.now(),
-      ),
-    ];
-
-    roles = [
-      Role(
-        id: 1,
-        name: 'Admin',
-        access: [
-          availableAccesses[0],
-          availableAccesses[1],
-          availableAccesses[2],
-        ],
-      ),
-      Role(id: 2, name: 'User', access: [availableAccesses[0]]),
-    ];
-  }
-
-  void _showAddRoleDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AddRoleDialog(
-        availableAccesses: availableAccesses,
-        onSave: (name, selectedAccessIds) {
-          setState(() {
-            final selectedAccesses = availableAccesses
-                .where((access) => selectedAccessIds.contains(access.id))
-                .toList();
-
-            roles.add(
-              Role(id: roles.length + 1, name: name, access: selectedAccesses),
-            );
-          });
-        },
-      ),
-    );
-  }
-
+class _RoleScreenState extends State<RoleScreen> {
   @override
   Widget build(BuildContext context) {
+    final roleProvider = Provider.of<RoleProvider>(context);
+    final List<Role> roles = roleProvider.roles;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Role Management'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
       body: roles.isEmpty
-          ? const Center(
-              child: Text('No roles yet. Add a new role to get started.'),
-            )
+          ? buildEmptyState("Role")
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: roles.length,
+              itemCount: roles.length + 1,
               itemBuilder: (context, index) {
-                return RoleCard(role: roles[index]);
+                if (index == 0) {
+                  return buildHeader("Role", Icons.manage_accounts);
+                }
+                return RoleCard(role: roles[index - 1]);
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddRoleDialog,
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.brown,
+        onPressed: () => context.push('/add-role'),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 }
 
-// Add Role Dialog
-class AddRoleDialog extends StatefulWidget {
-  final List<Access> availableAccesses;
-  final Function(String name, List<int> accessIds) onSave;
-
-  const AddRoleDialog({
-    Key? key,
-    required this.availableAccesses,
-    required this.onSave,
-  }) : super(key: key);
-
-  @override
-  State<AddRoleDialog> createState() => _AddRoleDialogState();
-}
-
-class _AddRoleDialogState extends State<AddRoleDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final Set<int> _selectedAccessIds = {};
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _handleSave() {
-    if (_formKey.currentState!.validate()) {
-      widget.onSave(_nameController.text, _selectedAccessIds.toList());
-      Navigator.pop(context);
-    }
-  }
-
-  Map<String, List<Access>> _groupAccessesByCategory() {
-    final Map<String, List<Access>> grouped = {};
-    for (var access in widget.availableAccesses) {
-      if (!grouped.containsKey(access.category)) {
-        grouped[access.category] = [];
-      }
-      grouped[access.category]!.add(access);
-    }
-    return grouped;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final groupedAccesses = _groupAccessesByCategory();
-
-    return Dialog(
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxHeight: 600),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const Text(
-                    'Add New Role',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Role Name',
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter role name',
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a role name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Access Permissions',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ...groupedAccesses.entries.map((entry) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                entry.key,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ),
-                            ...entry.value.map((access) {
-                              return CheckboxListTile(
-                                title: Text(access.name),
-                                subtitle: Text(
-                                  access.accessPath,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                value: _selectedAccessIds.contains(access.id),
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    if (value == true) {
-                                      _selectedAccessIds.add(access.id);
-                                    } else {
-                                      _selectedAccessIds.remove(access.id);
-                                    }
-                                  });
-                                },
-                                dense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                              );
-                            }).toList(),
-                            const SizedBox(height: 8),
-                          ],
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _handleSave,
-                    child: const Text('Save'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Role Card with Accordion
 class RoleCard extends StatefulWidget {
   final Role role;
 
@@ -334,59 +52,235 @@ class RoleCard extends StatefulWidget {
 class _RoleCardState extends State<RoleCard> {
   bool _isExpanded = false;
 
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case "ORDERS":
+        return Colors.indigo;
+      case "PRODUCTS & STOCK":
+        return Colors.deepPurple;
+      case "FINANCE":
+        return Colors.amber;
+      case "CONTENT & MEDIA":
+        return Colors.teal;
+      case "MANAGEMENT":
+        return Colors.brown;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final accessCount = widget.role.access?.length ?? 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
-          ListTile(
-            title: Text(
-              widget.role.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('ID: ${widget.role.id}'),
-            trailing: IconButton(
-              icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
-              onPressed: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                });
-              },
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Role Icon
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.brown.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.admin_panel_settings,
+                      color: Colors.brown.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Role Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                widget.role.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            idRenderer(widget.role.id),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.key_outlined,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$accessCount permission${accessCount != 1 ? 's' : ''}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Expand Icon
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        color: Colors.blue.shade700,
+                        iconSize: 20,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.blue.shade50,
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        onPressed: () {
+                          // TODO: Implement edit functionality
+                        },
+                        tooltip: 'Edit Role',
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        color: Colors.red.shade700,
+                        iconSize: 20,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.red.shade50,
+                          padding: const EdgeInsets.all(8),
+                        ),
+                        onPressed: () {
+                          // TODO: Implement delete functionality
+                        },
+                        tooltip: 'Delete Role',
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          _isExpanded ? Icons.expand_less : Icons.expand_more,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+
+          // Expanded Content
           if (_isExpanded) ...[
             const Divider(height: 1),
-            Padding(
+            Container(
+              color: Colors.grey.shade50,
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Access Permissions',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.security,
+                        size: 18,
+                        color: Colors.grey.shade700,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Access Permissions',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+
                   if (widget.role.access == null || widget.role.access!.isEmpty)
-                    const Text(
-                      'No access permissions assigned',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontStyle: FontStyle.italic,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'No access permissions assigned',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   else
                     ...widget.role.access!.map((access) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                      final categoryColor = _getCategoryColor(access.category);
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: categoryColor.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 16,
+                            // Icon
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                access.icon,
+                                color: categoryColor,
+                                size: 20,
+                              ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
+                            // Content
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,15 +288,47 @@ class _RoleCardState extends State<RoleCard> {
                                   Text(
                                     access.name,
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
                                     ),
                                   ),
-                                  Text(
-                                    '${access.category} - ${access.accessPath}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: categoryColor.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          access.category,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: categoryColor,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          access.accessPath,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey[600],
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -410,7 +336,7 @@ class _RoleCardState extends State<RoleCard> {
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                 ],
               ),
             ),

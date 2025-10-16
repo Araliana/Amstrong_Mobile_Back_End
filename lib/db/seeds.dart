@@ -19,31 +19,66 @@ Future<void> runSeeds({
   for (String role in roles) {
     await db.insert(tableNames[Tables.role]!, {"name": role});
   }
-
-  final Map<String, List<DataPermision>> permisions = {
+  final Map<String, List<DataPermission>> permissions = {
     "ORDERS": [
-      DataPermision(name: "All Orders", accessPath: "/access-path"),
-      DataPermision(name: "Pending Orders", accessPath: "/pending-path"),
-      DataPermision(name: "Completed Orders", accessPath: "/completed-path"),
+      DataPermission(name: "All Orders", accessPath: "/orders", icon: "orders"),
+      DataPermission(
+        name: "Pending Orders",
+        accessPath: "/pending-order",
+        icon: "orders_pending",
+      ),
+      DataPermission(
+        name: "Completed Orders",
+        accessPath: "/completed-orders",
+        icon: "orders_completed",
+      ),
     ],
     "PRODUCTS & STOCK": [
-      DataPermision(name: "Products", accessPath: "/products"),
-      DataPermision(name: "Categories", accessPath: "/categories"),
-      DataPermision(name: "Inventory", accessPath: "/inventory"),
+      DataPermission(
+        name: "Products",
+        accessPath: "/products",
+        icon: "products",
+      ),
+      DataPermission(
+        name: "Categories",
+        accessPath: "/categories",
+        icon: "categories",
+      ),
+      DataPermission(
+        name: "Inventory",
+        accessPath: "/inventory",
+        icon: "inventory",
+      ),
     ],
     "FINANCE": [
-      DataPermision(name: "Cash Flow", accessPath: "/cash-flow"),
-      DataPermision(name: "Report", accessPath: "/report"),
+      DataPermission(
+        name: "Cash Flow",
+        accessPath: "/cash-flow",
+        icon: "cashflow",
+      ),
+      DataPermission(name: "Report", accessPath: "/report", icon: "report"),
     ],
     "CONTENT & MEDIA": [
-      DataPermision(name: "Menu", accessPath: "/menu"),
-      DataPermision(name: "Dish Types", accessPath: "/dish-types"),
-      DataPermision(name: "Gallery", accessPath: "/gallery"),
+      DataPermission(name: "Menu", accessPath: "/menu", icon: "menu_food"),
+      DataPermission(
+        name: "Dish Types",
+        accessPath: "/dish-types",
+        icon: "dish_types",
+      ),
+      DataPermission(name: "Gallery", accessPath: "/gallery", icon: "gallery"),
     ],
     "MANAGEMENT": [
-      DataPermision(name: "Admin Users", accessPath: "/admin-users"),
-      DataPermision(name: "Roles", accessPath: "/dish-types"),
-      DataPermision(name: "Accesses", accessPath: "/accesses"),
+      DataPermission(
+        name: "Admin Users",
+        accessPath: "/admin-users",
+        icon: "user_admin",
+      ),
+      DataPermission(name: "Roles", accessPath: "/roles", icon: "roles"),
+      DataPermission(
+        name: "Accesses",
+        accessPath: "/accesses",
+        icon: "accesses",
+      ),
     ],
   };
 
@@ -52,15 +87,16 @@ Future<void> runSeeds({
     2: [12, 13, 14],
     3: [7, 8, 12, 13, 14],
   };
-  for (var entry in permisions.entries) {
+  for (var entry in permissions.entries) {
     final String category = entry.key;
-    final List<DataPermision> perms = entry.value;
+    final List<DataPermission> perms = entry.value;
 
     for (var access in perms) {
       final accessId = await db.insert(tableNames[Tables.access]!, {
         "name": access.name,
         "access_path": access.accessPath,
         "category": category,
+        "icon": access.icon,
       });
       for (int roleId = 1; roleId <= 3; roleId++) {
         if (!exclude[roleId]!.contains(accessId)) {
@@ -74,9 +110,14 @@ Future<void> runSeeds({
   }
 }
 
-class DataPermision {
+class DataPermission {
   final String name;
   final String accessPath;
+  final String icon;
 
-  DataPermision({required this.name, required this.accessPath});
+  DataPermission({
+    required this.name,
+    required this.accessPath,
+    required this.icon,
+  });
 }

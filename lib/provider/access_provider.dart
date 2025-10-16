@@ -36,6 +36,7 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required String icon,
   }) async {
     _setLoading(true);
     final res = await db.insert(accessTables, {
@@ -50,6 +51,7 @@ class AccessProvider with ChangeNotifier {
         name: name,
         accessPath: accessPath,
         category: category,
+        icon: appIcons.firstWhere((item) => item.name == icon).icon,
         createdAt: DateTime.now(),
       ),
     );
@@ -60,6 +62,7 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required String icon,
     required int id,
   }) async {
     _setLoading(true);
@@ -71,6 +74,7 @@ class AccessProvider with ChangeNotifier {
       'name': name,
       'access_path': accessPath,
       'category': category,
+      'icon': icon,
     });
 
     final index = accesses.indexWhere((item) => item.id == id);
@@ -79,6 +83,7 @@ class AccessProvider with ChangeNotifier {
       name: name,
       accessPath: accessPath,
       category: category,
+      icon: appIcons.firstWhere((item) => item.name == icon).icon,
       createdAt: access.createdAt,
     );
     _setLoading(false);

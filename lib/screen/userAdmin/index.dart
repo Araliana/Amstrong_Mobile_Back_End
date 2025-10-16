@@ -121,25 +121,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Text(
-                            'ID: ${user.id}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.green.shade700,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
+                        idRenderer(user.id),
                       ],
                     ),
                     Text(
@@ -333,10 +315,10 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                       value: selectedRole.toString(),
                       items: roleProvider.roles
                           .map(
-                            (role) => ({
-                              "label": role.name,
-                              "value": role.id.toString(),
-                            }),
+                            (role) => DropdownItem(
+                              label: role.name,
+                              value: role.id.toString(),
+                            ),
                           )
                           .toList(),
                       prefixIcon: Icons.manage_accounts,
@@ -450,10 +432,10 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                       value: selectedRole.toString(),
                       items: roleProvider.roles
                           .map(
-                            (role) => ({
-                              "label": role.name,
-                              "value": role.id.toString(),
-                            }),
+                            (role) => DropdownItem(
+                              label: role.name,
+                              value: role.id.toString(),
+                            ),
                           )
                           .toList(),
                       prefixIcon: Icons.manage_accounts,

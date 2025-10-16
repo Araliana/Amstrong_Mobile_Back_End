@@ -34,11 +34,33 @@ class RoleProvider with ChangeNotifier {
           fromTable: Tables.roleAccess,
         ),
       ],
+      orderType: OrderType.asc,
+      orderBy: "role.id",
     );
     roles
       ..clear()
       ..addAll(res.map((e) => Role.fromMap(e)).toList());
     _setLoading(false);
+  }
+
+  Future<Role> getRole(int id) async {
+    _setLoading(true);
+    final res = (await db.get(
+      Tables.role,
+      joins: [
+        Join(joinTable: Tables.roleAccess, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          joinTable: Tables.access,
+          fromKey: 'access_id',
+          toKey: 'id',
+          fromTable: Tables.roleAccess,
+        ),
+      ],
+      where: "role.id = ?",
+      whereArgs: [id],
+    ))[0];
+    _setLoading(false);
+    return Role.fromMap(res);
   }
 
   Future<void> addRole({
@@ -71,13 +93,8 @@ class RoleProvider with ChangeNotifier {
     required int id,
   }) async {
     _setLoading(true);
-    final access = Role.fromMap(
-      (await db.get(
-        roleTable,
-        where: "id = ?",
-        whereArgs: [id],
-        joins: [Join(joinTable: Tables.role, fromKey: 'id', toKey: 'role_id')],
-      ))[0],
+    final role = Role.fromMap(
+      (await db.get(Tables.role, where: "id = ?", whereArgs: [id]))[0],
     );
     await db.delete(roleAccessTable, where: "role_id", whereArgs: [id]);
     final newAcc = [];
@@ -92,7 +109,7 @@ class RoleProvider with ChangeNotifier {
     final index = roles.indexWhere((item) => item.id == id);
     roles[index] = Role(
       id: id,
-      name: access.name,
+      name: role.name,
       access: newAcc.map((acc) => Access.fromMap(acc)).toList(),
     );
     _setLoading(false);

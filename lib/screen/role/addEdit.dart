@@ -22,7 +22,7 @@ class AddEditRoleScreen extends StatefulWidget {
 class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  late Set<int> _selectedAccessIds;
+  late Set<int> _selectedAccessIds = {};
   late Role initRole;
 
   @override
@@ -80,6 +80,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final groupedAccesses = _groupAccessesByCategory();
     final isEdit = widget.roleId != null;
     MaterialColor color = widget.roleId != null ? Colors.indigo : Colors.purple;
@@ -420,6 +421,29 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                 isLoading: false,
                 onConfirm: () async {
                   if (_formKey.currentState!.validate()) {
+                    if (_selectedAccessIds.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Please select the permision before submit!',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (isEdit) {
+                      await roleProvider.editRole(
+                        name: _nameController.text,
+                        accesses: _selectedAccessIds,
+                        id: initRole.id,
+                      );
+                    } else {
+                      await roleProvider.addRole(
+                        name: _nameController.text,
+                        accesses: _selectedAccessIds,
+                      );
+                    }
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

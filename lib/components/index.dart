@@ -94,7 +94,13 @@ Widget buildDropdownField({
           (item) => DropdownMenuItem(
             value: item.value,
             child: Row(
-              children: [Icon(item.icon), SizedBox(width: 5), Text(item.label)],
+              children: [
+                if (item.icon != null) ...[
+                  Icon(item.icon, size: 20),
+                  const SizedBox(width: 6),
+                ],
+                Text(item.label),
+              ],
             ),
           ),
         )
@@ -232,6 +238,38 @@ Widget idRenderer(int id) {
         fontSize: 12,
         color: Colors.green.shade700,
         fontWeight: FontWeight.w500,
+      ),
+    ),
+  );
+}
+
+void showDeleteConfirmation(
+  BuildContext context, {
+  required bool isLoading,
+  required Function onDelete,
+  required String title,
+  required String label,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Delete $title'),
+      content: Text('Are you sure you want to delete "$label"?'),
+      actions: buildDialogActions(
+        context: context,
+        confirmText: "Delete",
+        confirmColor: Colors.red,
+        isLoading: isLoading,
+        onConfirm: () async {
+          await onDelete();
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
       ),
     ),
   );

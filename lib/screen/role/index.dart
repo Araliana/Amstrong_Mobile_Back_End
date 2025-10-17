@@ -33,7 +33,7 @@ class _RoleScreenState extends State<RoleScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.brown,
-        onPressed: () => context.push('/add-role'),
+        onPressed: () => context.push('/add-edit-role'),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -71,6 +71,7 @@ class _RoleCardState extends State<RoleCard> {
 
   @override
   Widget build(BuildContext context) {
+    final roleProvider = Provider.of<RoleProvider>(context);
     final accessCount = widget.role.access?.length ?? 0;
 
     return Card(
@@ -158,7 +159,7 @@ class _RoleCardState extends State<RoleCard> {
                           padding: const EdgeInsets.all(8),
                         ),
                         onPressed: () {
-                          // TODO: Implement edit functionality
+                          context.push("/add-edit-role", extra: widget.role.id);
                         },
                         tooltip: 'Edit Role',
                       ),
@@ -171,8 +172,16 @@ class _RoleCardState extends State<RoleCard> {
                           backgroundColor: Colors.red.shade50,
                           padding: const EdgeInsets.all(8),
                         ),
-                        onPressed: () {
-                          // TODO: Implement delete functionality
+                        onPressed: () async {
+                          showDeleteConfirmation(
+                            context,
+                            title: "Role",
+                            label: widget.role.name,
+                            isLoading: roleProvider.isLoading,
+                            onDelete: () async {
+                              await roleProvider.deleteRole(widget.role.id);
+                            },
+                          );
                         },
                         tooltip: 'Delete Role',
                       ),

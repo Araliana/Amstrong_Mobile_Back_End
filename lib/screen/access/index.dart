@@ -128,7 +128,17 @@ class _AccessScreenState extends State<AccessScreen> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deletePermission(context, access),
+                          onPressed: () async {
+                            showDeleteConfirmation(
+                              context,
+                              title: "Access",
+                              label: access.name,
+                              isLoading: acceseProvider.isLoading,
+                              onDelete: () async {
+                                await acceseProvider.deleteAccess(access.id);
+                              },
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -152,9 +162,7 @@ class _AccessScreenState extends State<AccessScreen> {
       text: access?.accessPath.substring(1) ?? '',
     );
     String? selectedCategory = access?.category;
-    String? selectedIcon = appIcons
-        .firstWhereOrNull((item) => item.icon == access?.icon)
-        ?.name;
+    String? selectedIcon = access?.iconName;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -216,20 +224,26 @@ class _AccessScreenState extends State<AccessScreen> {
                   const SizedBox(height: 16),
                   buildDropdownField(
                     label: 'Icon',
-                    value: selectedCategory,
+                    value: selectedIcon,
                     items: appIcons
                         .map(
                           (item) => DropdownItem(
-                            label: item.name,
+                            label: item.name
+                                .split("_")
+                                .map(
+                                  (word) =>
+                                      word[0].toUpperCase() + word.substring(1),
+                                )
+                                .join(" "),
                             value: item.name,
                             icon: item.icon,
                           ),
                         )
                         .toList(),
-                    prefixIcon: Icons.image,
+                    prefixIcon: selectedIcon == null ? Icons.draw : null,
                     onChanged: (value) {
                       setDialogState(() {
-                        selectedCategory = value;
+                        selectedIcon = value;
                       });
                     },
                     validator: (value) {
@@ -272,35 +286,12 @@ class _AccessScreenState extends State<AccessScreen> {
                     content: Text(
                       isEdit ? 'Permission updated' : 'Permission added',
                     ),
+                    backgroundColor: Colors.green,
                   ),
                 );
               }
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  void _deletePermission(BuildContext context, Access access) {
-    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Permission'),
-        content: Text('Are you sure you want to delete "${access.name}"?'),
-        actions: buildDialogActions(
-          context: context,
-          confirmText: "Delete",
-          confirmColor: Colors.red,
-          isLoading: accessProvider.isLoading,
-          onConfirm: () async {
-            await accessProvider.deleteAccess(access.id);
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Admin user deleted successfully')),
-            );
-          },
         ),
       ),
     );

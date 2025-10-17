@@ -51,6 +51,7 @@ class AccessProvider with ChangeNotifier {
         name: name,
         accessPath: accessPath,
         category: category,
+        iconName: icon,
         icon: appIcons.firstWhere((item) => item.name == icon).icon,
         createdAt: DateTime.now(),
       ),
@@ -83,6 +84,7 @@ class AccessProvider with ChangeNotifier {
       name: name,
       accessPath: accessPath,
       category: category,
+      iconName: icon,
       icon: appIcons.firstWhere((item) => item.name == icon).icon,
       createdAt: access.createdAt,
     );

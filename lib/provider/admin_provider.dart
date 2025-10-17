@@ -33,6 +33,8 @@ class AdminProvider with ChangeNotifier {
           isList: false,
         ),
       ],
+      orderBy: "user_admin.id",
+      orderType: OrderType.asc,
     );
     userAdmins
       ..clear()
@@ -64,6 +66,7 @@ class AdminProvider with ChangeNotifier {
         username: username,
         password: hashPassword(password),
         createdAt: DateTime.now(),
+        roleId: roleId,
         role: role,
       ),
     );
@@ -86,7 +89,7 @@ class AdminProvider with ChangeNotifier {
       (await db.get(
         roleTable,
         where: "id = ?",
-        whereArgs: [roleId ?? userAdmin.role.id],
+        whereArgs: [roleId ?? userAdmin.roleId],
       ))[0],
     );
 
@@ -97,7 +100,7 @@ class AdminProvider with ChangeNotifier {
       'password': password != null
           ? hashPassword(password)
           : userAdmin.password,
-      "role_id": roleId ?? userAdmin.role.id,
+      "role_id": roleId ?? userAdmin.roleId,
     });
 
     final index = userAdmins.indexWhere((item) => item.id == id);
@@ -109,6 +112,7 @@ class AdminProvider with ChangeNotifier {
       password: password != null ? hashPassword(password) : userAdmin.password,
       lastLogin: userAdmin.lastLogin,
       createdAt: userAdmin.createdAt,
+      roleId: roleId ?? userAdmin.roleId,
       role: role,
     );
     _setLoading(false);

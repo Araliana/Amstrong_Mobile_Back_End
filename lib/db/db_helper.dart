@@ -128,7 +128,7 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
-    await deleteDatabase(path);
+    // await deleteDatabase(path);
     return await openDatabase(
       path,
       version: _dbVersion,

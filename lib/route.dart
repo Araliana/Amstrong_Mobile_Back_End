@@ -39,7 +39,7 @@ class AppRoutes {
             builder: (context, state) => const RoleScreen(),
           ),
           GoRoute(
-            path: '/add-role',
+            path: '/add-edit-role',
             builder: (context, state) {
               final id = state.extra as int?;
               final accessProvider = Provider.of<AccessProvider>(context);

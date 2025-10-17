@@ -65,31 +65,27 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> addRole({
     required String name,
-    required List<int> accesses,
+    required Set<int> accesses,
   }) async {
     _setLoading(true);
     final res = await db.insert(roleTable, {'name': name});
-    final newAcc = [];
+    final List<Access> newAcc = [];
     for (int access in accesses) {
       newAcc.add(
-        await db.get(accessTable, where: "id = ?", whereArgs: [access]),
+        Access.fromMap(
+          (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
+        ),
       );
       await db.insert(roleAccessTable, {'role_id': res, "access_id": access});
     }
 
-    roles.add(
-      Role(
-        id: res,
-        name: name,
-        access: newAcc.map((acc) => Access.fromMap(acc)).toList(),
-      ),
-    );
+    roles.add(Role(id: res, name: name, access: newAcc));
     _setLoading(false);
   }
 
   Future<void> editRole({
     required String name,
-    required List<int> accesses,
+    required Set<int> accesses,
     required int id,
   }) async {
     _setLoading(true);
@@ -97,21 +93,19 @@ class RoleProvider with ChangeNotifier {
       (await db.get(Tables.role, where: "id = ?", whereArgs: [id]))[0],
     );
     await db.delete(roleAccessTable, where: "role_id", whereArgs: [id]);
-    final newAcc = [];
+    final List<Access> newAcc = [];
     for (int access in accesses) {
       newAcc.add(
-        await db.get(accessTable, where: "id = ?", whereArgs: [access]),
+        Access.fromMap(
+          (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
+        ),
       );
       await db.insert(roleAccessTable, {'role_id': id, "access_id": access});
     }
     await db.update(roleTable, id, {'name': name});
 
     final index = roles.indexWhere((item) => item.id == id);
-    roles[index] = Role(
-      id: id,
-      name: role.name,
-      access: newAcc.map((acc) => Access.fromMap(acc)).toList(),
-    );
+    roles[index] = Role(id: id, name: role.name, access: newAcc);
     _setLoading(false);
   }
 

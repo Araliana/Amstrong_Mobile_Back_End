@@ -8,7 +8,8 @@ class UserAdmin {
   final String password;
   final DateTime? lastLogin;
   final DateTime createdAt;
-  final Role role;
+  final int roleId;
+  final Role? role;
 
   UserAdmin({
     required this.id,
@@ -18,7 +19,8 @@ class UserAdmin {
     required this.password,
     this.lastLogin,
     required this.createdAt,
-    required this.role,
+    required this.roleId,
+    this.role,
   });
 
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
@@ -32,7 +34,10 @@ class UserAdmin {
           ? DateTime.parse(map['last_login'])
           : null,
       createdAt: DateTime.parse(map['created_at']),
-      role: Role.fromMap((map['role'] as Map).cast<String, dynamic>()),
+      roleId: map['role_id'],
+      role: map['role'] == null
+          ? null
+          : Role.fromMap((map['role'] as Map).cast<String, dynamic>()),
     );
   }
 }

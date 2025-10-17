@@ -41,6 +41,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   }
 
   Widget _buildUserAdminCard(UserAdmin user) {
+    final adminProvider = Provider.of<AdminProvider>(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -110,7 +111,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                user.role.name.toUpperCase(),
+                                user.role!.name.toUpperCase(),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -217,7 +218,15 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   } else if (value == 'reset') {
                     _showResetPasswordDialog(context, user);
                   } else if (value == 'delete') {
-                    _showDeleteConfirmation(context, user);
+                    showDeleteConfirmation(
+                      context,
+                      title: "User Admin",
+                      label: user.username,
+                      isLoading: adminProvider.isLoading,
+                      onDelete: () async {
+                        await adminProvider.deleteUserAdmin(user.id);
+                      },
+                    );
                   }
                 },
               ),
@@ -369,6 +378,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Admin user created successfully'),
+                    backgroundColor: Colors.green,
                   ),
                 );
               }
@@ -385,7 +395,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
-    int? selectedRole = user.role.id;
+    int? selectedRole = user.role!.id;
 
     showDialog(
       context: context,
@@ -469,7 +479,10 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                 );
                 if (userAdmin != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Username already existed!')),
+                    const SnackBar(
+                      content: Text('Username already existed!'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                   return;
                 }
@@ -477,11 +490,13 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   id: user.id,
                   fullname: nameController.text,
                   username: usernameController.text,
+                  roleId: selectedRole,
                 );
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Admin user edited successfully'),
+                    backgroundColor: Colors.green,
                   ),
                 );
               }
@@ -573,36 +588,14 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   password: newPasswordController.text,
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password reset successfully')),
+                  const SnackBar(
+                    content: Text('Password reset successfully'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
               }
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  // Dialog Delete Confirmation
-  void _showDeleteConfirmation(BuildContext context, UserAdmin user) {
-    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Admin User'),
-        content: Text('Are you sure you want to delete "${user.username}"?'),
-        actions: buildDialogActions(
-          context: context,
-          confirmText: "Delete",
-          confirmColor: Colors.red,
-          isLoading: adminProvider.isLoading,
-          onConfirm: () async {
-            await adminProvider.deleteUserAdmin(user.id);
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Admin user deleted successfully')),
-            );
-          },
         ),
       ),
     );

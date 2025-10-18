@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
@@ -12,6 +13,7 @@ import 'package:provider/provider.dart';
 class AppRoutes {
   static final GoRouter router = GoRouter(
     routes: [
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       ShellRoute(
         builder: (context, state, child) =>
             _AppShell(state: state, child: child),
@@ -58,7 +60,7 @@ class AppRoutes {
         ],
       ),
     ],
-    initialLocation: '/',
+    initialLocation: '/login',
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text("Page Not Found"), centerTitle: true),
       body: Center(
@@ -91,7 +93,6 @@ class AppRoutes {
   );
 }
 
-/// Widget untuk wrapper AppBar dan Drawer
 class _AppShell extends StatefulWidget {
   final Widget child;
   final GoRouterState state;
@@ -656,7 +657,7 @@ class _AppShellState extends State<_AppShell> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Reset', style: TextStyle(color: Colors.white)),
+                  : const Text('Logout', style: TextStyle(color: Colors.white)),
             ),
           ],
         );

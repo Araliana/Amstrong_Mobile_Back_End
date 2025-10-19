@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/gallery/gallery.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
@@ -54,6 +55,11 @@ class AppRoutes {
           GoRoute(
             path: '/accesses',
             builder: (context, state) => const AccessScreen(),
+          ),
+
+          GoRoute(
+            path: '/gallery',
+            builder: (context, state) => const GalleryScreen(),
           ),
         ],
       ),

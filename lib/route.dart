@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/gallery/gallery.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
+import 'package:flutter_application_1/screen/profile/profile.dart';
 import 'package:provider/provider.dart';
 
 class AppRoutes {
@@ -16,6 +18,11 @@ class AppRoutes {
         builder: (context, state, child) =>
             _AppShell(state: state, child: child),
         routes: [
+          //PROFILE
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
           //MAIN
           GoRoute(
             path: '/',
@@ -54,6 +61,11 @@ class AppRoutes {
           GoRoute(
             path: '/accesses',
             builder: (context, state) => const AccessScreen(),
+          ),
+
+          GoRoute(
+            path: '/gallery',
+            builder: (context, state) => const GalleryScreen(),
           ),
         ],
       ),
@@ -260,7 +272,10 @@ class _AppShellState extends State<_AppShell> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => {},
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.go('/profile');
+                        },
                         borderRadius: BorderRadius.circular(8),
                         splashColor: Colors.white.withValues(alpha: 0.2),
                         highlightColor: Colors.white.withValues(alpha: 0.1),

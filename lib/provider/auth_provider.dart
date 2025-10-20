@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
-  int? currUserId;
-  final DBHelper db = DBHelper();
-  final Tables adminTables = Tables.userAdmin;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String? currUserId;
+  String? currUsername;
 
   bool isLoading = false;
 
   AuthProvider() {
-    _loadCurrUser();
+    _loadCurrentUser();
+    _listenAuthChanges();
   }
 
   void _setLoading(bool value) {
@@ -18,45 +20,69 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _loadCurrUser() async {
+  void _listenAuthChanges() {
+    _auth.authStateChanges().listen((user) async {
+      if (user == null) {
+        await _clearLocalUser();
+        notifyListeners();
+      } else {
+        currUserId = user.uid;
+        notifyListeners();
+      }
+    });
+  }
+
+  Future<void> _loadCurrentUser() async {
     _setLoading(true);
     final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString("curr_user_id");
-
-    if (userJson != null) {
-      currUserId = int.parse(userJson);
-    } else {
-      currUserId = null;
-    }
-
+    currUserId = prefs.getString("curr_user_id");
+    currUsername = prefs.getString("curr_username");
     _setLoading(false);
   }
 
   Future<bool> login(String username, String password) async {
-    _setLoading(true);
+    try {
+      _setLoading(true);
+      final email = "$username@kjm.local";
 
-    final res = await db.get(
-      adminTables,
-      where: "username = ? AND password = ?",
-      whereArgs: [username, password],
-    );
+      final userCred = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-    if (res.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("curr_user_id", res[0]["id"]);
+      await prefs.setString("curr_user_id", userCred.user!.uid);
+      await prefs.setString("curr_username", username);
+
+      currUserId = userCred.user!.uid;
+      currUsername = username;
+
       _setLoading(false);
+      notifyListeners();
       return true;
-    } else {
+    } on FirebaseAuthException catch (e) {
+      print("Login error: $e");
       _setLoading(false);
       return false;
     }
   }
 
+  /// Logout user
   Future<void> logout() async {
     _setLoading(true);
+    await _auth.signOut();
+    await _clearLocalUser();
+    _setLoading(false);
+    notifyListeners();
+  }
+
+  Future<void> _clearLocalUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("curr_user_id");
+    await prefs.remove("curr_username");
     currUserId = null;
-    _setLoading(false);
+    currUsername = null;
   }
+
+  bool get isLoggedIn => _auth.currentUser != null;
 }

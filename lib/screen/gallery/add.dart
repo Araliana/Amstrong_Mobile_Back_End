@@ -1,10 +1,8 @@
+// lib/screens/add.dart
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-
-import '../../provider/post_provider.dart';
+import '../../db/db_helper.dart'; // sesuaikan path import
 
 class AddPostScreen extends StatefulWidget {
   const AddPostScreen({Key? key}) : super(key: key);
@@ -14,163 +12,114 @@ class AddPostScreen extends StatefulWidget {
 }
 
 class _AddPostScreenState extends State<AddPostScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _quoteCtrl = TextEditingController();
+  String _category = 'band';
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
-  final TextEditingController _captionCtrl = TextEditingController();
-  bool _isSaving = false;
+  bool _saving = false;
 
-  Future<void> _pickImage(ImageSource source) async {
-    final XFile? file = await _picker.pickImage(
-      source: source,
-      maxWidth: 1200,
-      imageQuality: 85,
-    );
-    if (file == null) return;
+  Future<void> _pickImage() async {
+    final XFile? f = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 1200, imageQuality: 85);
+    if (f == null) return;
     setState(() {
-      _imageFile = File(file.path);
+      _imageFile = File(f.path);
     });
   }
 
-  Future<void> _savePost() async {
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
     if (_imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Silakan pilih gambar terlebih dahulu.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pilih gambar terlebih dahulu.')));
       return;
     }
 
-    setState(() => _isSaving = true);
-
-    // In a real app: upload file to server and use resulting URL.
-    // For demo, we use local file path as imagePath.
+    setState(() => _saving = true);
     try {
-      await Provider.of<PostProvider>(context, listen: false).addPost(
-        userId: 'me',
-        username: 'Saya',
-        avatarUrl: '',
-        imagePath: _imageFile!.path,
-        caption: _captionCtrl.text.trim(),
+      final post = GalleryPost(
+        name: _nameCtrl.text.trim(),
+        category: _category,
+        quote: _quoteCtrl.text.trim(),
+        imagePath: _imageFile!.path, // menyimpan path lokal
       );
-
-      Navigator.pop(context);
+      await DBGalleryHelper.instance.insertPost(post);
+      Navigator.pop(context, true); // kembali ke gallery, berikan true agar reload
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan postingan: \$e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
     } finally {
-      setState(() => _isSaving = false);
+      setState(() => _saving = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _quoteCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Buat Postingan'),
+        title: Text('Tambah Postingan'),
         actions: [
           TextButton(
-            onPressed: _isSaving ? null : _savePost,
-            child: _isSaving
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text('Unggah', style: TextStyle(color: Colors.white)),
-          ),
+            onPressed: _saving ? null : _save,
+            child: _saving ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text('Simpan', style: TextStyle(color: Colors.white)),
+          )
         ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            InkWell(
-              onTap: () => _showPickOptions(),
-              child: Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: _imageFile == null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_a_photo, size: 48),
-                            SizedBox(height: 8),
-                            Text('Ketuk untuk memilih gambar'),
-                          ],
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          _imageFile!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                      ),
-              ),
-            ),
-
-            SizedBox(height: 12),
-            TextField(
-              controller: _captionCtrl,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Tulis caption...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: _isSaving ? null : _savePost,
-              icon: Icon(Icons.save),
-              label: Text('Simpan Postingan'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showPickOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return SafeArea(
-          child: Wrap(
+        child: Form(
+          key: _formKey,
+          child: ListView(
             children: [
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Pilih dari Galeri'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 260,
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
+                  child: _imageFile == null
+                      ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add_a_photo, size: 48), SizedBox(height: 8), Text('Ketuk untuk memilih gambar')]))
+                      : ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity)),
+                ),
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _nameCtrl,
+                decoration: InputDecoration(labelText: 'Nama', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama diperlukan' : null,
+              ),
+              SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _category,
+                decoration: InputDecoration(labelText: 'Kategori', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                items: ['band', 'employee', 'customer'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _category = v);
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.camera_alt),
-                title: Text('Ambil Foto'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _quoteCtrl,
+                maxLines: 4,
+                decoration: InputDecoration(labelText: 'Quote', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Quote diperlukan' : null,
               ),
-              ListTile(
-                leading: Icon(Icons.close),
-                title: Text('Batal'),
-                onTap: () => Navigator.pop(context),
-              ),
+              SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: Icon(Icons.save),
+                label: Text('Simpan Postingan'),
+                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14)),
+              )
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -62,12 +62,106 @@ class Join {
   });
 }
 
+// ==== GALLERY SECTION ====
+// Model + helper CRUD untuk tabel gallery agar bisa digunakan oleh gallery.dart & add.dart
+class GalleryPost {
+  final int? id;
+  final String name;
+  final String category;
+  final String quote;
+  final String imagePath;
+
+  GalleryPost({
+    this.id,
+    required this.name,
+    required this.category,
+    required this.quote,
+    required this.imagePath,
+  });
+
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'name': name,
+      'category': category,
+      'quote': quote,
+      'imagePath': imagePath,
+    };
+    if (id != null) map['id'] = id;
+    return map;
+  }
+
+  factory GalleryPost.fromMap(Map<String, dynamic> m) => GalleryPost(
+        id: m['id'] as int?,
+        name: m['name'] ?? '',
+        category: m['category'] ?? '',
+        quote: m['quote'] ?? '',
+        imagePath: m['imagePath'] ?? '',
+      );
+}
+
+class DBGalleryHelper {
+  DBGalleryHelper._privateConstructor();
+  static final DBGalleryHelper instance = DBGalleryHelper._privateConstructor();
+
+  static Database? _db;
+  Future<Database> get database async {
+    if (_db != null) return _db!;
+    _db = await _initDB('app_database.db');
+    return _db!;
+  }
+
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
+  }
+
+  Future _createDB(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS gallery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        quote TEXT NOT NULL,
+        imagePath TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<int> insertPost(GalleryPost post) async {
+    final db = await instance.database;
+    return await db.insert('gallery', post.toMap());
+  }
+
+  Future<List<GalleryPost>> getPosts() async {
+    final db = await instance.database;
+    final maps = await db.query('gallery', orderBy: 'id DESC');
+    return maps.map((m) => GalleryPost.fromMap(m)).toList();
+  }
+
+  Future<int> deletePost(int id) async {
+    final db = await instance.database;
+    return await db.delete('gallery', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future close() async {
+    final db = await instance.database;
+    db.close();
+  }
+}
+// ==== END GALLERY SECTION ====
+
+
+// ==== BASE DB HELPER (original milikmu, tidak diubah) ====
 class DBHelper {
   static Database? _db;
+  static const int _dbVersion = 1;
 
-  static const int _dbVersion = 1; //setiap ada perubahan pada table naikin 1
-
-  // Definisi schema
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
       CREATE TABLE user_admin(
@@ -107,12 +201,8 @@ class DBHelper {
     ''',
   };
 
-  // Perubahan Schema
-  static final Map<int, List<String>> tableMigrations = {
-    // 1: ['ALTER TABLE order ADD COLUMN totalAmount REAL'],
-  };
+  static final Map<int, List<String>> tableMigrations = {};
 
-  // Mapping enum ke nama tabel
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",
     Tables.role: "role",
@@ -128,7 +218,6 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
-    // await deleteDatabase(path);
     return await openDatabase(
       path,
       version: _dbVersion,
@@ -150,13 +239,11 @@ class DBHelper {
     );
   }
 
-  // INSERT
   Future<int> insert(Tables table, Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert(tableNames[table]!, data);
   }
 
-  // UPDATE
   Future<int> update(Tables table, int id, Map<String, dynamic> data) async {
     final db = await database;
     return await db.update(
@@ -167,7 +254,6 @@ class DBHelper {
     );
   }
 
-  // DELETE
   Future<int> delete(
     Tables table, {
     int? id,
@@ -200,16 +286,14 @@ class DBHelper {
     final baseTable = tableNames[table]!;
     final query = StringBuffer();
 
-    // ==== SELECT BASE COLUMNS ====
     final baseCols = await _getColumns(baseTable);
     query.write("SELECT ");
     query.write(
       baseCols.map((c) => "$baseTable.$c AS ${baseTable}_$c").join(", "),
     );
 
-    // ==== SELECT JOIN COLUMNS ====
     final joinTables = <String>[];
-    final listTables = <String>[]; // tabel yang isList=true
+    final listTables = <String>[];
 
     if (joins != null) {
       for (var j in joins) {
@@ -223,36 +307,28 @@ class DBHelper {
       }
     }
 
-    // ==== FROM BASE TABLE ====
     query.write(" FROM $baseTable");
 
-    // ==== JOIN CLAUSES ====
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
-        final fromTbl = j.fromTable != null
-            ? tableNames[j.fromTable]!
-            : baseTable;
+        final fromTbl = j.fromTable != null ? tableNames[j.fromTable]! : baseTable;
         query.write(
           " ${j.joinType.sql} $jt ON $fromTbl.${j.fromKey} = $jt.${j.toKey}",
         );
       }
     }
 
-    // ==== WHERE ====
     if (where != null) query.write(" WHERE $where");
 
-    // ==== ORDER BY ====
     if (orderBy != null) {
       query.write(" ORDER BY $orderBy ${orderType.sql}");
     } else {
       query.write(" ORDER BY $baseTable.id ${orderType.sql}");
     }
 
-    // Jalankan query
     final rows = await db.rawQuery(query.toString(), whereArgs);
 
-    // Convert hasil ke nested
     return _toNested(
       rows,
       baseTable: baseTable,
@@ -274,13 +350,12 @@ class DBHelper {
     required List<String> listTables,
   }) {
     final result = <Map<String, dynamic>>[];
-    final seen = <dynamic, Map<String, dynamic>>{}; // id base -> row
+    final seen = <dynamic, Map<String, dynamic>>{};
 
     for (var row in rows) {
       final baseData = <String, dynamic>{};
       final nestedData = <String, dynamic>{};
 
-      // Pisahkan base dan nested per baris SQL
       row.forEach((key, value) {
         if (key.startsWith("${baseTable}_")) {
           baseData[key.replaceFirst("${baseTable}_", "")] = value;
@@ -300,9 +375,8 @@ class DBHelper {
       if (!seen.containsKey(baseId)) {
         final newRow = Map<String, dynamic>.from(baseData);
         for (var jt in joinTables) {
-          newRow[jt] = listTables.contains(jt)
-              ? <Map<String, dynamic>>[]
-              : null;
+          newRow[jt] =
+              listTables.contains(jt) ? <Map<String, dynamic>>[] : null;
         }
         seen[baseId] = newRow;
         result.add(newRow);

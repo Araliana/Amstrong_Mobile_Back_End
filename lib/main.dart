@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
-import 'package:flutter_application_1/provider/post_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/route.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +13,6 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => RoleProvider()),
         ChangeNotifierProvider(create: (_) => AccessProvider()),
-        ChangeNotifierProvider(create: (_) => PostProvider()),
       ],
       child: const MainApp(),
     ),

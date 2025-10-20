@@ -23,7 +23,6 @@ dependencies:
   firebase_storage: ^13.0.2
   image_picker: ^0.8.7+5
   cached_network_image: ^3.2.3
-  uuid: ^3.0.7
 
 flutter_icons:
   android: true

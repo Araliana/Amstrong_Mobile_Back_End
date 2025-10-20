@@ -510,11 +510,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/gallery',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Gallery page not available yet'),
-                      ),
-                    );
+                    context.go('/gallery');
                   },
                 ),
 

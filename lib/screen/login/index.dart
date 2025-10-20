@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
               margin: const EdgeInsets.all(24),
               child: Card(
                 elevation: 24,
-                shadowColor: Colors.black.withOpacity(0.3),
+                shadowColor: Colors.black.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -56,33 +56,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo Kopi dengan efek
                         Container(
-                          width: 120,
-                          height: 120,
+                          width: 150,
+                          height: 150,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.brown.shade700,
-                                Colors.brown.shade500,
-                              ],
-                            ),
+                            color: Colors.amberAccent.shade700,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.brown.shade300.withOpacity(0.5),
-                                blurRadius: 20,
+                                color: Colors.brown.shade300.withValues(
+                                  alpha: 0.5,
+                                ),
+                                blurRadius: 15,
                                 offset: const Offset(0, 8),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.coffee,
-                            size: 70,
-                            color: Colors.white,
-                          ),
+                          child: Image.asset("assets/secondary_icon.png"),
                         ),
                         const SizedBox(height: 32),
 
@@ -186,7 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.brown.shade400.withOpacity(0.4),
+                                color: Colors.brown.shade400.withValues(
+                                  alpha: 0.4,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 6),
                               ),

@@ -37,7 +37,6 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hapus kategori berdasarkan id
   Future<void> removeCategory(int id) async {
     _categories.removeWhere((cat) => cat.id == id);
     await _saveCategories();

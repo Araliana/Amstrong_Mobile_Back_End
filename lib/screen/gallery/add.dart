@@ -21,7 +21,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
   bool _saving = false;
 
   Future<void> _pickImage() async {
-    final XFile? f = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 1200, imageQuality: 85);
+    final XFile? f = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 85,
+    );
     if (f == null) return;
     setState(() {
       _imageFile = File(f.path);
@@ -31,7 +35,9 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Pilih gambar terlebih dahulu.')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Pilih gambar terlebih dahulu.')));
       return;
     }
 
@@ -44,9 +50,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
         imagePath: _imageFile!.path, // menyimpan path lokal
       );
       await DBGalleryHelper.instance.insertPost(post);
-      Navigator.pop(context, true); // kembali ke gallery, berikan true agar reload
+      Navigator.pop(
+        context,
+        true,
+      ); // kembali ke gallery, berikan true agar reload
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
     } finally {
       setState(() => _saving = false);
     }
@@ -67,8 +78,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
         actions: [
           TextButton(
             onPressed: _saving ? null : _save,
-            child: _saving ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text('Simpan', style: TextStyle(color: Colors.white)),
-          )
+            child: _saving
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text('Simpan', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
       body: Padding(
@@ -81,23 +98,55 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 onTap: _pickImage,
                 child: Container(
                   height: 260,
-                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade300)),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
                   child: _imageFile == null
-                      ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add_a_photo, size: 48), SizedBox(height: 8), Text('Ketuk untuk memilih gambar')]))
-                      : ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity)),
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add_a_photo, size: 48),
+                              SizedBox(height: 8),
+                              Text('Ketuk untuk memilih gambar'),
+                            ],
+                          ),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            _imageFile!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        ),
                 ),
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _nameCtrl,
-                decoration: InputDecoration(labelText: 'Nama', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Nama diperlukan' : null,
+                decoration: InputDecoration(
+                  labelText: 'Nama',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Nama diperlukan' : null,
               ),
               SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: _category,
-                decoration: InputDecoration(labelText: 'Kategori', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                items: ['band', 'employee', 'customer'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                decoration: InputDecoration(
+                  labelText: 'Kategori',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                items: ['band', 'employee', 'customer']
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
                 onChanged: (v) {
                   if (v != null) setState(() => _category = v);
                 },
@@ -106,16 +155,24 @@ class _AddPostScreenState extends State<AddPostScreen> {
               TextFormField(
                 controller: _quoteCtrl,
                 maxLines: 4,
-                decoration: InputDecoration(labelText: 'Quote', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Quote diperlukan' : null,
+                decoration: InputDecoration(
+                  labelText: 'Quote',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Quote diperlukan' : null,
               ),
               SizedBox(height: 18),
               ElevatedButton.icon(
                 onPressed: _saving ? null : _save,
                 icon: Icon(Icons.save),
                 label: Text('Simpan Postingan'),
-                style: ElevatedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 14)),
-              )
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
             ],
           ),
         ),

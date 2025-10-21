@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class DashboardPage extends StatefulWidget {
+class DashboardScreen extends StatefulWidget {
   final String selectedPeriod;
-  const DashboardPage({super.key, required this.selectedPeriod});
+  const DashboardScreen({super.key, required this.selectedPeriod});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardScreenState extends State<DashboardScreen> {
   String selectedPeriod = 'Hari Ini';
 
   // Dummy data

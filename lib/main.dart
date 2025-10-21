@@ -6,7 +6,10 @@ import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/route.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+GoRouter? _appRouter;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,26 +32,31 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.white,
-          primary: Colors.black,
-          surface: Colors.white,
-          onSurface: Colors.black,
-        ),
-        dialogTheme: DialogThemeData(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        _appRouter ??= AppRoute.createRouter(authProvider);
+        return MaterialApp.router(
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.white,
+              primary: Colors.black,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
           ),
-        ),
-      ),
-      debugShowCheckedModeBanner: false,
-      title: "KJM",
-      routerConfig: AppRoutes.router,
+          debugShowCheckedModeBanner: false,
+          title: "KJM",
+          routerConfig: _appRouter,
+        );
+      },
     );
   }
 }

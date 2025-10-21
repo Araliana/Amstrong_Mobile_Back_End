@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
+import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/gallery/gallery.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
@@ -10,87 +12,109 @@ import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:provider/provider.dart';
 
-class AppRoutes {
-  static final GoRouter router = GoRouter(
-    routes: [
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      ShellRoute(
-        builder: (context, state, child) =>
-            _AppShell(state: state, child: child),
-        routes: [
-          //MAIN
-          GoRoute(
-            path: '/',
-            builder: (context, state) {
-              final selectedPeriod = state.extra as String? ?? 'Hari Ini';
-              return DashboardScreen(selectedPeriod: selectedPeriod);
-            },
-          ),
-          //ORDERS
-          //PRODUCTS & STOCK
-          //FINANCE
-          //CONTENT & MEDIA
-          GoRoute(path: '/menu', builder: (context, state) => const MenuPage()),
-          //MANAGEMENT
-          GoRoute(
-            path: '/user-admin',
-            builder: (context, state) => const UserAdminScreen(),
-          ),
-          GoRoute(
-            path: '/roles',
-            builder: (context, state) => const RoleScreen(),
-          ),
-          GoRoute(
-            path: '/add-edit-role',
-            builder: (context, state) {
-              final id = state.extra as int?;
-              final accessProvider = Provider.of<AccessProvider>(context);
+class AppRoute {
+  static GoRouter createRouter(AuthProvider authProvider) {
+    return GoRouter(
+      redirect: (context, state) {
+        if (!authProvider.isLoggedIn) return '/login';
 
-              return AddEditRoleScreen(
-                roleId: id,
-                availableAccesses: accessProvider.accesses,
-              );
-            },
-          ),
-
-          GoRoute(
-            path: '/accesses',
-            builder: (context, state) => const AccessScreen(),
-          ),
-        ],
-      ),
-    ],
-    initialLocation: '/login',
-    errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text("Page Not Found"), centerTitle: true),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 80, color: Colors.redAccent),
-            const SizedBox(height: 20),
-            const Text(
-              "404 - Page not found",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              "Halaman tidak tersedia.",
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.home),
-              label: const Text("Kembali ke Dashboard"),
-              onPressed: () {
-                context.go('/');
+        return null;
+      },
+      routes: [
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        ShellRoute(
+          builder: (context, state, child) =>
+              _AppShell(state: state, child: child),
+          routes: [
+            //MAIN
+            GoRoute(
+              path: '/',
+              builder: (context, state) {
+                final selectedPeriod = state.extra as String? ?? 'Hari Ini';
+                return DashboardScreen(selectedPeriod: selectedPeriod);
               },
+            ),
+            //ORDERS
+            //PRODUCTS & STOCK
+            //FINANCE
+            //CONTENT & MEDIA
+            GoRoute(
+              path: '/menu',
+              builder: (context, state) => const MenuPage(),
+            ),
+            //MANAGEMENT
+            GoRoute(
+              path: '/user-admin',
+              builder: (context, state) => const UserAdminScreen(),
+            ),
+            GoRoute(
+              path: '/roles',
+              builder: (context, state) => const RoleScreen(),
+            ),
+            GoRoute(
+              path: '/add-edit-role',
+              builder: (context, state) {
+                final id = state.extra as int?;
+                final accessProvider = Provider.of<AccessProvider>(context);
+
+                return AddEditRoleScreen(
+                  roleId: id,
+                  availableAccesses: accessProvider.accesses,
+                );
+              },
+            ),
+
+            GoRoute(
+              path: '/accesses',
+              builder: (context, state) => const AccessScreen(),
+            ),
+
+            GoRoute(
+              path: '/gallery',
+              builder: (context, state) => const GalleryScreen(),
             ),
           ],
         ),
+      ],
+      initialLocation: '/',
+      errorBuilder: (context, state) => Scaffold(
+        appBar: AppBar(title: const Text("Page Not Found"), centerTitle: true),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 80,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "404 - Page not found",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                "Halaman tidak tersedia.",
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.home),
+                label: const Text("Kembali ke Dashboard"),
+                onPressed: () {
+                  context.go('/');
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _AppShell extends StatefulWidget {
@@ -505,11 +529,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: currentPath == '/gallery',
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Gallery page not available yet'),
-                      ),
-                    );
+                    context.go('/gallery');
                   },
                 ),
 
@@ -625,6 +645,7 @@ class _AppShellState extends State<_AppShell> {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -633,11 +654,18 @@ class _AppShellState extends State<_AppShell> {
           content: const Text('Apakah Anda yakin ingin keluar?'),
           actions: [
             TextButton(
-              onPressed: false ? null : () => Navigator.pop(context),
+              onPressed: authProvider.isLoading
+                  ? null
+                  : () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: false ? null : () async {},
+              onPressed: authProvider.isLoading
+                  ? null
+                  : () async {
+                      await authProvider.logout();
+                      context.go('/login');
+                    },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -648,7 +676,7 @@ class _AppShellState extends State<_AppShell> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: false
+              child: authProvider.isLoading
                   ? const SizedBox(
                       width: 20,
                       height: 20,

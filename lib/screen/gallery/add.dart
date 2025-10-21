@@ -1,6 +1,8 @@
 // lib/screens/add.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/image_picker.dart';
+import 'package:flutter_application_1/model/memory.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../db/db_helper.dart'; // sesuaikan path import
 
@@ -43,17 +45,17 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
     setState(() => _saving = true);
     try {
-      final post = GalleryPost(
-        name: _nameCtrl.text.trim(),
-        category: _category,
-        quote: _quoteCtrl.text.trim(),
-        imagePath: _imageFile!.path, // menyimpan path lokal
-      );
-      await DBGalleryHelper.instance.insertPost(post);
-      Navigator.pop(
-        context,
-        true,
-      ); // kembali ke gallery, berikan true agar reload
+      // final post = Memory(
+      //   name: _nameCtrl.text.trim(),
+      //   category: _category,
+      //   quote: _quoteCtrl.text.trim(),
+      //   imagePath: _imageFile!.path, // menyimpan path lokal
+      // );
+      // await DBHelper.instance.insertPost(post);
+      // Navigator.pop(
+      //   context,
+      //   true,
+      // ); // kembali ke gallery, berikan true agar reload
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -94,34 +96,42 @@ class _AddPostScreenState extends State<AddPostScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 260,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: _imageFile == null
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add_a_photo, size: 48),
-                              SizedBox(height: 8),
-                              Text('Ketuk untuk memilih gambar'),
-                            ],
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(
-                            _imageFile!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        ),
-                ),
+              // GestureDetector(
+              //   onTap: _pickImage,
+              //   child: Container(
+              //     height: 260,
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(12),
+              //       border: Border.all(color: Colors.grey.shade300),
+              //     ),
+              //     child: _imageFile == null
+              //         ? Center(
+              //             child: Column(
+              //               mainAxisSize: MainAxisSize.min,
+              //               children: [
+              //                 Icon(Icons.add_a_photo, size: 48),
+              //                 SizedBox(height: 8),
+              //                 Text('Ketuk untuk memilih gambar'),
+              //               ],
+              //             ),
+              //           )
+              //         : ClipRRect(
+              //             borderRadius: BorderRadius.circular(12),
+              //             child: Image.file(
+              //               _imageFile!,
+              //               fit: BoxFit.cover,
+              //               width: double.infinity,
+              //             ),
+              //           ),
+              //   ),
+              // ),
+              ImageSelector(
+                isLoading: _saving,
+                onChanged: (val) {
+                  setState(() {
+                    _imageFile = val;
+                  });
+                },
               ),
               SizedBox(height: 12),
               TextFormField(

@@ -62,102 +62,6 @@ class Join {
   });
 }
 
-// ==== GALLERY SECTION ====
-// Model + helper CRUD untuk tabel gallery agar bisa digunakan oleh gallery.dart & add.dart
-class GalleryPost {
-  final int? id;
-  final String name;
-  final String category;
-  final String quote;
-  final String imagePath;
-
-  GalleryPost({
-    this.id,
-    required this.name,
-    required this.category,
-    required this.quote,
-    required this.imagePath,
-  });
-
-  Map<String, dynamic> toMap() {
-    final map = <String, dynamic>{
-      'name': name,
-      'category': category,
-      'quote': quote,
-      'imagePath': imagePath,
-    };
-    if (id != null) map['id'] = id;
-    return map;
-  }
-
-  factory GalleryPost.fromMap(Map<String, dynamic> m) => GalleryPost(
-        id: m['id'] as int?,
-        name: m['name'] ?? '',
-        category: m['category'] ?? '',
-        quote: m['quote'] ?? '',
-        imagePath: m['imagePath'] ?? '',
-      );
-}
-
-class DBGalleryHelper {
-  DBGalleryHelper._privateConstructor();
-  static final DBGalleryHelper instance = DBGalleryHelper._privateConstructor();
-
-  static Database? _db;
-  Future<Database> get database async {
-    if (_db != null) return _db!;
-    _db = await _initDB('app_database.db');
-    return _db!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
-  }
-
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS gallery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        quote TEXT NOT NULL,
-        imagePath TEXT NOT NULL
-      )
-    ''');
-  }
-
-  Future<int> insertPost(GalleryPost post) async {
-    final db = await instance.database;
-    return await db.insert('gallery', post.toMap());
-  }
-
-  Future<List<GalleryPost>> getPosts() async {
-    final db = await instance.database;
-    final maps = await db.query('gallery', orderBy: 'id DESC');
-    return maps.map((m) => GalleryPost.fromMap(m)).toList();
-  }
-
-  Future<int> deletePost(int id) async {
-    final db = await instance.database;
-    return await db.delete('gallery', where: 'id = ?', whereArgs: [id]);
-  }
-
-  Future close() async {
-    final db = await instance.database;
-    db.close();
-  }
-}
-// ==== END GALLERY SECTION ====
-
-
-// ==== BASE DB HELPER (original milikmu, tidak diubah) ====
 class DBHelper {
   static Database? _db;
   static const int _dbVersion = 1;
@@ -199,6 +103,16 @@ class DBHelper {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     ''',
+    Tables.gallery: '''
+      CREATE TABLE IF NOT EXISTS gallery (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        quote TEXT NOT NULL,
+        imagePath TEXT NOT NULL
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+      ''',
   };
 
   static final Map<int, List<String>> tableMigrations = {};
@@ -208,6 +122,7 @@ class DBHelper {
     Tables.role: "role",
     Tables.access: "access",
     Tables.roleAccess: "role_access",
+    Tables.gallery: "gallery",
   };
 
   Future<Database> get database async {
@@ -312,7 +227,9 @@ class DBHelper {
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
-        final fromTbl = j.fromTable != null ? tableNames[j.fromTable]! : baseTable;
+        final fromTbl = j.fromTable != null
+            ? tableNames[j.fromTable]!
+            : baseTable;
         query.write(
           " ${j.joinType.sql} $jt ON $fromTbl.${j.fromKey} = $jt.${j.toKey}",
         );
@@ -375,8 +292,9 @@ class DBHelper {
       if (!seen.containsKey(baseId)) {
         final newRow = Map<String, dynamic>.from(baseData);
         for (var jt in joinTables) {
-          newRow[jt] =
-              listTables.contains(jt) ? <Map<String, dynamic>>[] : null;
+          newRow[jt] = listTables.contains(jt)
+              ? <Map<String, dynamic>>[]
+              : null;
         }
         seen[baseId] = newRow;
         result.add(newRow);

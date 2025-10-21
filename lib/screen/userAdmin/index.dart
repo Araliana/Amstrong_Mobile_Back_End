@@ -237,7 +237,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     );
   }
 
-  // Dialog Create Admin
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final nameController = TextEditingController();
@@ -389,7 +388,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     );
   }
 
-  // Dialog Edit Admin (name only)
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final nameController = TextEditingController(text: user.fullname);
@@ -507,7 +505,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     );
   }
 
-  // Dialog Reset Password
   void _showResetPasswordDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final newPasswordController = TextEditingController();

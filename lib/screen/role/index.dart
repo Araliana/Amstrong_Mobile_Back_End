@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 
 // Main Page
 class RoleScreen extends StatefulWidget {
-  const RoleScreen({Key? key}) : super(key: key);
+  const RoleScreen({super.key});
 
   @override
   State<RoleScreen> createState() => _RoleScreenState();
@@ -43,7 +43,7 @@ class _RoleScreenState extends State<RoleScreen> {
 class RoleCard extends StatefulWidget {
   final Role role;
 
-  const RoleCard({Key? key, required this.role}) : super(key: key);
+  const RoleCard({super.key, required this.role});
 
   @override
   State<RoleCard> createState() => _RoleCardState();

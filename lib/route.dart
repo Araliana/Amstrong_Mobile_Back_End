@@ -23,7 +23,7 @@ class AppRoutes {
             path: '/',
             builder: (context, state) {
               final selectedPeriod = state.extra as String? ?? 'Hari Ini';
-              return DashboardPage(selectedPeriod: selectedPeriod);
+              return DashboardScreen(selectedPeriod: selectedPeriod);
             },
           ),
           //ORDERS

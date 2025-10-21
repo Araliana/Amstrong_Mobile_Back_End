@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -13,7 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -185,48 +188,54 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                           child: ElevatedButton(
-                            onPressed: _isLoading
+                            onPressed: authProvider.isLoading
                                 ? null
-                                : () {
+                                : () async {
                                     if (_formKey.currentState!.validate()) {
-                                      setState(() {
-                                        _isLoading = true;
-                                      });
-
-                                      // Simulasi login
-                                      Future.delayed(
-                                        const Duration(seconds: 2),
-                                        () {
-                                          setState(() {
-                                            _isLoading = false;
-                                          });
-
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.check_circle,
-                                                    color: Colors.white,
-                                                  ),
-                                                  SizedBox(width: 12),
-                                                  Text('Login successful!'),
-                                                ],
-                                              ),
-                                              backgroundColor:
-                                                  Colors.green.shade600,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          );
-                                        },
+                                      final res = await authProvider.login(
+                                        _usernameController.text,
+                                        _passwordController.text,
                                       );
+                                      if (res) {
+                                        context.go("/");
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: const Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.check_circle,
+                                                  color: Colors.white,
+                                                ),
+                                                SizedBox(width: 12),
+                                                Text('Login successful!'),
+                                              ],
+                                            ),
+                                            backgroundColor:
+                                                Colors.green.shade600,
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: const Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.error_outline,
+                                                  color: Colors.white,
+                                                ),
+                                                SizedBox(width: 12),
+                                                Text('Invalid Credensials!'),
+                                              ],
+                                            ),
+                                            backgroundColor:
+                                                Colors.red.shade600,
+                                          ),
+                                        );
+                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
@@ -237,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
-                            child: _isLoading
+                            child: authProvider.isLoading
                                 ? const SizedBox(
                                     width: 24,
                                     height: 24,

@@ -253,14 +253,17 @@ class _ImageSelectorState extends State<ImageSelector> {
   Widget _buildDocumentMode(bool isSmall) {
     return Container(
       width: double.infinity,
-      height: isSmall ? 180 : 220,
+      height: 270,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: _selectedImage != null ? Colors.grey[200] : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.3),
+          color: _selectedImage != null
+              ? Colors.grey.withValues(alpha: 0.3)
+              : const Color(0xFF2C39B8).withValues(alpha: 0.3),
           width: 2,
           strokeAlign: BorderSide.strokeAlignInside,
+          style: _selectedImage != null ? BorderStyle.solid : BorderStyle.solid,
         ),
       ),
       child: Stack(
@@ -280,23 +283,60 @@ class _ImageSelectorState extends State<ImageSelector> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.insert_drive_file_outlined,
-                    size: isSmall ? 48 : 64,
-                    color: Colors.grey[400],
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C39B8).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.cloud_upload_outlined,
+                      size: isSmall ? 48 : 64,
+                      color: const Color(0xFF2C39B8),
+                    ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Text(
-                    "No document selected",
+                    "Tap the button to select source",
                     style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: isSmall ? 14 : 16,
+                      color: Colors.grey[800],
+                      fontSize: isSmall ? 16 : 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Divider(indent: 50, endIndent: 50, height: 5, thickness: 2),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2C39B8),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "Select Image",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmall ? 14 : 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Supported: JPG, PNG, JPEG",
+                    style: TextStyle(
+                      color: Colors.grey[500],
+                      fontSize: isSmall ? 12 : 13,
                     ),
                   ),
                 ],
               ),
             ),
-          if (!(widget.isLoading ?? false))
+          if (_selectedImage != null && !(widget.isLoading ?? false))
             Positioned(
               bottom: 12,
               right: 12,
@@ -312,7 +352,7 @@ class _ImageSelectorState extends State<ImageSelector> {
                   padding: EdgeInsets.zero,
                   iconSize: isSmall ? 18 : 20,
                   onPressed: () => _showImageSourceBottomSheet(context),
-                  icon: Icon(_selectedImage == null ? Icons.add : Icons.edit),
+                  icon: const Icon(Icons.edit),
                   color: Colors.white,
                 ),
               ),

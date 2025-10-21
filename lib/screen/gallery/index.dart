@@ -1,9 +1,10 @@
 // lib/screens/gallery.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/model/memory.dart';
 import '../../db/db_helper.dart'; // ubah path import sesuai posisi file db_helper.dart
 // Jika kamu menempel class ke db_helper.dart, import tetap sama.
-// Pastikan GalleryPost dan DBGalleryHelper tersedia.
+// Pastikan Memory dan DBGalleryHelper tersedia.
 
 import 'add.dart';
 
@@ -15,7 +16,7 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  List<GalleryPost> _posts = [];
+  List<Memory> _posts = [];
   bool _loading = true;
 
   @override
@@ -28,11 +29,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
     setState(() {
       _loading = true;
     });
-    final posts = await DBGalleryHelper.instance.getPosts();
-    setState(() {
-      _posts = posts;
-      _loading = false;
-    });
+    // final posts = await DBGalleryHelper.instance.getPosts();
+    // setState(() {
+    //   _posts = posts;
+    //   _loading = false;
+    // });
   }
 
   Future<void> _onRefresh() async {
@@ -50,7 +51,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
   }
 
-  Widget _buildTile(GalleryPost p) {
+  Widget _buildTile(Memory p) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -70,7 +71,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     color: Colors.grey[200],
                     child: p.imagePath.startsWith('http')
                         ? Image.network(p.imagePath, fit: BoxFit.cover)
-                        : Image.file(File(p.imagePath), fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.broken_image)),
+                        : Image.file(
+                            File(p.imagePath),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                Icon(Icons.broken_image),
+                          ),
                   ),
                 ),
                 SizedBox(width: 12),
@@ -78,23 +84,32 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(p.name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(
+                        p.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                       SizedBox(height: 4),
-                      Text(p.category, style: TextStyle(fontSize: 13, color: Colors.grey[700])),
+                      Text(
+                        p.category,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      ),
                     ],
                   ),
                 ),
                 PopupMenuButton<String>(
                   onSelected: (v) async {
-                    if (v == 'delete') {
-                      await DBGalleryHelper.instance.deletePost(p.id!);
-                      _loadPosts();
-                    }
+                    // if (v == 'delete') {
+                    //   await DBGalleryHelper.instance.deletePost(p.id!);
+                    //   _loadPosts();
+                    // }
                   },
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 'delete', child: Text('Hapus')),
                   ],
-                )
+                ),
               ],
             ),
 
@@ -103,7 +118,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
             // Quote
             Text(
               p.quote,
-              style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 15,
+                fontStyle: FontStyle.italic,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
@@ -116,9 +135,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Gallery'),
-        actions: [
-          IconButton(onPressed: _openAdd, icon: Icon(Icons.add)),
-        ],
+        actions: [IconButton(onPressed: _openAdd, icon: Icon(Icons.add))],
       ),
       body: _loading
           ? Center(child: CircularProgressIndicator())
@@ -129,9 +146,17 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       // supaya pull-to-refresh tetap bekerja saat kosong
                       children: [
                         SizedBox(height: 120),
-                        Icon(Icons.photo_library, size: 60, color: Colors.grey[400]),
+                        Icon(
+                          Icons.photo_library,
+                          size: 60,
+                          color: Colors.grey[400],
+                        ),
                         SizedBox(height: 12),
-                        Center(child: Text('Belum ada postingan. Tekan + untuk menambah.')),
+                        Center(
+                          child: Text(
+                            'Belum ada postingan. Tekan + untuk menambah.',
+                          ),
+                        ),
                       ],
                     )
                   : ListView.builder(

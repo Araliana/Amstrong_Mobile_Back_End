@@ -10,16 +10,12 @@ class AccessProvider with ChangeNotifier {
 
   bool isLoading = false;
 
-  AccessProvider() {
-    _loadAccess();
-  }
-
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  Future<void> _loadAccess() async {
+  Future<void> loadAccess() async {
     _setLoading(true);
     final res = await db.get(
       accessTables,
@@ -71,12 +67,16 @@ class AccessProvider with ChangeNotifier {
       (await db.get(accessTables, where: "id = ?", whereArgs: [id]))[0],
     );
 
-    await db.update(accessTables, id, {
-      'name': name,
-      'access_path': accessPath,
-      'category': category,
-      'icon': icon,
-    });
+    await db.update(
+      accessTables,
+      id: id,
+      data: {
+        'name': name,
+        'access_path': accessPath,
+        'category': category,
+        'icon': icon,
+      },
+    );
 
     final index = accesses.indexWhere((item) => item.id == id);
     accesses[index] = Access(

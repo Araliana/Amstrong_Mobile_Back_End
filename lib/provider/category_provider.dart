@@ -66,10 +66,14 @@ class CategoryProvider with ChangeNotifier {
 
     final current = Category.fromMap(oldData.first);
 
-    await db.update(categoryTable, id, {
-      'name': name ?? current.name,
-      'created_at': current.createdAt.toIso8601String(),
-    });
+    await db.update(
+      categoryTable,
+      id: id,
+      data: {
+        'name': name ?? current.name,
+        'created_at': current.createdAt.toIso8601String(),
+      },
+    );
 
     final index = categories.indexWhere((item) => item.id == id);
     if (index != -1) {

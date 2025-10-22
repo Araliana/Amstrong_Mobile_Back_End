@@ -14,23 +14,40 @@ class RoleScreen extends StatefulWidget {
 }
 
 class _RoleScreenState extends State<RoleScreen> {
+  late Future<void> _loadFuture;
+  @override
+  void initState() {
+    super.initState();
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    _loadFuture = roleProvider.loadRole();
+  }
+
   @override
   Widget build(BuildContext context) {
     final roleProvider = Provider.of<RoleProvider>(context);
-    final List<Role> roles = roleProvider.roles;
     return Scaffold(
-      body: roles.isEmpty
-          ? buildEmptyState("Role", Icons.manage_accounts_outlined)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: roles.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return buildHeader("Role", Icons.manage_accounts);
-                }
-                return RoleCard(role: roles[index - 1]);
-              },
-            ),
+      body: FutureBuilder(
+        future: _loadFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              roleProvider.isLoading) {
+            return buildLoadingState("Fetching Role Data...");
+          }
+          final roles = roleProvider.roles;
+          return roles.isEmpty
+              ? buildEmptyState("Role", Icons.manage_accounts_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: roles.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildHeader("Role", Icons.manage_accounts);
+                    }
+                    return RoleCard(role: roles[index - 1]);
+                  },
+                );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.brown,
         onPressed: () => context.push('/add-edit-role'),

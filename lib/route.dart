@@ -58,12 +58,8 @@ class AppRoute {
               path: '/add-edit-role',
               builder: (context, state) {
                 final id = state.extra as int?;
-                final accessProvider = Provider.of<AccessProvider>(context);
 
-                return AddEditRoleScreen(
-                  roleId: id,
-                  availableAccesses: accessProvider.accesses,
-                );
+                return AddEditRoleScreen(roleId: id);
               },
             ),
 

@@ -14,24 +14,42 @@ class UserAdminScreen extends StatefulWidget {
 }
 
 class _UserAdminScreenState extends State<UserAdminScreen> {
+  late Future<void> _loadFuture;
+  @override
+  void initState() {
+    super.initState();
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    _loadFuture = adminProvider.loadUserAdmin();
+  }
+
   @override
   Widget build(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context);
-    final userAdmins = adminProvider.userAdmins;
+
     return Scaffold(
-      body: userAdmins.isEmpty
-          ? buildEmptyState("User Admin", Icons.people_outline)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: userAdmins.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return buildHeader("User Admin", Icons.people);
-                }
-                final user = userAdmins[index - 1];
-                return _buildUserAdminCard(user);
-              },
-            ),
+      body: FutureBuilder(
+        future: _loadFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              adminProvider.isLoading) {
+            return buildLoadingState("Fetching Admin Data...");
+          }
+          final userAdmins = adminProvider.userAdmins;
+          return userAdmins.isEmpty
+              ? buildEmptyState("User Admin", Icons.people_outline)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: userAdmins.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildHeader("User Admin", Icons.people);
+                    }
+                    final user = userAdmins[index - 1];
+                    return _buildUserAdminCard(user);
+                  },
+                );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.brown,
         onPressed: () => _showCreateDialog(context),

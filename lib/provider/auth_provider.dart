@@ -123,6 +123,11 @@ class AuthProvider with ChangeNotifier {
       currUserId = userCred.user!.uid;
       currUsername = username;
       currUserData = resData.first;
+      await db.update(
+        adminTables,
+        id: res.id,
+        data: {"last_login": DateTime.now().toIso8601String()},
+      );
 
       _setLoading(false);
       notifyListeners();

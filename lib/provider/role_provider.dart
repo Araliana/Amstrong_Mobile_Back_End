@@ -12,16 +12,12 @@ class RoleProvider with ChangeNotifier {
 
   bool isLoading = false;
 
-  RoleProvider() {
-    _loadRole();
-  }
-
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  Future<void> _loadRole() async {
+  Future<void> loadRole() async {
     _setLoading(true);
     final res = await db.get(
       roleTable,
@@ -37,7 +33,7 @@ class RoleProvider with ChangeNotifier {
       orderType: OrderType.asc,
       orderBy: "role.id",
     );
-    print(res);
+
     roles
       ..clear()
       ..addAll(res.map((e) => Role.fromMap(e)).toList());
@@ -103,7 +99,7 @@ class RoleProvider with ChangeNotifier {
       );
       await db.insert(roleAccessTable, {'role_id': id, "access_id": access});
     }
-    await db.update(roleTable, id, {'name': name});
+    await db.update(roleTable, id: id, data: {'name': name});
 
     final index = roles.indexWhere((item) => item.id == id);
     roles[index] = Role(id: id, name: role.name, access: newAcc);

@@ -11,6 +11,7 @@ enum Tables {
   role,
   access,
   roleAccess,
+  category,
 }
 
 enum JoinType {
@@ -160,13 +161,35 @@ class DBHelper {
     return await db.insert(tableNames[table]!, data);
   }
 
-  Future<int> update(Tables table, int id, Map<String, dynamic> data) async {
+  Future<int> update(
+    Tables table, {
+    int? id,
+    String? where,
+    List<Object?>? whereArgs,
+    required Map<String, dynamic> data,
+  }) async {
     final db = await database;
+    final tableName = tableNames[table]!;
+
+    final buffer = StringBuffer();
+    final args = <Object?>[];
+
+    if (where != null && where.isNotEmpty) {
+      buffer.write(where);
+      if (whereArgs != null) args.addAll(whereArgs);
+    }
+
+    if (id != null) {
+      if (buffer.isNotEmpty) buffer.write(' AND ');
+      buffer.write('id = ?');
+      args.add(id);
+    }
+
     return await db.update(
-      tableNames[table]!,
+      tableName,
       data,
-      where: 'id = ?',
-      whereArgs: [id],
+      where: buffer.isEmpty ? null : buffer.toString(),
+      whereArgs: buffer.isEmpty ? null : args,
     );
   }
 

@@ -12,16 +12,12 @@ class AdminProvider with ChangeNotifier {
 
   bool isLoading = false;
 
-  AdminProvider() {
-    _loadUserAdmin();
-  }
-
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  Future<void> _loadUserAdmin() async {
+  Future<void> loadUserAdmin() async {
     _setLoading(true);
     final res = await db.get(
       adminTables,
@@ -93,15 +89,19 @@ class AdminProvider with ChangeNotifier {
       ))[0],
     );
 
-    await db.update(adminTables, id, {
-      'fullname': fullname ?? userAdmin.fullname,
-      'username': username ?? userAdmin.username,
-      'img': img ?? userAdmin.img,
-      'password': password != null
-          ? hashPassword(password)
-          : userAdmin.password,
-      "role_id": roleId ?? userAdmin.roleId,
-    });
+    await db.update(
+      adminTables,
+      id: id,
+      data: {
+        'fullname': fullname ?? userAdmin.fullname,
+        'username': username ?? userAdmin.username,
+        'img': img ?? userAdmin.img,
+        'password': password != null
+            ? hashPassword(password)
+            : userAdmin.password,
+        "role_id": roleId ?? userAdmin.roleId,
+      },
+    );
 
     final index = userAdmins.indexWhere((item) => item.id == id);
     userAdmins[index] = UserAdmin(

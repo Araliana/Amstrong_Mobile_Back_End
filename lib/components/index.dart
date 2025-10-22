@@ -201,6 +201,41 @@ Widget buildEmptyState(String title, IconData icon) {
   );
 }
 
+Widget buildLoadingState([String? message]) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2C39B8).withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const SizedBox(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(
+              strokeWidth: 3.5,
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2C39B8)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          message ?? 'Loading...',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 Widget buildHeader(String title, IconData icon) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 16.0),

@@ -13,6 +13,7 @@ class AccessScreen extends StatefulWidget {
 }
 
 class _AccessScreenState extends State<AccessScreen> {
+  late Future<void> _loadFuture;
   final List<String> categories = [
     'ORDERS',
     'PRODUCTS & STOCK',
@@ -22,130 +23,149 @@ class _AccessScreenState extends State<AccessScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
+    _loadFuture = accessProvider.loadAccess();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final acceseProvider = Provider.of<AccessProvider>(context);
-    final accesses = acceseProvider.accesses;
+    final accessProvider = Provider.of<AccessProvider>(context);
     return Scaffold(
-      body: accesses.isEmpty
-          ? buildEmptyState("Access", Icons.lock_outlined)
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: accesses.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return buildHeader("Access", Icons.lock);
-                }
-                final access = accesses[index - 1];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    title: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            access.icon,
-                            size: 16,
-                            color: Colors.blue,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          access.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        idRenderer(access.id),
-                      ],
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        Row(
+      body: FutureBuilder(
+        future: _loadFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting ||
+              accessProvider.isLoading) {
+            return buildLoadingState("Fetching Access Data...");
+          }
+          final accesses = accessProvider.accesses;
+          return accesses.isEmpty
+              ? buildEmptyState("Access", Icons.lock_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: accesses.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildHeader("Access", Icons.lock);
+                    }
+                    final access = accesses[index - 1];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 2,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Row(
                           children: [
-                            const Icon(
-                              Icons.link,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                access.accessPath,
-                                style: const TextStyle(
-                                  fontFamily: 'monospace',
-                                  color: Colors.blue,
-                                ),
+                            Container(
+                              padding: EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                access.icon,
+                                size: 16,
+                                color: Colors.blue,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.category,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(access.category),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.access_time,
-                              size: 16,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 10),
                             Text(
-                              formatDate(access.createdAt),
-                              style: const TextStyle(fontSize: 12),
+                              access.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            idRenderer(access.id),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.link,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    access.accessPath,
+                                    style: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.category,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(access.category),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  formatDate(access.createdAt),
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showAddEditDialog(context, access),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            showDeleteConfirmation(
-                              context,
-                              title: "Access",
-                              label: access.name,
-                              isLoading: acceseProvider.isLoading,
-                              onDelete: () async {
-                                await acceseProvider.deleteAccess(access.id);
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () =>
+                                  _showAddEditDialog(context, access),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                showDeleteConfirmation(
+                                  context,
+                                  title: "Access",
+                                  label: access.name,
+                                  isLoading: accessProvider.isLoading,
+                                  onDelete: () async {
+                                    await accessProvider.deleteAccess(
+                                      access.id,
+                                    );
+                                  },
+                                );
                               },
-                            );
-                          },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
-              },
-            ),
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(context),
         backgroundColor: Colors.brown,

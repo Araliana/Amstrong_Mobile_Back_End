@@ -70,7 +70,7 @@ Future<void> runSeeds({
     "MANAGEMENT": [
       DataPermission(
         name: "Admin Users",
-        accessPath: "/admin-users",
+        accessPath: "/user-admin",
         icon: "user_admin",
       ),
       DataPermission(name: "Roles", accessPath: "/roles", icon: "roles"),
@@ -91,13 +91,16 @@ Future<void> runSeeds({
     final String category = entry.key;
     final List<DataPermission> perms = entry.value;
 
-    for (var access in perms) {
+    for (int i = 0; i < perms.length; i++) {
+      final access = perms[i];
       final accessId = await db.insert(tableNames[Tables.access]!, {
         "name": access.name,
         "access_path": access.accessPath,
         "category": category,
         "icon": access.icon,
+        "id_sort": i + 1,
       });
+
       for (int roleId = 1; roleId <= 3; roleId++) {
         if (!exclude[roleId]!.contains(accessId)) {
           await db.insert(tableNames[Tables.roleAccess]!, {

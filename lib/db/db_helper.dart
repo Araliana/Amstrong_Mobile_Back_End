@@ -11,7 +11,8 @@ enum Tables {
   role,
   access,
   roleAccess,
-  category,
+  productType,
+  dishType,
 }
 
 enum JoinType {
@@ -93,6 +94,7 @@ class DBHelper {
         name VARCHAR,
         access_path VARCHAR,
         category VARCHAR,
+        id_sort INTEGER,
         icon VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -114,6 +116,20 @@ class DBHelper {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
       ''',
+    Tables.productType: '''
+      CREATE TABLE product_type (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+      ''',
+    Tables.dishType: '''
+      CREATE TABLE dish_type (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+      ''',
   };
 
   static final Map<int, List<String>> tableMigrations = {};
@@ -124,6 +140,8 @@ class DBHelper {
     Tables.access: "access",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",
+    Tables.productType: "product_type",
+    Tables.dishType: "dish_type",
   };
 
   Future<Database> get database async {

@@ -17,11 +17,7 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> loadAccess() async {
     _setLoading(true);
-    final res = await db.get(
-      accessTables,
-      orderBy: "name",
-      orderType: OrderType.asc,
-    );
+    final res = await db.get(accessTables);
     accesses
       ..clear()
       ..addAll(res.map((e) => Access.fromMap(e)).toList());
@@ -32,6 +28,7 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required int idSort,
     required String icon,
   }) async {
     _setLoading(true);
@@ -39,6 +36,7 @@ class AccessProvider with ChangeNotifier {
       'name': name,
       'access_path': accessPath,
       'category': category,
+      'id_sort': idSort,
     });
 
     accesses.add(
@@ -47,6 +45,7 @@ class AccessProvider with ChangeNotifier {
         name: name,
         accessPath: accessPath,
         category: category,
+        idSort: idSort,
         iconName: icon,
         icon: appIcons.firstWhere((item) => item.name == icon).icon,
         createdAt: DateTime.now(),
@@ -59,6 +58,7 @@ class AccessProvider with ChangeNotifier {
     required String name,
     required String accessPath,
     required String category,
+    required int idSort,
     required String icon,
     required int id,
   }) async {
@@ -74,6 +74,7 @@ class AccessProvider with ChangeNotifier {
         'name': name,
         'access_path': accessPath,
         'category': category,
+        'id_sort': idSort,
         'icon': icon,
       },
     );
@@ -84,6 +85,7 @@ class AccessProvider with ChangeNotifier {
       name: name,
       accessPath: accessPath,
       category: category,
+      idSort: idSort,
       iconName: icon,
       icon: appIcons.firstWhere((item) => item.name == icon).icon,
       createdAt: access.createdAt,

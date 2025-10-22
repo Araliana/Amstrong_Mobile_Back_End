@@ -48,7 +48,10 @@ class _CategoryPageState extends State<CategoryPage> {
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () async {
-                            await categoryProvider.deleteCategory(category.id);
+                            await categoryProvider.deleteCategory(
+                              CategoryType.product,
+                              category.id,
+                            );
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -98,7 +101,10 @@ class _CategoryPageState extends State<CategoryPage> {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
 
-              final exists = await provider.checkCategoryName(name);
+              final exists = await provider.checkCategoryName(
+                CategoryType.product,
+                name,
+              );
               if (exists != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Nama kategori sudah ada')),
@@ -106,7 +112,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 return;
               }
 
-              await provider.addCategory(name);
+              await provider.addCategory(CategoryType.product, name);
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Simpan'),
@@ -148,6 +154,7 @@ class _CategoryPageState extends State<CategoryPage> {
               if (newName.isEmpty) return;
 
               final exists = await provider.checkCategoryName(
+                CategoryType.product,
                 newName,
                 excludeId: category.id,
               );
@@ -160,7 +167,11 @@ class _CategoryPageState extends State<CategoryPage> {
                 return;
               }
 
-              await provider.editCategory(id: category.id, name: newName);
+              await provider.editCategory(
+                CategoryType.product,
+                id: category.id,
+                name: newName,
+              );
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Simpan'),

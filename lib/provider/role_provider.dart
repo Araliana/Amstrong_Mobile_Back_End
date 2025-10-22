@@ -87,9 +87,9 @@ class RoleProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     final role = Role.fromMap(
-      (await db.get(Tables.role, where: "id = ?", whereArgs: [id]))[0],
+      (await db.get(roleTable, where: "id = ?", whereArgs: [id]))[0],
     );
-    await db.delete(roleAccessTable, where: "role_id", whereArgs: [id]);
+    await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     final List<Access> newAcc = [];
     for (int access in accesses) {
       newAcc.add(
@@ -109,7 +109,7 @@ class RoleProvider with ChangeNotifier {
   Future<void> deleteRole(int id) async {
     _setLoading(true);
     await db.delete(roleTable, id: id);
-    await db.delete(roleAccessTable, where: "role_id", whereArgs: [id]);
+    await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     roles.removeWhere((item) => item.id == id);
     _setLoading(false);
   }

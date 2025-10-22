@@ -1,19 +1,16 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_application_1/model/category.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:flutter_application_1/db/db_helper.dart';
+
+enum CategoryType { menu, product }
 
 class CategoryProvider with ChangeNotifier {
   final List<Category> categories = [];
   final DBHelper db = DBHelper();
-  final Tables categoryTable = Tables.category;
+  final Tables productTypeTable = Tables.productType;
+  final Tables dishTypeTable = Tables.dishType;
 
   bool isLoading = false;
-
-  CategoryProvider() {
-    _loadCategories();
-  }
 
   /// 🔹 Setter untuk status loading
   void _setLoading(bool value) {
@@ -22,10 +19,10 @@ class CategoryProvider with ChangeNotifier {
   }
 
   /// 🔹 Ambil semua kategori dari database
-  Future<void> _loadCategories() async {
+  Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);
     final res = await db.get(
-      categoryTable,
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
       orderBy: "id",
       orderType: OrderType.asc,
     );
@@ -38,24 +35,28 @@ class CategoryProvider with ChangeNotifier {
   }
 
   /// 🔹 Tambah kategori baru
-  Future<void> addCategory(String name) async {
+  Future<void> addCategory(CategoryType type, String name) async {
     _setLoading(true);
 
-    final id = await db.insert(categoryTable, {
-      'name': name,
-      'created_at': DateTime.now().toIso8601String(),
-    });
+    final id = await db.insert(
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
+      {'name': name},
+    );
 
     categories.add(Category(id: id, name: name, createdAt: DateTime.now()));
 
     _setLoading(false);
   }
 
-  Future<void> editCategory({required int id, String? name}) async {
+  Future<void> editCategory(
+    CategoryType type, {
+    required int id,
+    String? name,
+  }) async {
     _setLoading(true);
 
     final oldData = await db.get(
-      categoryTable,
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
       where: "id = ?",
       whereArgs: [id],
     );
@@ -67,12 +68,9 @@ class CategoryProvider with ChangeNotifier {
     final current = Category.fromMap(oldData.first);
 
     await db.update(
-      categoryTable,
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
       id: id,
-      data: {
-        'name': name ?? current.name,
-        'created_at': current.createdAt.toIso8601String(),
-      },
+      data: {'name': name ?? current.name},
     );
 
     final index = categories.indexWhere((item) => item.id == id);
@@ -87,18 +85,25 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  Future<void> deleteCategory(int id) async {
+  Future<void> deleteCategory(CategoryType type, int id) async {
     _setLoading(true);
-    await db.delete(categoryTable, id: id);
+    await db.delete(
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
+      id: id,
+    );
     categories.removeWhere((item) => item.id == id);
     _setLoading(false);
   }
 
-  Future<Category?> checkCategoryName(String name, {int? excludeId}) async {
+  Future<Category?> checkCategoryName(
+    CategoryType type,
+    String name, {
+    int? excludeId,
+  }) async {
     _setLoading(true);
 
     final res = await db.get(
-      categoryTable,
+      type == CategoryType.menu ? dishTypeTable : productTypeTable,
       where: "LOWER(name) = LOWER(?) ${excludeId != null ? 'AND id != ?' : ''}",
       whereArgs: excludeId != null ? [name, excludeId] : [name],
     );
@@ -107,9 +112,5 @@ class CategoryProvider with ChangeNotifier {
 
     if (res.isEmpty) return null;
     return Category.fromMap(res.first);
-  }
-
-  Future<void> refresh() async {
-    await _loadCategories();
   }
 }

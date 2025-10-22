@@ -5,6 +5,7 @@ class Access {
   final String name;
   final String accessPath;
   final String category;
+  final int idSort;
   final String iconName;
   final IconData icon;
   final DateTime createdAt;
@@ -14,6 +15,7 @@ class Access {
     required this.name,
     required this.accessPath,
     required this.category,
+    required this.idSort,
     required this.iconName,
     required this.icon,
     required this.createdAt,
@@ -25,13 +27,12 @@ class Access {
       name: map['name'],
       accessPath: map['access_path'],
       category: map['category'],
+      idSort: map['id_sort'],
       iconName: map['icon'],
       icon: appIcons.firstWhere((item) => item.name == map["icon"]).icon,
       createdAt: DateTime.parse(map['created_at']),
     );
   }
-
-  void add(Access access) {}
 }
 
 final List<IconItem> appIcons = [

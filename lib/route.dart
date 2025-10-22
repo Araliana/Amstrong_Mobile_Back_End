@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
@@ -127,6 +129,11 @@ class _AppShellState extends State<_AppShell> {
   String selectedPeriod = 'Hari Ini';
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     List<Widget> actions = [];
 
@@ -176,6 +183,7 @@ class _AppShellState extends State<_AppShell> {
   }
 
   Widget _buildDrawer(BuildContext context) {
+    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
     final currentPath = widget.state.uri.path;
 
     return Drawer(
@@ -362,208 +370,120 @@ class _AppShellState extends State<_AppShell> {
                   },
                 ),
 
-                // ORDERS
-                _buildMenuCategory('ORDERS'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.shopping_cart_rounded,
-                  title: 'All Orders',
-                  path: '/orders',
-                  isSelected: currentPath == '/orders',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('All Orders page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.hourglass_empty_rounded,
-                  title: 'Pending Orders',
-                  path: '/orders/pending',
-                  isSelected: currentPath == '/orders/pending',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pending Orders page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.check_circle_rounded,
-                  title: 'Completed Orders',
-                  path: '/orders/completed',
-                  isSelected: currentPath == '/orders/completed',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Completed Orders page not available yet',
+                FutureBuilder<Map<String, List<Access>>>(
+                  future: groupAccessesByCategory(context),
+                  builder: (context, snapshot) {
+                    // Loading State
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Loading menu...',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
+                      );
+                    }
+
+                    // Empty State
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.menu_open,
+                                size: 64,
+                                color: Colors.grey[300],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No Menu Available',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'There are no menu items to display.\nPlease contact administrator.',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 24),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(Icons.arrow_back),
+                                label: const Text('Close Drawer'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Success State - Display Menu
+                    final data = sortAccess(snapshot.data!);
+
+                    return SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: data.map((entry) {
+                          final category = entry.key;
+                          final accesses = entry.value;
+
+                          accesses.sort(
+                            (a, b) => (a.idSort).compareTo(b.idSort),
+                          );
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildMenuCategory(category),
+                              ...accesses.map(
+                                (access) => _buildDrawerItem(
+                                  context: context,
+                                  icon: access.icon,
+                                  title: access.name,
+                                  path: access.accessPath,
+                                  isSelected: currentPath == access.accessPath,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    context.go(access.accessPath);
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                       ),
                     );
                   },
                 ),
 
-                // PRODUCTS & STOCK
-                _buildMenuCategory('PRODUCTS & STOCK'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.coffee_maker_rounded,
-                  title: 'Products',
-                  path: '/products',
-                  isSelected: currentPath == '/products',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Products page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.category_rounded,
-                  title: 'Categories',
-                  path: '/categories',
-                  isSelected: currentPath == '/categories',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Categories page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.inventory_2_rounded,
-                  title: 'Inventory',
-                  path: '/inventory',
-                  isSelected: currentPath == '/inventory',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Inventory page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-
-                // FINANCE
-                _buildMenuCategory('FINANCE'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.account_balance_wallet_rounded,
-                  title: 'Cash Flow',
-                  path: '/cashflow',
-                  isSelected: currentPath == '/cashflow',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Cash Flow page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.assessment_rounded,
-                  title: 'Report',
-                  path: '/report',
-                  isSelected: currentPath == '/report',
-                  onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Report page not available yet'),
-                      ),
-                    );
-                  },
-                ),
-
-                // CONTENT & MEDIA
-                _buildMenuCategory('CONTENT & MEDIA'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.restaurant_menu_rounded,
-                  title: 'Menu',
-                  path: '/menu',
-                  isSelected: currentPath == '/menu',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/menu');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.fastfood,
-                  title: 'Dish Types',
-                  path: '/dish-types',
-                  isSelected: currentPath == '/dish-types',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/dish-types');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.collections_rounded,
-                  title: 'Gallery',
-                  path: '/gallery',
-                  isSelected: currentPath == '/gallery',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/gallery');
-                  },
-                ),
-
-                // MANAGEMENT
-                _buildMenuCategory('MANAGEMENT'),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.people_rounded,
-                  title: 'User Admin',
-                  path: '/user-admin',
-                  isSelected: currentPath == '/user-admin',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/user-admin');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.manage_accounts,
-                  title: 'Roles',
-                  path: '/roles',
-                  isSelected: currentPath == '/roles',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/roles');
-                  },
-                ),
-                _buildDrawerItem(
-                  context: context,
-                  icon: Icons.lock,
-                  title: 'Accesses',
-                  path: '/accesses',
-                  isSelected: currentPath == '/accesses',
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.go('/accesses');
-                  },
-                ),
+                const SizedBox(height: 16),
 
                 Divider(height: 2, indent: 16, endIndent: 16),
 

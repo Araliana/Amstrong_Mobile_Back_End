@@ -257,6 +257,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
 
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
@@ -333,8 +334,9 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Consumer<RoleProvider>(
-                  builder: (context, roleProvider, child) {
+                FutureBuilder(
+                  future: roleProvider.loadRole(),
+                  builder: (context, snapshot) {
                     return buildDropdownField(
                       label: 'Role',
                       isLoading: roleProvider.isLoading,
@@ -408,6 +410,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
 
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
@@ -450,8 +453,9 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Consumer<RoleProvider>(
-                  builder: (context, roleProvider, child) {
+                FutureBuilder(
+                  future: roleProvider.loadRole(),
+                  builder: (context, snapshot) {
                     return buildDropdownField(
                       label: 'Role',
                       isLoading: roleProvider.isLoading,

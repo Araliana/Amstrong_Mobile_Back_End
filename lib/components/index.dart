@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+enum InputMode { text, number, mixed }
 
 Widget buildInput({
   required TextEditingController controller,
@@ -8,11 +11,33 @@ Widget buildInput({
   Widget? suffix,
   String? prefixText,
   String? Function(String?)? validator,
+  InputMode mode = InputMode.mixed,
 }) {
+  TextInputType keyboardType = TextInputType.text;
+  List<TextInputFormatter> formatters = [];
+
+  switch (mode) {
+    case InputMode.number:
+      keyboardType = TextInputType.number;
+      formatters = [FilteringTextInputFormatter.digitsOnly];
+      break;
+
+    case InputMode.text:
+      keyboardType = TextInputType.text;
+      formatters = [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))];
+      break;
+
+    case InputMode.mixed:
+      keyboardType = TextInputType.text;
+      break;
+  }
+
   return TextFormField(
     controller: controller,
     obscureText: obscure,
     validator: validator,
+    keyboardType: keyboardType,
+    inputFormatters: formatters,
     decoration: InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon),

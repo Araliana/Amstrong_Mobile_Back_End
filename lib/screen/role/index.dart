@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -68,23 +69,6 @@ class RoleCard extends StatefulWidget {
 
 class _RoleCardState extends State<RoleCard> {
   bool _isExpanded = false;
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case "ORDERS":
-        return Colors.indigo;
-      case "PRODUCTS & STOCK":
-        return Colors.deepPurple;
-      case "FINANCE":
-        return Colors.amber;
-      case "CONTENT & MEDIA":
-        return Colors.teal;
-      case "MANAGEMENT":
-        return Colors.brown;
-      default:
-        return Colors.grey;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +261,7 @@ class _RoleCardState extends State<RoleCard> {
                     )
                   else
                     ...widget.role.access!.map((access) {
-                      final categoryColor = _getCategoryColor(access.category);
+                      final categoryColor = getCategoryColor(access.category);
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),

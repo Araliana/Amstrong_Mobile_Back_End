@@ -14,13 +14,6 @@ class AccessScreen extends StatefulWidget {
 
 class _AccessScreenState extends State<AccessScreen> {
   late Future<void> _loadFuture;
-  final List<String> categories = [
-    'ORDERS',
-    'PRODUCTS & STOCK',
-    'FINANCE',
-    'CONTENT & MEDIA',
-    'MANAGEMENT',
-  ];
 
   @override
   void initState() {
@@ -41,6 +34,24 @@ class _AccessScreenState extends State<AccessScreen> {
             return buildLoadingState("Fetching Access Data...");
           }
           final accesses = accessProvider.accesses;
+          accesses.sort((a, b) {
+            final ai = accessCategory.indexOf(a.category);
+            final bi = accessCategory.indexOf(b.category);
+
+            if (ai != bi) {
+              if (ai == -1 && bi == -1) {
+                return a.category.compareTo(b.category);
+              } else if (ai == -1) {
+                return 1;
+              } else if (bi == -1) {
+                return -1;
+              }
+              return ai.compareTo(bi);
+            }
+
+            return a.id.compareTo(b.id);
+          });
+
           return accesses.isEmpty
               ? buildEmptyState("Access", Icons.lock_outlined)
               : ListView.builder(
@@ -50,27 +61,36 @@ class _AccessScreenState extends State<AccessScreen> {
                     if (index == 0) {
                       return buildHeader("Access", Icons.lock);
                     }
+
                     final access = accesses[index - 1];
+                    final categoryColor = getCategoryColor(access.category);
+
                     return Card(
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(width: 1, color: categoryColor),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       margin: const EdgeInsets.only(bottom: 12),
                       elevation: 2,
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         title: Row(
                           children: [
+                            // Icon dengan warna category
                             Container(
-                              padding: EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withValues(alpha: 0.1),
+                                color: categoryColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 access.icon,
                                 size: 16,
-                                color: Colors.blue,
+                                color: categoryColor,
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             Text(
                               access.name,
                               style: const TextStyle(
@@ -78,7 +98,7 @@ class _AccessScreenState extends State<AccessScreen> {
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             idRenderer(access.id),
                           ],
                         ),
@@ -106,15 +126,40 @@ class _AccessScreenState extends State<AccessScreen> {
                               ],
                             ),
                             const SizedBox(height: 4),
+                            // Category badge dengan warna
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.category,
-                                  size: 16,
-                                  color: Colors.grey,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: categoryColor.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.category,
+                                        size: 12,
+                                        color: categoryColor,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        access.category,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: categoryColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(access.category),
                               ],
                             ),
                             const SizedBox(height: 4),
@@ -181,6 +226,9 @@ class _AccessScreenState extends State<AccessScreen> {
     final pathController = TextEditingController(
       text: access?.accessPath.substring(1) ?? '',
     );
+    final sortController = TextEditingController(
+      text: access?.idSort.toString(),
+    );
     String? selectedCategory = access?.category;
     String? selectedIcon = access?.iconName;
     final formKey = GlobalKey<FormState>();
@@ -227,7 +275,7 @@ class _AccessScreenState extends State<AccessScreen> {
                   buildDropdownField(
                     label: 'Category',
                     value: selectedCategory,
-                    simpleItems: categories,
+                    simpleItems: accessCategory,
                     prefixIcon: Icons.category,
                     onChanged: (value) {
                       setDialogState(() {
@@ -273,6 +321,19 @@ class _AccessScreenState extends State<AccessScreen> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  buildInput(
+                    controller: sortController,
+                    label: 'ID Sort',
+                    icon: Icons.sort_by_alpha_outlined,
+                    mode: InputMode.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'ID sort is required';
+                      }
+                      return null;
+                    },
+                  ),
                 ],
               ),
             ),
@@ -287,17 +348,19 @@ class _AccessScreenState extends State<AccessScreen> {
                 if (!isEdit) {
                   await accessProvider.addAccess(
                     name: nameController.text,
-                    accessPath: pathController.text,
+                    accessPath: "/${pathController.text}",
                     icon: selectedIcon!,
                     category: selectedCategory!,
+                    idSort: int.parse(sortController.text),
                   );
                 } else {
                   await accessProvider.editAccess(
                     name: nameController.text,
-                    accessPath: pathController.text,
+                    accessPath: "/${pathController.text}",
                     category: selectedCategory!,
                     icon: selectedIcon!,
                     id: access.id,
+                    idSort: int.parse(sortController.text),
                   );
                 }
                 Navigator.pop(context);

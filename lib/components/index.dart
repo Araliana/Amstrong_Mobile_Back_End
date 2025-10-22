@@ -175,12 +175,12 @@ List<Widget> buildDialogActions({
   ];
 }
 
-Widget buildEmptyState(String title) {
+Widget buildEmptyState(String title, IconData icon) {
   return Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.people_outline, size: 100, color: Colors.grey.shade300),
+        Icon(icon, size: 100, color: Colors.grey.shade300),
         const SizedBox(height: 16),
         Text(
           'No $title',

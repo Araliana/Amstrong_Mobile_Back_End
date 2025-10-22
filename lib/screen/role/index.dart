@@ -20,7 +20,7 @@ class _RoleScreenState extends State<RoleScreen> {
     final List<Role> roles = roleProvider.roles;
     return Scaffold(
       body: roles.isEmpty
-          ? buildEmptyState("Role")
+          ? buildEmptyState("Role", Icons.manage_accounts_outlined)
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: roles.length + 1,

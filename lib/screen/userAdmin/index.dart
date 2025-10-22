@@ -20,13 +20,13 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     final userAdmins = adminProvider.userAdmins;
     return Scaffold(
       body: userAdmins.isEmpty
-          ? buildEmptyState("User Admin")
+          ? buildEmptyState("User Admin", Icons.people_outline)
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: userAdmins.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return buildHeader("User Admin", Icons.people_rounded);
+                  return buildHeader("User Admin", Icons.people);
                 }
                 final user = userAdmins[index - 1];
                 return _buildUserAdminCard(user);

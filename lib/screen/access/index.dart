@@ -27,7 +27,7 @@ class _AccessScreenState extends State<AccessScreen> {
     final accesses = acceseProvider.accesses;
     return Scaffold(
       body: accesses.isEmpty
-          ? buildEmptyState("Access")
+          ? buildEmptyState("Access", Icons.lock_outlined)
           : ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: accesses.length + 1,

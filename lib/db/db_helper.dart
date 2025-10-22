@@ -104,12 +104,12 @@ class DBHelper {
       )
     ''',
     Tables.gallery: '''
-      CREATE TABLE IF NOT EXISTS gallery (
+      CREATE TABLE gallery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        quote TEXT NOT NULL,
-        imagePath TEXT NOT NULL
+        name VARCHAR,
+        category VARCHAR,
+        quote VARCHAR,
+        imagePath VARCHAR
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
       ''',
@@ -133,6 +133,7 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
+    // await deleteDatabase(path);
     return await openDatabase(
       path,
       version: _dbVersion,

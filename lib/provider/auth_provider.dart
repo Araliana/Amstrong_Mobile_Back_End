@@ -152,10 +152,7 @@ class AuthProvider with ChangeNotifier {
     currUserData = null;
   }
 
-  bool get isLoggedIn {
-    final user = _auth.currentUser;
-    return user != null;
-  }
+  bool get isLoggedIn => _auth.currentUser != null;
 
   Future<void> _checkLocalUser() async {
     if (currUsername == null) return;

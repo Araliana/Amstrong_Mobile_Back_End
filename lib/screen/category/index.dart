@@ -4,7 +4,9 @@ import 'package:flutter_application_1/provider/category_provider.dart';
 import 'package:flutter_application_1/model/category.dart';
 
 class CategoryPage extends StatefulWidget {
-  const CategoryPage({super.key});
+  final CategoryType type;
+
+  const CategoryPage({super.key, required this.type});
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
@@ -12,20 +14,37 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      Provider.of<CategoryProvider>(
+        context,
+        listen: false,
+      ).loadCategories(widget.type);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final categoryProvider = Provider.of<CategoryProvider>(context);
+    final provider = Provider.of<CategoryProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Manajemen Kategori')),
-      body: categoryProvider.isLoading
+      appBar: AppBar(
+        title: Text(
+          widget.type == CategoryType.menu
+              ? 'Dish Type (Jenis Menu)'
+              : 'Product Category (Kategori Produk)',
+        ),
+      ),
+      body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : categoryProvider.categories.isEmpty
-          ? const Center(child: Text('Belum ada kategori'))
+          : provider.categories.isEmpty
+          ? const Center(child: Text('Belum ada data kategori'))
           : ListView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount: categoryProvider.categories.length,
+              itemCount: provider.categories.length,
               itemBuilder: (context, index) {
-                final Category category = categoryProvider.categories[index];
+                final Category category = provider.categories[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
@@ -39,17 +58,14 @@ class _CategoryPageState extends State<CategoryPage> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showEditDialog(
-                            context,
-                            categoryProvider,
-                            category,
-                          ),
+                          onPressed: () =>
+                              _showEditDialog(context, provider, category),
                         ),
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () async {
-                            await categoryProvider.deleteCategory(
-                              CategoryType.product,
+                            await provider.deleteCategory(
+                              widget.type,
                               category.id,
                             );
                             if (mounted) {
@@ -70,25 +86,30 @@ class _CategoryPageState extends State<CategoryPage> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(context, categoryProvider),
+        onPressed: () => _showAddDialog(context, provider),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  /// 🔹 Dialog Tambah Kategori
   void _showAddDialog(BuildContext context, CategoryProvider provider) {
     final TextEditingController nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Tambah Kategori'),
+        title: Text(
+          widget.type == CategoryType.menu
+              ? 'Tambah Dish Type'
+              : 'Tambah Product Category',
+        ),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Nama kategori',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: widget.type == CategoryType.menu
+                ? 'Nama jenis menu'
+                : 'Nama kategori produk',
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
@@ -102,7 +123,7 @@ class _CategoryPageState extends State<CategoryPage> {
               if (name.isEmpty) return;
 
               final exists = await provider.checkCategoryName(
-                CategoryType.product,
+                widget.type,
                 name,
               );
               if (exists != null && context.mounted) {
@@ -112,7 +133,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 return;
               }
 
-              await provider.addCategory(CategoryType.product, name);
+              await provider.addCategory(widget.type, name);
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Simpan'),
@@ -122,7 +143,6 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
-  /// 🔹 Dialog Edit Kategori
   void _showEditDialog(
     BuildContext context,
     CategoryProvider provider,
@@ -135,7 +155,11 @@ class _CategoryPageState extends State<CategoryPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Edit Kategori'),
+        title: Text(
+          widget.type == CategoryType.menu
+              ? 'Edit Dish Type'
+              : 'Edit Product Category',
+        ),
         content: TextField(
           controller: editController,
           decoration: const InputDecoration(
@@ -154,7 +178,7 @@ class _CategoryPageState extends State<CategoryPage> {
               if (newName.isEmpty) return;
 
               final exists = await provider.checkCategoryName(
-                CategoryType.product,
+                widget.type,
                 newName,
                 excludeId: category.id,
               );
@@ -168,10 +192,11 @@ class _CategoryPageState extends State<CategoryPage> {
               }
 
               await provider.editCategory(
-                CategoryType.product,
+                widget.type,
                 id: category.id,
                 name: newName,
               );
+
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Simpan'),

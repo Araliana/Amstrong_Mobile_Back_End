@@ -1,9 +1,11 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/model/role.dart';
 
 class RoleProvider with ChangeNotifier {
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<Role> roles = [];
   final DBHelper db = DBHelper();
   final Tables roleTable = Tables.role;
@@ -38,6 +40,11 @@ class RoleProvider with ChangeNotifier {
       ..clear()
       ..addAll(res.map((e) => Role.fromMap(e)).toList());
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'load_role',
+      parameters: {'count': roles.length},
+    );
   }
 
   Future<Role> getRole(int id) async {
@@ -57,6 +64,10 @@ class RoleProvider with ChangeNotifier {
       whereArgs: [id],
     ))[0];
     _setLoading(false);
+    await analytics.logEvent(
+      name: 'get_role_detail',
+      parameters: {'role_id': id},
+    );
     return Role.fromMap(res);
   }
 
@@ -78,6 +89,15 @@ class RoleProvider with ChangeNotifier {
 
     roles.add(Role(id: res, name: name, access: newAcc));
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'add_role',
+      parameters: {
+        'role_id': res,
+        'name': name,
+        'access_count': accesses.length,
+      },
+    );
   }
 
   Future<void> editRole({
@@ -104,6 +124,15 @@ class RoleProvider with ChangeNotifier {
     final index = roles.indexWhere((item) => item.id == id);
     roles[index] = Role(id: id, name: role.name, access: newAcc);
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'edit_role',
+      parameters: {
+        'role_id': id,
+        'new_name': name,
+        'access_count': accesses.length,
+      },
+    );
   }
 
   Future<void> deleteRole(int id) async {
@@ -112,5 +141,7 @@ class RoleProvider with ChangeNotifier {
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     roles.removeWhere((item) => item.id == id);
     _setLoading(false);
+
+    await analytics.logEvent(name: 'delete_role', parameters: {'role_id': id});
   }
 }

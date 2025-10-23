@@ -78,14 +78,18 @@ class DBHelper {
         password VARCHAR,
         role_id INTEGER,
         last_login DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
     ''',
     Tables.role: '''
       CREATE TABLE role(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
     ''',
     Tables.access: '''
@@ -96,14 +100,18 @@ class DBHelper {
         category VARCHAR,
         id_sort INTEGER,
         icon VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
     ''',
     Tables.roleAccess: '''
       CREATE TABLE role_access(
         role_id INTEGER,
         access_id INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
     ''',
     Tables.gallery: '''
@@ -113,21 +121,27 @@ class DBHelper {
         category VARCHAR,
         quote VARCHAR,
         imagePath VARCHAR
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
       ''',
     Tables.productType: '''
       CREATE TABLE product_type (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
       ''',
     Tables.dishType: '''
       CREATE TABLE dish_type (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
       )
       ''',
   };
@@ -189,6 +203,8 @@ class DBHelper {
     final db = await database;
     final tableName = tableNames[table]!;
 
+    data['updated_at'] = DateTime.now().toIso8601String();
+
     final buffer = StringBuffer();
     final args = <Object?>[];
 
@@ -218,16 +234,31 @@ class DBHelper {
     List<Object?>? whereArgs,
   }) async {
     final db = await database;
+    final tableName = tableNames[table]!;
 
-    if (id != null) {
-      where = 'id = ?';
-      whereArgs = [id];
+    final now = DateTime.now().toIso8601String();
+
+    final data = {'deleted_at': now};
+
+    final buffer = StringBuffer();
+    final args = <Object?>[];
+
+    if (where != null && where.isNotEmpty) {
+      buffer.write(where);
+      if (whereArgs != null) args.addAll(whereArgs);
     }
 
-    return await db.delete(
-      tableNames[table]!,
-      where: where,
-      whereArgs: whereArgs,
+    if (id != null) {
+      if (buffer.isNotEmpty) buffer.write(' AND ');
+      buffer.write('id = ?');
+      args.add(id);
+    }
+
+    return await db.update(
+      tableName,
+      data,
+      where: buffer.isEmpty ? null : buffer.toString(),
+      whereArgs: buffer.isEmpty ? null : args,
     );
   }
 

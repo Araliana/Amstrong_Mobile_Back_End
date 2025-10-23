@@ -1,12 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:bcrypt/bcrypt.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 final List<String> accessCategory = [
   'ORDERS',
@@ -75,23 +75,6 @@ String formatDate(DateTime dateTime) {
   return DateFormat('dd MMM yyyy').format(dateTime);
 }
 
-Future<String?> uploadFile(File file) async {
-  try {
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    final ext = p.extension(file.path); // contoh: .jpg / .png / .pdf
-
-    final ref = FirebaseStorage.instance.ref().child(
-      'images/$fileName$ext',
-    ); // pakai ext asli
-
-    await ref.putFile(file);
-    return await ref.getDownloadURL();
-  } catch (e) {
-    print("Error: $e");
-    return null;
-  }
-}
-
 Future<Map<String, List<Access>>> groupAccessesByCategory(
   BuildContext context,
 ) async {
@@ -121,5 +104,30 @@ Color getCategoryColor(String category) {
       return Colors.brown;
     default:
       return Colors.grey;
+  }
+}
+
+final String publicKey = "public_Kjr6RCPoMfWgOGSFh10Jc7odHvw=";
+final String uploadEndpoint = "https://upload.imagekit.io/api/v1/files/upload";
+
+Future<String> uploadFile(File file, {String? folder}) async {
+  final uri = Uri.parse(uploadEndpoint);
+  final request = http.MultipartRequest('POST', uri);
+
+  request.files.add(await http.MultipartFile.fromPath('file', file.path));
+  request.fields['fileName'] = file.uri.pathSegments.last;
+  request.fields['publicKey'] = publicKey;
+  if (folder != null) {
+    request.fields['folder'] = folder;
+  }
+
+  final response = await request.send();
+  final respStr = await response.stream.bytesToString();
+
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = jsonDecode(respStr);
+    return data['url'] as String;
+  } else {
+    throw Exception('ImageKit upload failed: $respStr');
   }
 }

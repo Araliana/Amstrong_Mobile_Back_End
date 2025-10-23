@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
-import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
@@ -183,7 +182,6 @@ class _AppShellState extends State<_AppShell> {
   }
 
   Widget _buildDrawer(BuildContext context) {
-    final accessProvider = Provider.of<AccessProvider>(context, listen: false);
     final currentPath = widget.state.uri.path;
 
     return Drawer(

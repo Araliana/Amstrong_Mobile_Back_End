@@ -1,5 +1,79 @@
 PODS:
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
+  - Firebase/Auth (12.4.0):
+    - Firebase/CoreOnly
+    - FirebaseAuth (~> 12.4.0)
+  - Firebase/CoreOnly (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+  - Firebase/Storage (12.4.0):
+    - Firebase/CoreOnly
+    - FirebaseStorage (~> 12.4.0)
+  - firebase_auth (6.1.1):
+    - Firebase/Auth (~> 12.4.0)
+    - Firebase/CoreOnly (~> 12.4.0)
+    - firebase_core
+    - FlutterMacOS
+  - firebase_core (4.2.0):
+    - Firebase/CoreOnly (~> 12.4.0)
+    - FlutterMacOS
+  - firebase_storage (13.0.2):
+    - Firebase/CoreOnly (~> 12.4.0)
+    - Firebase/Storage (~> 12.4.0)
+    - firebase_core
+    - FlutterMacOS
+  - FirebaseAppCheckInterop (12.4.0)
+  - FirebaseAuth (12.4.0):
+    - FirebaseAppCheckInterop (~> 12.4.0)
+    - FirebaseAuthInterop (~> 12.4.0)
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseCoreExtension (~> 12.4.0)
+    - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
+    - RecaptchaInterop (~> 101.0)
+  - FirebaseAuthInterop (12.4.0)
+  - FirebaseCore (12.4.0):
+    - FirebaseCoreInternal (~> 12.4.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreExtension (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+  - FirebaseCoreInternal (12.4.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseStorage (12.4.0):
+    - FirebaseAppCheckInterop (~> 12.4.0)
+    - FirebaseAuthInterop (~> 12.4.0)
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseCoreExtension (~> 12.4.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GTMSessionFetcher/Core (< 6.0, >= 3.4)
   - FlutterMacOS (1.0.0)
+  - GoogleUtilities/AppDelegateSwizzler (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Network
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Network (8.1.0):
+    - GoogleUtilities/Logger
+    - "GoogleUtilities/NSData+zlib"
+    - GoogleUtilities/Privacy
+    - GoogleUtilities/Reachability
+  - "GoogleUtilities/NSData+zlib (8.1.0)":
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/Reachability (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMSessionFetcher/Core (5.0.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -8,20 +82,63 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
+  - firebase_auth (from `Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos`)
+  - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
+  - firebase_storage (from `Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
 
+SPEC REPOS:
+  trunk:
+    - Firebase
+    - FirebaseAppCheckInterop
+    - FirebaseAuth
+    - FirebaseAuthInterop
+    - FirebaseCore
+    - FirebaseCoreExtension
+    - FirebaseCoreInternal
+    - FirebaseStorage
+    - GoogleUtilities
+    - GTMSessionFetcher
+
 EXTERNAL SOURCES:
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
+  firebase_auth:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos
+  firebase_core:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
+  firebase_storage:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_storage/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
   sqflite_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin
 
 SPEC CHECKSUMS:
+  file_selector_macos: 9e9e068e90ebee155097d00e89ae91edb2374db7
+  Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
+  firebase_auth: b6e7af6050a882814c2450b4302f680abde292a9
+  firebase_core: d81d1a44df95699ce074ae63d8cb43e9df21e142
+  firebase_storage: 92b1a0b94e2ac75779dbb37eee35bae0edfd7e42
+  FirebaseAppCheckInterop: f734c802f21fe1da0837708f0f9a27218c8a4ed0
+  FirebaseAuth: 4a2aed737c84114a9d9b33d11ae1b147d6b94889
+  FirebaseAuthInterop: 858e6b754966e70740a4370dd1503dfffe6dbb49
+  FirebaseCore: bb595f3114953664e3c1dc032f008a244147cfd3
+  FirebaseCoreExtension: 7e1f7118ee970e001a8013719fb90950ee5e0018
+  FirebaseCoreInternal: d7f5a043c2cd01a08103ab586587c1468047bca6
+  FirebaseStorage: 20d6b56fb8a40ebaa03d6a2889fe33dac64adb73
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMSessionFetcher: 02d6e866e90bc236f48a703a041dfe43e6221a29
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
 

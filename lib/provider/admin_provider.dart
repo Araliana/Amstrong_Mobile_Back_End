@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/role.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
 
 class AdminProvider with ChangeNotifier {
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<UserAdmin> userAdmins = [];
   final DBHelper db = DBHelper();
   final Tables adminTables = Tables.userAdmin;
@@ -36,6 +38,11 @@ class AdminProvider with ChangeNotifier {
       ..clear()
       ..addAll(res.map((e) => UserAdmin.fromMap(e)).toList());
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'load_admin',
+      parameters: {'count': userAdmins.length},
+    );
   }
 
   Future<void> addUserAdmin({
@@ -67,6 +74,15 @@ class AdminProvider with ChangeNotifier {
       ),
     );
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'add_admin',
+      parameters: {
+        'fullname': fullname,
+        'username': username,
+        'role_id': roleId,
+      },
+    );
   }
 
   Future<void> editUserAdmin({
@@ -116,6 +132,16 @@ class AdminProvider with ChangeNotifier {
       role: role,
     );
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'edit_admin',
+      parameters: {
+        'id': id,
+        'fullname': fullname ?? userAdmin.fullname,
+        'username': username ?? userAdmin.username,
+        'role_id': roleId ?? userAdmin.roleId,
+      },
+    );
   }
 
   Future<UserAdmin?> checkUsername({required String username, int? id}) async {
@@ -125,11 +151,17 @@ class AdminProvider with ChangeNotifier {
       where: "username = ? ${id != null ? "AND id != ?" : ""}",
       whereArgs: [username],
     );
+    _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'check_username',
+      parameters: {'username': username, 'found': userAdmin.isNotEmpty},
+    );
+
     if (userAdmin.isEmpty) {
       return null;
     }
 
-    _setLoading(false);
     return UserAdmin.fromMap(userAdmin[0]);
   }
 
@@ -138,5 +170,7 @@ class AdminProvider with ChangeNotifier {
     await db.delete(adminTables, id: id);
     userAdmins.removeWhere((item) => item.id == id);
     _setLoading(false);
+
+    await analytics.logEvent(name: 'delete_admin', parameters: {'id': id});
   }
 }

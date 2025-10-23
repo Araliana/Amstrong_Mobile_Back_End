@@ -1,8 +1,10 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/access.dart';
 
 class AccessProvider with ChangeNotifier {
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<Access> accesses = [];
   final DBHelper db = DBHelper();
   final Tables accessTables = Tables.access;
@@ -22,6 +24,11 @@ class AccessProvider with ChangeNotifier {
       ..clear()
       ..addAll(res.map((e) => Access.fromMap(e)).toList());
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'load_access',
+      parameters: {'count': accesses.length},
+    );
   }
 
   Future<void> addAccess({
@@ -52,6 +59,11 @@ class AccessProvider with ChangeNotifier {
       ),
     );
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'add_access',
+      parameters: {'name': name, 'category': category, 'path': accessPath},
+    );
   }
 
   Future<void> editAccess({
@@ -91,6 +103,11 @@ class AccessProvider with ChangeNotifier {
       createdAt: access.createdAt,
     );
     _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'edit_access',
+      parameters: {'id': id, 'name': name, 'category': category},
+    );
   }
 
   Future<void> deleteAccess(int id) async {
@@ -99,5 +116,7 @@ class AccessProvider with ChangeNotifier {
     await db.delete(roleAccessTable, where: "access_id", whereArgs: [id]);
     accesses.removeWhere((item) => item.id == id);
     _setLoading(false);
+
+    await analytics.logEvent(name: 'delete_access', parameters: {'id': id});
   }
 }

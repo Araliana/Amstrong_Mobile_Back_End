@@ -192,6 +192,7 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     await _auth.signOut();
     await _clearLocalUser();
+    await db.clearDB();
     _setLoading(false);
     await analytics.logEvent(
       name: 'logout',

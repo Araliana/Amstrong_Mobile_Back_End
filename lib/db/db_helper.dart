@@ -188,6 +188,15 @@ class DBHelper {
     );
   }
 
+  Future<void> clearDB() async {
+    final path = join(await getDatabasesPath(), "app.db");
+    if (_db != null) {
+      await _db!.close();
+    }
+    await deleteDatabase(path);
+    _db = null;
+  }
+
   Future<int> insert(Tables table, Map<String, dynamic> data) async {
     final db = await database;
     return await db.insert(tableNames[table]!, data);

@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
@@ -13,6 +14,11 @@ import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:provider/provider.dart';
 
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
+  analytics: analytics,
+);
+
 class AppRoute {
   static GoRouter createRouter(AuthProvider authProvider) {
     return GoRouter(
@@ -27,6 +33,7 @@ class AppRoute {
           builder: (context, state) => const LoginScreen(),
         ),
         ShellRoute(
+          observers: [observer],
           builder: (context, state, child) =>
               _AppShell(state: state, child: child),
           routes: [

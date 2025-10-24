@@ -7,6 +7,7 @@ import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/route.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 GoRouter? _appRouter;
@@ -14,6 +15,7 @@ GoRouter? _appRouter;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await MobileAds.instance.initialize();
   runApp(
     MultiProvider(
       providers: [

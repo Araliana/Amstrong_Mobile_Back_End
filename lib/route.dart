@@ -5,6 +5,7 @@ import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
+import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
@@ -12,7 +13,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
-import 'package:flutter_application_1/screen/profile/profile.dart';
+import 'package:flutter_application_1/screen/profile/index.dart';
 import 'package:provider/provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -52,6 +53,10 @@ class AppRoute {
             ),
             //ORDERS
             //PRODUCTS & STOCK
+            GoRoute(
+              path: '/products',
+              builder: (context, state) => const ProductPage(),
+            ),
             //FINANCE
             //CONTENT & MEDIA
             GoRoute(

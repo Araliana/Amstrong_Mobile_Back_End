@@ -135,7 +135,7 @@ Widget buildDropdownField({
   final isValueValid = dropdownItems.any((e) => e.value == value);
 
   return DropdownButtonFormField<String>(
-    initialValue: isValueValid ? value : null,
+    value: isValueValid ? value : null,
     decoration: InputDecoration(
       labelText: label,
       prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,

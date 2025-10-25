@@ -306,7 +306,7 @@ class _AppShellState extends State<_AppShell> {
                       child: InkWell(
                         onTap: () {
                           Navigator.pop(context);
-                          context.go('/profile');
+                          context.push('/profile');
                         },
                         borderRadius: BorderRadius.circular(8),
                         splashColor: Colors.white.withValues(alpha: 0.2),

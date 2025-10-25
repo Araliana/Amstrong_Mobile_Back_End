@@ -19,7 +19,7 @@ class AuthProvider with ChangeNotifier {
   bool isLoading = false;
 
   AuthProvider() {
-    _loadCurrentUser();
+    loadCurrentUser();
     _listenAuthChanges();
   }
 
@@ -39,7 +39,19 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
       } else {
         currUserId = user.uid;
+
+        // pastikan username sudah terisi (misalnya dari SharedPreferences)
+        final prefs = await SharedPreferences.getInstance();
+        currUsername ??= prefs.getString("curr_username");
+
+        // kalau tetap null, kasih fallback
+        if (currUsername == null) {
+          print('⚠️ Warning: currUsername null setelah login, isi fallback.');
+          currUsername = user.email?.split('@').first ?? 'unknown';
+        }
+
         await _checkLocalUser();
+
         await analytics.logEvent(
           name: 'auth_state_change',
           parameters: {
@@ -48,12 +60,13 @@ class AuthProvider with ChangeNotifier {
             'username': currUsername!,
           },
         );
+
         notifyListeners();
       }
     });
   }
 
-  Future<void> _loadCurrentUser() async {
+  Future<void> loadCurrentUser() async {
     _setLoading(true);
     final prefs = await SharedPreferences.getInstance();
     currUserId = prefs.getString("curr_user_id");
@@ -198,7 +211,7 @@ class AuthProvider with ChangeNotifier {
     _setLoading(false);
     await analytics.logEvent(
       name: 'logout',
-      parameters: {'user_id': userId!, 'username': username!},
+      parameters: {'user_id': userId, 'username': username},
     );
     notifyListeners();
   }

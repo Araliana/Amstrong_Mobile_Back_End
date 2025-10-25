@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:bcrypt/bcrypt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
-import 'package:flutter_application_1/provider/access_provider.dart';
+import 'package:flutter_application_1/provider/admin_provider.dart';
+import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -78,10 +79,11 @@ String formatDate(DateTime dateTime) {
 Future<Map<String, List<Access>>> groupAccessesByCategory(
   BuildContext context,
 ) async {
-  final accessProvider = Provider.of<AccessProvider>(context, listen: false);
-  await accessProvider.loadAccess();
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+  final currUser = await adminProvider.getCurrUser(authProvider.currUsername!);
   final Map<String, List<Access>> grouped = {};
-  for (var access in accessProvider.accesses) {
+  for (var access in currUser.role!.access!) {
     if (!grouped.containsKey(access.category)) {
       grouped[access.category] = [];
     }

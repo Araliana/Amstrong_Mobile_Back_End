@@ -115,7 +115,7 @@ class DBHelper {
         stock INTEGER,
         img VARCHAR,
         description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME
       )

@@ -190,13 +190,15 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
+    final userId = currUserId!;
+    final username = currUsername!;
     await _auth.signOut();
     await _clearLocalUser();
     await db.clearDB();
     _setLoading(false);
     await analytics.logEvent(
       name: 'logout',
-      parameters: {'user_id': currUserId!, 'username': currUsername!},
+      parameters: {'user_id': userId!, 'username': username!},
     );
     notifyListeners();
   }

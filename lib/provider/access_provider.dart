@@ -20,6 +20,7 @@ class AccessProvider with ChangeNotifier {
   Future<void> loadAccess() async {
     _setLoading(true);
     final res = await db.get(accessTables);
+
     accesses
       ..clear()
       ..addAll(res.map((e) => Access.fromMap(e)).toList());

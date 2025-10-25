@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/add_banner.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String selectedPeriod;
@@ -74,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          BannerAdWidget(),
           // Summary Cards
           GridView.count(
             crossAxisCount: 2,

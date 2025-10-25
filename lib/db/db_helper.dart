@@ -105,6 +105,21 @@ class DBHelper {
         deleted_at DATETIME
       )
     ''',
+    Tables.product: '''
+      CREATE TABLE product(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        slug VARCHAR,
+        price REAL,
+        discount_price REAL,
+        stock INTEGER,
+        img VARCHAR,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME,
+        deleted_at DATETIME
+      )
+    ''',
     Tables.roleAccess: '''
       CREATE TABLE role_access(
         role_id INTEGER,
@@ -152,6 +167,7 @@ class DBHelper {
     Tables.userAdmin: "user_admin",
     Tables.role: "role",
     Tables.access: "access",
+    Tables.product: "product",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",
     Tables.productType: "product_type",
@@ -186,6 +202,15 @@ class DBHelper {
         }
       },
     );
+  }
+
+  Future<void> clearDB() async {
+    final path = join(await getDatabasesPath(), "app.db");
+    if (_db != null) {
+      await _db!.close();
+    }
+    await deleteDatabase(path);
+    _db = null;
   }
 
   Future<int> insert(Tables table, Map<String, dynamic> data) async {

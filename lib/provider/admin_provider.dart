@@ -155,7 +155,10 @@ class AdminProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'check_username',
-      parameters: {'username': username, 'found': userAdmin.isNotEmpty},
+      parameters: {
+        'username': username,
+        'found': userAdmin.isNotEmpty.toString(),
+      },
     );
 
     if (userAdmin.isEmpty) {

@@ -1,9 +1,11 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
+import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
@@ -11,7 +13,13 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
+import 'package:flutter_application_1/screen/profile/index.dart';
 import 'package:provider/provider.dart';
+
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
+  analytics: analytics,
+);
 
 class AppRoute {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -26,7 +34,12 @@ class AppRoute {
           path: '/login',
           builder: (context, state) => const LoginScreen(),
         ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
         ShellRoute(
+          observers: [observer],
           builder: (context, state, child) =>
               _AppShell(state: state, child: child),
           routes: [
@@ -40,6 +53,10 @@ class AppRoute {
             ),
             //ORDERS
             //PRODUCTS & STOCK
+            GoRoute(
+              path: '/products',
+              builder: (context, state) => const ProductPage(),
+            ),
             //FINANCE
             //CONTENT & MEDIA
             GoRoute(
@@ -287,7 +304,10 @@ class _AppShellState extends State<_AppShell> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => {},
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.go('/profile');
+                        },
                         borderRadius: BorderRadius.circular(8),
                         splashColor: Colors.white.withValues(alpha: 0.2),
                         highlightColor: Colors.white.withValues(alpha: 0.1),

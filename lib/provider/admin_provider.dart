@@ -11,6 +11,8 @@ class AdminProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables adminTables = Tables.userAdmin;
   final Tables roleTable = Tables.role;
+  final Tables accessTable = Tables.access;
+  final Tables roleAccessTable = Tables.roleAccess;
 
   bool isLoading = false;
 
@@ -43,6 +45,37 @@ class AdminProvider with ChangeNotifier {
       name: 'load_admin',
       parameters: {'count': userAdmins.length},
     );
+  }
+
+  Future<UserAdmin> getCurrUser(String username) async {
+    final res = (await db.get(
+      adminTables,
+      joins: [
+        Join(
+          joinTable: roleTable,
+          fromKey: "role_id",
+          toKey: "id",
+          isList: false,
+        ),
+        Join(joinTable: roleAccessTable, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          joinTable: accessTable,
+          fromKey: 'access_id',
+          toKey: 'id',
+          fromTable: roleAccessTable,
+        ),
+      ],
+      where: "user_admin.username = ?",
+      whereArgs: [username],
+    ))[0];
+
+    res["role"]["access"] = res["access"];
+
+    await analytics.logEvent(
+      name: 'get_id_by_id',
+      parameters: {'count': userAdmins.length},
+    );
+    return UserAdmin.fromMap(res);
   }
 
   Future<void> addUserAdmin({

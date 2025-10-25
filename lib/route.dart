@@ -12,6 +12,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
+import 'package:flutter_application_1/screen/profile/profile.dart';
 import 'package:provider/provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -31,6 +32,10 @@ class AppRoute {
         GoRoute(
           path: '/login',
           builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
         ),
         ShellRoute(
           observers: [observer],
@@ -294,7 +299,10 @@ class _AppShellState extends State<_AppShell> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () => {},
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.go('/profile');
+                        },
                         borderRadius: BorderRadius.circular(8),
                         splashColor: Colors.white.withValues(alpha: 0.2),
                         highlightColor: Colors.white.withValues(alpha: 0.1),

@@ -9,10 +9,20 @@ Future<void> runSeeds({
   await db.insert(tableNames[Tables.userAdmin]!, {
     "fullname": "Master",
     "username": "admin",
-    "img": null,
     "password": hashPassword("Asdf1234!"),
     "role_id": 1,
-    "last_login": null,
+  });
+  await db.insert(tableNames[Tables.userAdmin]!, {
+    "fullname": "Sendirian",
+    "username": "xav",
+    "password": hashPassword("Asdf1234!"),
+    "role_id": 2,
+  });
+  await db.insert(tableNames[Tables.userAdmin]!, {
+    "fullname": "Who Are You",
+    "username": "who?",
+    "password": hashPassword("Asdf1234!"),
+    "role_id": 3,
   });
 
   final List<String> roles = ["Master", "Owner", "Staff"];

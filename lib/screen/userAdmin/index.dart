@@ -320,7 +320,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                           : Icons.visibility_off,
                     ),
                     onPressed: () {
-                      setState(() => obscurePassword = !obscurePassword);
+                      setDialogState(() => obscurePassword = !obscurePassword);
                     },
                   ),
                   validator: (value) {
@@ -552,7 +552,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   obscure: obscureNew,
                   suffix: IconButton(
                     icon: Icon(
-                      obscureNew ? Icons.visibility : Icons.visibility_off,
+                      !obscureNew ? Icons.visibility : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() => obscureNew = !obscureNew);
@@ -576,7 +576,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   obscure: obscureConfirm,
                   suffix: IconButton(
                     icon: Icon(
-                      obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                      !obscureConfirm ? Icons.visibility : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() => obscureConfirm = !obscureConfirm);

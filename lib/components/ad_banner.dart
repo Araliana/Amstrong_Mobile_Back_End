@@ -19,12 +19,19 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   String _getTestAdUnitId() {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'ca-app-pub-9684460237225738/7020374963';
+      return 'ca-app-pub-3940256099942544/2014213617';
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return 'ca-app-pub-9684460237225738/5277060216';
+      return 'ca-app-pub-3940256099942544/8388050270';
     } else {
       throw UnsupportedError('Unsupported platform');
     }
+    // if (defaultTargetPlatform == TargetPlatform.android) {
+    //   return 'ca-app-pub-9684460237225738/7020374963';
+    // } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    //   return 'ca-app-pub-9684460237225738/5277060216';
+    // } else {
+    //   throw UnsupportedError('Unsupported platform');
+    // }
   }
 
   void _loadAd() {
@@ -39,6 +46,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
           });
         },
         onAdFailedToLoad: (ad, err) {
+          print(err);
           ad.dispose();
         },
       ),

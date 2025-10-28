@@ -70,65 +70,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      body: Stack(
         children: [
-          BannerAdWidget(),
-          // Summary Cards
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.5,
-            children: [
-              _buildSummaryCard(
-                'Total Omset',
-                'Rp ${_formatNumber(salesData['totalOmset'])}',
-                Icons.attach_money,
-                Colors.green,
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Summary Cards
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.5,
+                    children: [
+                      _buildSummaryCard(
+                        'Total Omset',
+                        'Rp ${_formatNumber(salesData['totalOmset'])}',
+                        Icons.attach_money,
+                        Colors.green,
+                      ),
+                      _buildSummaryCard(
+                        'Transaksi',
+                        '${salesData['totalTransaksi']}',
+                        Icons.shopping_cart,
+                        Colors.blue,
+                      ),
+                      _buildSummaryCard(
+                        'Produk Terjual',
+                        '${salesData['totalProdukTerjual']}',
+                        Icons.inventory,
+                        Colors.orange,
+                      ),
+                      _buildSummaryCard(
+                        'Rata-rata',
+                        'Rp ${_formatNumber(salesData['avgTransaksi'])}',
+                        Icons.trending_up,
+                        Colors.purple,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildSectionTitle('Produk Terlaris'),
+                  const SizedBox(height: 12),
+                  _buildTopProductsList(),
+                  const SizedBox(height: 24),
+
+                  _buildSectionTitle('Penjualan per Kategori'),
+                  const SizedBox(height: 12),
+                  _buildCategoryChart(),
+                  const SizedBox(height: 24),
+
+                  _buildSectionTitle('Transaksi Terbaru'),
+                  const SizedBox(height: 12),
+                  _buildRecentTransactions(),
+                ],
               ),
-              _buildSummaryCard(
-                'Transaksi',
-                '${salesData['totalTransaksi']}',
-                Icons.shopping_cart,
-                Colors.blue,
-              ),
-              _buildSummaryCard(
-                'Produk Terjual',
-                '${salesData['totalProdukTerjual']}',
-                Icons.inventory,
-                Colors.orange,
-              ),
-              _buildSummaryCard(
-                'Rata-rata',
-                'Rp ${_formatNumber(salesData['avgTransaksi'])}',
-                Icons.trending_up,
-                Colors.purple,
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 24),
 
-          // Top Products
-          _buildSectionTitle('Produk Terlaris'),
-          const SizedBox(height: 12),
-          _buildTopProductsList(),
-          const SizedBox(height: 24),
-
-          // Category Sales Chart
-          _buildSectionTitle('Penjualan per Kategori'),
-          const SizedBox(height: 12),
-          _buildCategoryChart(),
-          const SizedBox(height: 24),
-
-          // Recent Transactions
-          _buildSectionTitle('Transaksi Terbaru'),
-          const SizedBox(height: 12),
-          _buildRecentTransactions(),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              child: Container(
+                alignment: Alignment.bottomCenter,
+                color: Colors.transparent,
+                child: IgnorePointer(
+                  ignoring: false,
+                  child: CollapsibleBannerAd(),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

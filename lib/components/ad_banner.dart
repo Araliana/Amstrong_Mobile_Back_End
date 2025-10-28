@@ -1,15 +1,17 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-class BannerAdWidget extends StatefulWidget {
+class CollapsibleBannerAd extends StatefulWidget {
+  const CollapsibleBannerAd({super.key});
+
   @override
-  _BannerAdWidgetState createState() => _BannerAdWidgetState();
+  State<CollapsibleBannerAd> createState() => _CollapsibleBannerAdState();
 }
 
-class _BannerAdWidgetState extends State<BannerAdWidget> {
+class _CollapsibleBannerAdState extends State<CollapsibleBannerAd> {
   BannerAd? _bannerAd;
-  bool _isAdLoaded = false;
+  bool _isLoaded = false;
 
   @override
   void initState() {
@@ -17,32 +19,46 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     _loadAd();
   }
 
-  String _getTestAdUnitId() {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'ca-app-pub-9684460237225738/7020374963';
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return 'ca-app-pub-9684460237225738/5277060216';
-    } else {
-      throw UnsupportedError('Unsupported platform');
-    }
-  }
+  void _loadAd() async {
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+      MediaQueryData.fromView(
+        WidgetsBinding.instance.window,
+      ).size.width.truncate(),
+    );
 
-  void _loadAd() {
-    _bannerAd = BannerAd(
-      adUnitId: _getTestAdUnitId(),
-      request: const AdRequest(),
-      size: AdSize.banner,
+    if (size == null) return;
+
+    final adUnitId = Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/2014213617' // test Android
+        : 'ca-app-pub-3940256099942544/2934735716'; // test iOS
+
+    final ad = BannerAd(
+      adUnitId: adUnitId,
+      request: const AdRequest(extras: {'collapsible': 'bottom'}),
+      size: size,
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           setState(() {
-            _isAdLoaded = true;
+            _bannerAd = ad as BannerAd;
+            _isLoaded = true;
           });
         },
         onAdFailedToLoad: (ad, err) {
           ad.dispose();
+          debugPrint('Failed to load ad: $err');
         },
       ),
-    )..load();
+    );
+
+    await ad.load();
+  }
+
+  void _closeAd() {
+    _bannerAd?.dispose();
+    setState(() {
+      _isLoaded = false;
+      _bannerAd = null;
+    });
   }
 
   @override
@@ -53,15 +69,40 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isAdLoaded && _bannerAd != null) {
-      return Container(
-        alignment: Alignment.center,
-        width: _bannerAd!.size.width.toDouble(),
-        height: _bannerAd!.size.height.toDouble(),
-        child: AdWidget(ad: _bannerAd!),
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
+    if (!_isLoaded || _bannerAd == null) return const SizedBox.shrink();
+
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Container(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              color: Colors.transparent,
+              child: AdWidget(ad: _bannerAd!),
+            ),
+            // Tombol close di pojok kanan atas banner
+            Positioned(
+              right: 0,
+              top: 0,
+              child: GestureDetector(
+                onTap: _closeAd,
+                child: Container(
+                  margin: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

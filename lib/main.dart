@@ -44,6 +44,12 @@ class MainApp extends StatelessWidget {
         return MaterialApp.router(
           theme: ThemeData(
             useMaterial3: true,
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+                TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              },
+            ),
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.white,
               primary: Colors.black,

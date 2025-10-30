@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
@@ -580,6 +581,7 @@ class _AppShellState extends State<_AppShell> {
 
   void _showLogoutDialog(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -597,6 +599,8 @@ class _AppShellState extends State<_AppShell> {
               onPressed: authProvider.isLoading
                   ? null
                   : () async {
+                      //TODO save dark theme, dan hapus ini breh
+                      await themeProvider.setTheme(ThemeMode.light);
                       await authProvider.logout();
                       context.go('/login');
                     },

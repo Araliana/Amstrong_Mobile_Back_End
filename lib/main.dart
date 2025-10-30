@@ -6,6 +6,7 @@ import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/provider/product_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/route.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -27,6 +28,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => RoleProvider()),
         ChangeNotifierProvider(create: (_) => AccessProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: const MainApp(),
     ),
@@ -38,12 +40,16 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+    return Consumer2<AuthProvider, ThemeProvider>(
+      builder: (context, authProvider, themeProvider, child) {
         _appRouter ??= AppRoute.createRouter(authProvider);
         return MaterialApp.router(
+          themeMode: themeProvider.themeMode,
+
+          // Light Theme
           theme: ThemeData(
             useMaterial3: true,
+            brightness: Brightness.light,
             pageTransitionsTheme: const PageTransitionsTheme(
               builders: {
                 TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
@@ -64,6 +70,38 @@ class MainApp extends StatelessWidget {
               ),
             ),
           ),
+
+          // Dark Theme
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+                TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              },
+            ),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.grey[900]!,
+              primary: Colors.white,
+              surface: Colors.grey[900]!,
+              onSurface: Colors.white,
+              brightness: Brightness.dark,
+            ),
+            dialogTheme: DialogThemeData(
+              backgroundColor: Colors.grey[850],
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            scaffoldBackgroundColor: Colors.black,
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.grey[900],
+              elevation: 0,
+            ),
+          ),
+
           debugShowCheckedModeBanner: false,
           title: "KJM",
           routerConfig: _appRouter,

@@ -119,8 +119,12 @@ Future<String> uploadFile(File file, {String? folder}) async {
   request.files.add(await http.MultipartFile.fromPath('file', file.path));
   request.fields['fileName'] = file.uri.pathSegments.last;
   request.fields['publicKey'] = publicKey;
-  if (folder != null) {
-    request.fields['folder'] = folder;
+
+  if (folder != null && folder.isNotEmpty) {
+    final cleanFolder = folder.replaceAll(RegExp(r'^/+|/+$'), '');
+    request.fields['folder'] = 'KJM/$cleanFolder';
+  } else {
+    request.fields['folder'] = 'KJM';
   }
 
   final response = await request.send();

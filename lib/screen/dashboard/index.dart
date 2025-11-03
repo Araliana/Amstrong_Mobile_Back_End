@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/ad_banner.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String selectedPeriod;
@@ -70,6 +72,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.getTheme();
     return Scaffold(
       body: Stack(
         children: [
@@ -95,42 +99,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'Rp ${_formatNumber(salesData['totalOmset'])}',
                           Icons.attach_money,
                           Colors.green,
+                          isDark,
                         ),
                         _buildSummaryCard(
                           'Transaksi',
                           '${salesData['totalTransaksi']}',
                           Icons.shopping_cart,
                           Colors.blue,
+                          isDark,
                         ),
                         _buildSummaryCard(
                           'Produk Terjual',
                           '${salesData['totalProdukTerjual']}',
                           Icons.inventory,
                           Colors.orange,
+                          isDark,
                         ),
                         _buildSummaryCard(
                           'Rata-rata',
                           'Rp ${_formatNumber(salesData['avgTransaksi'])}',
                           Icons.trending_up,
                           Colors.purple,
+                          isDark,
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Produk Terlaris'),
+                    _buildSectionTitle('Produk Terlaris',isDark),
                     const SizedBox(height: 12),
-                    _buildTopProductsList(),
+                    _buildTopProductsList(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Penjualan per Kategori'),
+                    _buildSectionTitle('Penjualan per Kategori',isDark),
                     const SizedBox(height: 12),
-                    _buildCategoryChart(),
+                    _buildCategoryChart(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Transaksi Terbaru'),
+                    _buildSectionTitle('Transaksi Terbaru',isDark),
                     const SizedBox(height: 12),
-                    _buildRecentTransactions(),
+                    _buildRecentTransactions(isDark),
                   ],
                 ),
               ),
@@ -162,11 +170,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String value,
     IconData icon,
     Color color,
+    bool theme,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme == true ? Colors.grey[900] : Colors.white,//Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -188,7 +197,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: theme == true ? Colors.white : Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -200,7 +209,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
+              color: theme == true ? Colors.white : Colors.grey[800],
             ),
           ),
         ],
@@ -208,21 +217,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title,bool theme) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: theme == true ? Colors.white : Colors.black87,
       ),
     );
   }
 
-  Widget _buildTopProductsList() {
+  Widget _buildTopProductsList(bool theme) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme == true ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -276,13 +285,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCategoryChart() {
+  Widget _buildCategoryChart(bool theme) {
     // final maxValue = categorySales.values.reduce((a, b) => a > b ? a : b);
     final totalSales = categorySales.values.reduce((a, b) => a + b);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme == true ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -316,7 +325,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: Colors.brown[700],
+                        color: theme == true ? Colors.brown[100] : Colors.brown[700],
                       ),
                     ),
                   ],
@@ -326,8 +335,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percentage,
-                    backgroundColor: Colors.grey[200],
-                    color: Colors.brown[400],
+                    backgroundColor: theme == true ? Colors.grey[500] : Colors.grey[200],
+                    color: theme == true ? Colors.brown[600] : Colors.brown[400],
                     minHeight: 8,
                   ),
                 ),
@@ -339,10 +348,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildRecentTransactions() {
+  Widget _buildRecentTransactions(bool theme) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme == true ? Colors.grey[900] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

@@ -5,6 +5,7 @@ import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:bcrypt/bcrypt.dart';
 
 class AuthProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -13,7 +14,7 @@ class AuthProvider with ChangeNotifier {
   final Tables adminTables = Tables.userAdmin;
 
   String? currUserId;
-  String? currUsername;
+  String? currDbUserId; // Store the ID from the local DB
   Map<String, dynamic>? currUserData;
 
   bool isLoading = false;
@@ -40,15 +41,9 @@ class AuthProvider with ChangeNotifier {
       } else {
         currUserId = user.uid;
 
-        // pastikan username sudah terisi (misalnya dari SharedPreferences)
+        // pastikan currDbUserId sudah terisi (misalnya dari SharedPreferences)
         final prefs = await SharedPreferences.getInstance();
-        currUsername ??= prefs.getString("curr_username");
-
-        // kalau tetap null, kasih fallback
-        if (currUsername == null) {
-          print('⚠️ Warning: currUsername null setelah login, isi fallback.');
-          currUsername = user.email?.split('@').first ?? 'unknown';
-        }
+        currDbUserId ??= prefs.getString("curr_db_user_id");
 
         await _checkLocalUser();
 
@@ -56,8 +51,8 @@ class AuthProvider with ChangeNotifier {
           name: 'auth_state_change',
           parameters: {
             'status': 'logged_in',
-            if (currUserId != null) 'user_id': currUserId!,
-            if (currUsername != null) 'username': currUsername!,
+            if (currUserId != null) 'firebase_user_id': currUserId!,
+            if (currDbUserId != null) 'db_user_id': currDbUserId!,
           },
         );
 
@@ -70,9 +65,9 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     final prefs = await SharedPreferences.getInstance();
     currUserId = prefs.getString("curr_user_id");
-    currUsername = prefs.getString("curr_username");
+    currDbUserId = prefs.getString("curr_db_user_id");
 
-    if (currUsername != null) {
+    if (currDbUserId != null) {
       await _checkLocalUser();
     }
 
@@ -102,7 +97,8 @@ class AuthProvider with ChangeNotifier {
 
       final res = UserAdmin.fromMap(resData.first);
 
-      if (!verifyPassword(password, res.password)) {
+      // Verify password using bcrypt
+      if (!BCrypt.checkpw(password, res.password)) {
         _setLoading(false);
         await analytics.logEvent(
           name: 'login_failed',
@@ -113,6 +109,7 @@ class AuthProvider with ChangeNotifier {
 
       UserCredential userCred;
       try {
+        // Try signing in with the user's email and the *unhashed* password
         userCred = await _auth.signInWithEmailAndPassword(
           email: email,
           password: password,
@@ -120,6 +117,7 @@ class AuthProvider with ChangeNotifier {
       } on FirebaseAuthException catch (e) {
         print('⚠️ Firebase error: ${e.code} — ${e.message}');
 
+        // If user is not found in Firebase, create them
         if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
           final userCred = await _auth.createUserWithEmailAndPassword(
             email: email,
@@ -129,11 +127,17 @@ class AuthProvider with ChangeNotifier {
           if (userCred.user != null) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString("curr_user_id", userCred.user!.uid);
-            await prefs.setString("curr_username", username);
+            await prefs.setString("curr_db_user_id", res.id.toString());
 
             currUserId = userCred.user!.uid;
-            currUsername = username;
+            currDbUserId = res.id.toString();
             currUserData = resData.first;
+
+            await db.update(
+              adminTables,
+              id: res.id,
+              data: {"last_login": DateTime.now().toIso8601String()},
+            );
 
             _setLoading(false);
 
@@ -141,12 +145,12 @@ class AuthProvider with ChangeNotifier {
               name: 'user_created',
               parameters: {
                 'username': username,
-                if (currUserId != null) 'user_id': currUserId!,
+                if (currUserId != null) 'firebase_user_id': currUserId!,
               },
             );
 
             notifyListeners();
-            print('✅ User baru dibuat & login sukses untuk $email');
+            print('✅ User baru dibuat di Firebase & login sukses untuk $email');
             return true;
           } else {
             _setLoading(false);
@@ -185,11 +189,12 @@ class AuthProvider with ChangeNotifier {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("curr_user_id", userCred.user!.uid);
-      await prefs.setString("curr_username", username);
+      await prefs.setString("curr_db_user_id", res.id.toString());
 
       currUserId = userCred.user!.uid;
-      currUsername = username;
+      currDbUserId = res.id.toString();
       currUserData = resData.first;
+
       await db.update(
         adminTables,
         id: res.id,
@@ -202,7 +207,8 @@ class AuthProvider with ChangeNotifier {
         name: 'login_success',
         parameters: {
           'username': username,
-          if (currUserId != null) 'user_id': currUserId!,
+          if (currUserId != null) 'firebase_user_id': currUserId!,
+          if (currDbUserId != null) 'db_user_id': currDbUserId!,
         },
       );
       notifyListeners();
@@ -222,7 +228,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _setLoading(true);
     final userId = currUserId;
-    final username = currUsername;
+    final dbUserId = currDbUserId;
     await _auth.signOut();
     await _clearLocalUser();
     await db.clearDB();
@@ -230,8 +236,8 @@ class AuthProvider with ChangeNotifier {
     await analytics.logEvent(
       name: 'logout',
       parameters: {
-        if (userId != null) 'user_id': userId,
-        if (username != null) 'username': username,
+        if (userId != null) 'firebase_user_id': userId,
+        if (dbUserId != null) 'db_user_id': dbUserId,
       },
     );
     notifyListeners();
@@ -240,28 +246,24 @@ class AuthProvider with ChangeNotifier {
   Future<void> _clearLocalUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("curr_user_id");
-    await prefs.remove("curr_username");
+    await prefs.remove("curr_db_user_id");
     currUserId = null;
-    currUsername = null;
+    currDbUserId = null;
     currUserData = null;
   }
 
   bool get isLoggedIn => _auth.currentUser != null;
 
   Future<void> _checkLocalUser() async {
-    if (currUsername == null) return;
+    if (currDbUserId == null) return;
 
-    final res = await db.get(
-      adminTables,
-      where: "username = ?",
-      whereArgs: [currUsername],
-    );
+    final res = await db.get(adminTables, where: "password = ?", whereArgs: []);
 
     if (res.isEmpty) {
       await logout();
       await analytics.logEvent(
         name: 'local_user_not_found',
-        parameters: {if (currUsername != null) 'username': currUsername!},
+        parameters: {if (currDbUserId != null) 'db_user_id': currDbUserId!},
       );
     } else {
       currUserData = res.first;

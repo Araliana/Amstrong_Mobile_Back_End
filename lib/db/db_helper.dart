@@ -66,7 +66,7 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2; // Increment version untuk migration
 
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
@@ -115,6 +115,9 @@ class DBHelper {
         stock INTEGER,
         img VARCHAR,
         description TEXT,
+        hpp REAL,
+        profit_type VARCHAR,
+        profit_amount REAL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME
@@ -161,7 +164,13 @@ class DBHelper {
       ''',
   };
 
-  static final Map<int, List<String>> tableMigrations = {};
+  static final Map<int, List<String>> tableMigrations = {
+    2: [
+      'ALTER TABLE product ADD COLUMN hpp REAL',
+      'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
+      'ALTER TABLE product ADD COLUMN profit_amount REAL',
+    ],
+  };
 
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",
@@ -334,7 +343,18 @@ class DBHelper {
       }
     }
 
-    if (where != null) query.write(" WHERE $where");
+    // Add filter for soft delete - exclude deleted items
+    final whereClause = StringBuffer();
+    final whereArgsList = <Object?>[];
+
+    whereClause.write("$baseTable.deleted_at IS NULL");
+
+    if (where != null && where.isNotEmpty) {
+      whereClause.write(" AND ($where)");
+      if (whereArgs != null) whereArgsList.addAll(whereArgs);
+    }
+
+    query.write(" WHERE ${whereClause.toString()}");
 
     if (orderBy != null) {
       query.write(" ORDER BY $orderBy ${orderType.sql}");
@@ -342,7 +362,7 @@ class DBHelper {
       query.write(" ORDER BY $baseTable.id ${orderType.sql}");
     }
 
-    final rows = await db.rawQuery(query.toString(), whereArgs);
+    final rows = await db.rawQuery(query.toString(), whereArgsList);
 
     return _toNested(
       rows,

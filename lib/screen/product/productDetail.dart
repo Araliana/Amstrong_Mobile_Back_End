@@ -51,12 +51,24 @@ void showProductDetail(BuildContext context, Product product) {
                 ),
               SizedBox(height: 16),
               _buildDetailRow('Name', product.name),
-              _buildDetailRow('Price', 'IDR ${_formatPrice(product.price)}'),
-              if (product.discountPrice != null)
+              if (product.discountPrice != null &&
+                  product.discountPrice! > 0) ...[
                 _buildDetailRow(
-                  'Discount Price',
+                  'Original Price',
+                  'IDR ${_formatPrice(product.price)}',
+                ),
+                _buildDetailRow(
+                  'Discount',
                   'IDR ${_formatPrice(product.discountPrice!)}',
                 ),
+                _buildDetailRow(
+                  'Final Price',
+                  'IDR ${_formatPrice(product.price - product.discountPrice!)}',
+                  highlight: true,
+                ),
+              ] else ...[
+                _buildDetailRow('Price', 'IDR ${_formatPrice(product.price)}'),
+              ],
               _buildDetailRow('Stock', '${product.stock} items'),
               if (product.description != null &&
                   product.description!.isNotEmpty)
@@ -104,7 +116,7 @@ void showProductDetail(BuildContext context, Product product) {
   );
 }
 
-Widget _buildDetailRow(String label, String value) {
+Widget _buildDetailRow(String label, String value, {bool highlight = false}) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 8.0),
     child: Row(
@@ -116,7 +128,7 @@ Widget _buildDetailRow(String label, String value) {
             label,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Colors.brown[700],
+              color: highlight ? Colors.green[700] : Colors.brown[700],
               fontSize: 14,
             ),
           ),
@@ -124,7 +136,11 @@ Widget _buildDetailRow(String label, String value) {
         Expanded(
           child: Text(
             value,
-            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+            style: TextStyle(
+              color: highlight ? Colors.green[700] : Colors.grey[700],
+              fontSize: 14,
+              fontWeight: highlight ? FontWeight.w700 : FontWeight.normal,
+            ),
           ),
         ),
       ],

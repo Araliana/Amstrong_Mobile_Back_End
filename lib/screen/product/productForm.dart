@@ -208,16 +208,7 @@ Future<void> showProductForm(
               String? imageUrl = editProduct?.img;
               if (pickedFile != null) {
                 final uploaded = await uploadFile(pickedFile!);
-                if (uploaded != null) {
-                  imageUrl = uploaded;
-                } else {
-                  messenger.showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to upload image'),
-                      backgroundColor: Colors.orange[700],
-                    ),
-                  );
-                }
+                imageUrl = uploaded;
               }
 
               final provider = Provider.of<ProductProvider>(
@@ -237,14 +228,25 @@ Future<void> showProductForm(
                   img: imageUrl,
                 );
               } else {
-                await provider.editProduct(
-                  id: editProduct.id,
-                  name: name,
-                  price: price,
-                  stock: stock,
-                  description: desc,
-                  img: imageUrl,
-                );
+                final productId = editProduct.id;
+                if (productId != null) {
+                  await provider.editProduct(
+                    id: productId,
+                    name: name,
+                    price: price,
+                    stock: stock,
+                    description: desc,
+                    img: imageUrl,
+                  );
+                } else {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Product ID is missing'),
+                      backgroundColor: Colors.red[700],
+                    ),
+                  );
+                  return;
+                }
               }
 
               Navigator.of(c).pop();

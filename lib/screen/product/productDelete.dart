@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import '../../provider/product_provider.dart';
 
 Future<void> confirmDeleteProduct(BuildContext context, int id) async {
-  // Save ScaffoldMessenger before showing dialog
+  // Save ScaffoldMessenger and Provider before showing dialog
   final messenger = ScaffoldMessenger.of(context);
+  final provider = Provider.of<ProductProvider>(context, listen: false);
 
   final ok = await showDialog<bool>(
     context: context,
@@ -60,19 +61,32 @@ Future<void> confirmDeleteProduct(BuildContext context, int id) async {
   );
 
   if (ok == true) {
-    await Provider.of<ProductProvider>(
-      context,
-      listen: false,
-    ).deleteProduct(id);
+    try {
+      await provider.deleteProduct(id);
 
-    // Show success message using saved messenger
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Product deleted successfully!'),
-        backgroundColor: Colors.green[700],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+      // Show success message using saved messenger
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Product deleted successfully!'),
+          backgroundColor: Colors.green[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } catch (e) {
+      // Show error message if delete fails
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete product: $e'),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 }

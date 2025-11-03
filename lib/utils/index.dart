@@ -81,14 +81,25 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
 ) async {
   final authProvider = Provider.of<AuthProvider>(context, listen: false);
   final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-  final currUser = await adminProvider.getCurrUser(authProvider.currUsername!);
-  final Map<String, List<Access>> grouped = {};
-  for (var access in currUser.role!.access!) {
-    if (!grouped.containsKey(access.category)) {
-      grouped[access.category] = [];
-    }
-    grouped[access.category]!.add(access);
+
+  final currUsername = authProvider.currUsername;
+  if (currUsername == null) {
+    return {}; // Return empty map if no username
   }
+
+  final currUser = await adminProvider.getCurrUser(currUsername);
+  final Map<String, List<Access>> grouped = {};
+
+  // Check if user has role and access
+  if (currUser.role?.access != null) {
+    for (var access in currUser.role!.access!) {
+      if (!grouped.containsKey(access.category)) {
+        grouped[access.category] = [];
+      }
+      grouped[access.category]!.add(access);
+    }
+  }
+
   return grouped;
 }
 
@@ -109,16 +120,18 @@ Color getCategoryColor(String category) {
   }
 }
 
-final String publicKey = "public_Kjr6RCPoMfWgOGSFh10Jc7odHvw=";
+final String privateKey = "private_jcw73bL0uzySjVOBzHIMUYc0cag=";
 final String uploadEndpoint = "https://upload.imagekit.io/api/v1/files/upload";
 
 Future<String> uploadFile(File file, {String? folder}) async {
   final uri = Uri.parse(uploadEndpoint);
   final request = http.MultipartRequest('POST', uri);
 
+  final String basicAuth = 'Basic ${base64Encode(utf8.encode('$privateKey:'))}';
+  request.headers['Authorization'] = basicAuth;
+
   request.files.add(await http.MultipartFile.fromPath('file', file.path));
   request.fields['fileName'] = file.uri.pathSegments.last;
-  request.fields['publicKey'] = publicKey;
 
   if (folder != null && folder.isNotEmpty) {
     final cleanFolder = folder.replaceAll(RegExp(r'^/+|/+$'), '');

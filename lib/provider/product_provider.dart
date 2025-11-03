@@ -40,27 +40,26 @@ class ProductProvider with ChangeNotifier {
     required int stock,
     required String description,
     required String? img,
+    double? hpp,
+    String? profitType,
+    double? profitAmount,
+    double? discountPrice,
   }) async {
     _setLoading(true);
-    final res = await db.insert(productTables, {
+    await db.insert(productTables, {
       'name': name,
       'price': price,
+      'discount_price': discountPrice,
       'stock': stock,
       'description': description,
       'img': img,
+      'hpp': hpp,
+      'profit_type': profitType,
+      'profit_amount': profitAmount,
     });
 
-    products.add(
-      Product(
-        id: res,
-        name: name,
-        price: price,
-        stock: stock,
-        description: description,
-        createdAt: DateTime.now(),
-      ),
-    );
-    _setLoading(false);
+    // Reload products dari database untuk memastikan sinkronisasi
+    await loadProducts();
 
     await analytics.logEvent(
       name: 'add_product',
@@ -80,6 +79,10 @@ class ProductProvider with ChangeNotifier {
     required String description,
     required String? img,
     required int id,
+    double? hpp,
+    String? profitType,
+    double? profitAmount,
+    double? discountPrice,
   }) async {
     _setLoading(true);
     final product = Product.fromMap(
@@ -92,26 +95,21 @@ class ProductProvider with ChangeNotifier {
       data: {
         'name': name,
         'price': price,
+        'discount_price': discountPrice,
         'stock': stock,
         'description': description,
         'img': img ?? product.img,
+        'hpp': hpp,
+        'profit_type': profitType,
+        'profit_amount': profitAmount,
       },
     );
 
-    final index = products.indexWhere((item) => item.id == id);
-    products[index] = Product(
-      id: id,
-      name: name,
-      price: price,
-      stock: stock,
-      description: description,
-      img: img ?? product.img,
-      createdAt: product.createdAt,
-    );
-    _setLoading(false);
+    // Reload products dari database untuk memastikan sinkronisasi
+    await loadProducts();
 
     await analytics.logEvent(
-      name: 'edit_admin',
+      name: 'edit_product',
       parameters: {
         'name': name,
         'price': price,
@@ -124,8 +122,9 @@ class ProductProvider with ChangeNotifier {
   Future<void> deleteProduct(int id) async {
     _setLoading(true);
     await db.delete(productTables, id: id);
-    products.removeWhere((item) => item.id == id);
-    _setLoading(false);
+
+    // Reload products dari database untuk memastikan sinkronisasi
+    await loadProducts();
 
     await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
   }

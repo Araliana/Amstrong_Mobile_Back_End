@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:flutter_application_1/screen/product/productDetail.dart';
-import 'package:flutter_application_1/screen/product/productForm.dart';
+import 'package:flutter_application_1/screen/product/productFormPage.dart';
 import 'package:flutter_application_1/screen/product/productDelete.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +121,24 @@ class _ProductPageState extends State<ProductPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     ElevatedButton.icon(
-                      onPressed: () => showProductForm(context),
+                      onPressed: () async {
+                        // Save provider reference before navigation
+                        final prov = Provider.of<ProductProvider>(
+                          context,
+                          listen: false,
+                        );
+
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductFormPage(),
+                          ),
+                        );
+
+                        if (result == true) {
+                          prov.loadProducts();
+                        }
+                      },
                       icon: const Icon(Icons.add_rounded, size: 20),
                       label: Text(
                         isMobile ? 'Add' : 'Add Product',
@@ -183,10 +200,30 @@ class _ProductPageState extends State<ProductPage> {
                           return _buildProductCard(
                             product: product,
                             isMobile: isMobile,
-                            onEdit: () =>
-                                showProductForm(context, editProduct: product),
-                            onDelete: () =>
-                                confirmDeleteProduct(context, product.id!),
+                            onEdit: () async {
+                              // Save provider reference before navigation
+                              final prov = Provider.of<ProductProvider>(
+                                context,
+                                listen: false,
+                              );
+
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProductFormPage(editProduct: product),
+                                ),
+                              );
+
+                              if (result == true) {
+                                prov.loadProducts();
+                              }
+                            },
+                            onDelete: () {
+                              if (product.id != null) {
+                                confirmDeleteProduct(context, product.id!);
+                              }
+                            },
                           );
                         },
                       ),
@@ -238,16 +275,19 @@ class _ProductPageState extends State<ProductPage> {
                         colors: [Colors.brown[50]!, Colors.brown[100]!],
                       ),
                     ),
-                    padding: const EdgeInsets.all(16),
                     child: product.img == null || product.img!.isEmpty
-                        ? Icon(
-                            Icons.coffee_rounded,
-                            size: isMobile ? 60 : 80,
-                            color: Colors.brown[300],
+                        ? Center(
+                            child: Icon(
+                              Icons.coffee_rounded,
+                              size: isMobile ? 60 : 80,
+                              color: Colors.brown[300],
+                            ),
                           )
                         : Image.network(
                             product.img!,
-                            fit: BoxFit.contain,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
                             loadingBuilder: (context, child, progress) {
                               if (progress == null) return child;
                               return Center(
@@ -358,9 +398,11 @@ class _ProductPageState extends State<ProductPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (product.discountPrice != null) ...[
+                        if (product.discountPrice != null &&
+                            product.discountPrice! > 0) ...[
+                          // Harga asli yang dicoret
                           Text(
-                            'IDR ${_formatPrice(product.discountPrice!)}',
+                            'IDR ${_formatPrice(product.price)}',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: isMobile ? 11 : 12,
@@ -369,28 +411,54 @@ class _ProductPageState extends State<ProductPage> {
                             ),
                           ),
                           SizedBox(height: 2),
+                          // Harga setelah diskon
+                          Row(
+                            children: [
+                              Text(
+                                'IDR ',
+                                style: TextStyle(
+                                  color: Colors.brown[700],
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                _formatPrice(
+                                  product.price - product.discountPrice!,
+                                ),
+                                style: TextStyle(
+                                  color: Colors.brown[900],
+                                  fontSize: isMobile ? 16 : 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          // Harga normal tanpa diskon
+                          Row(
+                            children: [
+                              Text(
+                                'IDR ',
+                                style: TextStyle(
+                                  color: Colors.brown[700],
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                _formatPrice(product.price),
+                                style: TextStyle(
+                                  color: Colors.brown[900],
+                                  fontSize: isMobile ? 16 : 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
-                        Row(
-                          children: [
-                            Text(
-                              'IDR ',
-                              style: TextStyle(
-                                color: Colors.brown[700],
-                                fontSize: isMobile ? 12 : 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _formatPrice(product.price),
-                              style: TextStyle(
-                                color: Colors.brown[900],
-                                fontSize: isMobile ? 16 : 18,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ],

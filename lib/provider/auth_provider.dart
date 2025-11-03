@@ -56,8 +56,8 @@ class AuthProvider with ChangeNotifier {
           name: 'auth_state_change',
           parameters: {
             'status': 'logged_in',
-            'user_id': currUserId!,
-            'username': currUsername!,
+            if (currUserId != null) 'user_id': currUserId!,
+            if (currUsername != null) 'username': currUsername!,
           },
         );
 
@@ -126,24 +126,33 @@ class AuthProvider with ChangeNotifier {
             password: password,
           );
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString("curr_user_id", userCred.user!.uid);
-          await prefs.setString("curr_username", username);
+          if (userCred.user != null) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString("curr_user_id", userCred.user!.uid);
+            await prefs.setString("curr_username", username);
 
-          currUserId = userCred.user!.uid;
-          currUsername = username;
-          currUserData = resData.first;
+            currUserId = userCred.user!.uid;
+            currUsername = username;
+            currUserData = resData.first;
 
-          _setLoading(false);
+            _setLoading(false);
 
-          await analytics.logEvent(
-            name: 'user_created',
-            parameters: {'username': username, 'user_id': currUserId!},
-          );
+            await analytics.logEvent(
+              name: 'user_created',
+              parameters: {
+                'username': username,
+                if (currUserId != null) 'user_id': currUserId!,
+              },
+            );
 
-          notifyListeners();
-          print('✅ User baru dibuat & login sukses untuk $email');
-          return true;
+            notifyListeners();
+            print('✅ User baru dibuat & login sukses untuk $email');
+            return true;
+          } else {
+            _setLoading(false);
+            print('❌ User creation failed - user is null');
+            return false;
+          }
         }
 
         if (e.code == 'wrong-password') {
@@ -168,6 +177,12 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
+      if (userCred.user == null) {
+        _setLoading(false);
+        print('❌ Login failed - user is null');
+        return false;
+      }
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("curr_user_id", userCred.user!.uid);
       await prefs.setString("curr_username", username);
@@ -185,7 +200,10 @@ class AuthProvider with ChangeNotifier {
       await analytics.logLogin(loginMethod: 'email_password');
       await analytics.logEvent(
         name: 'login_success',
-        parameters: {'username': username, 'user_id': currUserId!},
+        parameters: {
+          'username': username,
+          if (currUserId != null) 'user_id': currUserId!,
+        },
       );
       notifyListeners();
       print('✅ Login sukses untuk $email');
@@ -203,15 +221,18 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     _setLoading(true);
-    final userId = currUserId!;
-    final username = currUsername!;
+    final userId = currUserId;
+    final username = currUsername;
     await _auth.signOut();
     await _clearLocalUser();
     await db.clearDB();
     _setLoading(false);
     await analytics.logEvent(
       name: 'logout',
-      parameters: {'user_id': userId, 'username': username},
+      parameters: {
+        if (userId != null) 'user_id': userId,
+        if (username != null) 'username': username,
+      },
     );
     notifyListeners();
   }
@@ -240,7 +261,7 @@ class AuthProvider with ChangeNotifier {
       await logout();
       await analytics.logEvent(
         name: 'local_user_not_found',
-        parameters: {'username': currUsername!},
+        parameters: {if (currUsername != null) 'username': currUsername!},
       );
     } else {
       currUserData = res.first;

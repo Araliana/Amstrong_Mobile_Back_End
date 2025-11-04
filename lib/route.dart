@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:flutter_application_1/screen/profile/index.dart';
+import 'package:flutter_application_1/screen/ChangePass/ChangePassword.dart';
 import 'package:provider/provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -38,6 +39,10 @@ class AppRoute {
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/change-password',
+          builder: (context, state) => const ChangePasswordScreen(),
         ),
         ShellRoute(
           observers: [observer],

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
@@ -37,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _loadUserData() async {
-    // TODO: Load from widget.user or your state management
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final prefs = await SharedPreferences.getInstance();
     final currUsername = prefs.getString("curr_username") ?? "none";
@@ -423,7 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: const Text('Change Password'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // TODO: Navigate to change password screen
+                    context.push('/change-password');
                   },
                 ),
 

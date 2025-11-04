@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../provider/change_password.dart';
-import '../model/change_password.dart';
-import '../components/index.dart';
+import 'package:flutter_application_1/provider/change_password.dart';
+import 'package:flutter_application_1/model/change_password.dart';
+import 'package:flutter_application_1/components/index.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({Key? key}) : super(key: key);
+  const ChangePasswordScreen({super.key});
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();

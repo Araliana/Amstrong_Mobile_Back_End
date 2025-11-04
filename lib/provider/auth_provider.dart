@@ -127,9 +127,11 @@ class AuthProvider with ChangeNotifier {
           );
 
           if (userCred.user != null) {
+
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString("curr_user_id", userCred.user!.uid);
             await prefs.setString("curr_username", username);
+            await prefs.setInt("curr_id",res.id);
 
             currUserId = userCred.user!.uid;
             currUsername = username;
@@ -186,6 +188,7 @@ class AuthProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("curr_user_id", userCred.user!.uid);
       await prefs.setString("curr_username", username);
+      await prefs.setInt("curr_id",res.id);
 
       currUserId = userCred.user!.uid;
       currUsername = username;
@@ -206,6 +209,9 @@ class AuthProvider with ChangeNotifier {
         },
       );
       notifyListeners();
+      print("=============================");
+      print(prefs.getKeys());
+      print("=============================");
       print('✅ Login sukses untuk $email');
       return true;
     } catch (e) {

@@ -82,12 +82,12 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
   final authProvider = Provider.of<AuthProvider>(context, listen: false);
   final adminProvider = Provider.of<AdminProvider>(context, listen: false);
 
-  final currUsername = authProvider.currUsername;
-  if (currUsername == null) {
+  final userID = authProvider.currUserId;
+  if (userID == null) {
     return {}; // Return empty map if no username
   }
 
-  final currUser = await adminProvider.getCurrUser(currUsername);
+  final currUser = await adminProvider.getCurrUser(userID);
   final Map<String, List<Access>> grouped = {};
 
   // Check if user has role and access

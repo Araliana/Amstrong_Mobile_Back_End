@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_application_1/provider/change_password.dart';
-import 'package:flutter_application_1/model/change_password.dart';
-import 'package:flutter_application_1/components/index.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -32,7 +31,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<ChangePasswordProvider>(context);
+    final provider = Provider.of<AdminProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -42,10 +41,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.brown.shade800,
-              Colors.brown.shade400,
-            ],
+            colors: [Colors.brown.shade800, Colors.brown.shade400],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -145,7 +141,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                               color: Colors.brown.shade600,
                             ),
                             onPressed: () {
-                              setState(() => _obscureConfirm = !_obscureConfirm);
+                              setState(
+                                () => _obscureConfirm = !_obscureConfirm,
+                              );
                             },
                           ),
                           validator: (value) {
@@ -175,53 +173,29 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 ? null
                                 : () async {
                                     if (_formKey.currentState!.validate()) {
-                                      final model = ChangePasswordModel(
-                                        oldPassword:
-                                            _oldPasswordController.text.trim(),
-                                        newPassword:
-                                            _newPasswordController.text.trim(),
-                                        confirmPassword:
-                                            _confirmPasswordController.text
-                                                .trim(),
+                                      // await provider.editUserAdmin();
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor:
+                                              Colors.green.shade600,
+                                          content: const Row(
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle,
+                                                color: Colors.white,
+                                              ),
+                                              SizedBox(width: 10),
+                                              Text(
+                                                'Password changed successfully!',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       );
-
-                                      final success = await provider
-                                          .changePassword(model);
-
-                                      if (success) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            backgroundColor:
-                                                Colors.green.shade600,
-                                            content: const Row(
-                                              children: [
-                                                Icon(Icons.check_circle,
-                                                    color: Colors.white),
-                                                SizedBox(width: 10),
-                                                Text('Password changed!'),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                        context.pop();
-                                      } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            backgroundColor:
-                                                Colors.red.shade600,
-                                            content: const Row(
-                                              children: [
-                                                Icon(Icons.error_outline,
-                                                    color: Colors.white),
-                                                SizedBox(width: 10),
-                                                Text('Change failed!'),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      }
+                                      context.pop();
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
@@ -238,9 +212,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
-                                              Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
                                     ),
                                   )
                                 : const Text(

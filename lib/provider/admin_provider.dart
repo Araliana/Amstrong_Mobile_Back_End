@@ -47,7 +47,7 @@ class AdminProvider with ChangeNotifier {
     );
   }
 
-  Future<UserAdmin> getCurrUser(String username) async {
+  Future<UserAdmin> getCurrUser(String userId) async {
     final res = (await db.get(
       adminTables,
       joins: [
@@ -65,8 +65,8 @@ class AdminProvider with ChangeNotifier {
           fromTable: roleAccessTable,
         ),
       ],
-      where: "user_admin.username = ?",
-      whereArgs: [username],
+      where: "user_admin.id = ?",
+      whereArgs: [userId],
     ))[0];
 
     res["role"]["access"] = res["access"];

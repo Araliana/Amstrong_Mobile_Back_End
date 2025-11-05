@@ -10,8 +10,6 @@ class UserAdmin {
   final DateTime createdAt;
   final int roleId;
   final Role? role;
-  // TODO save this thing fr fr
-  //final bool themesdark;
 
   UserAdmin({
     required this.id,
@@ -23,7 +21,6 @@ class UserAdmin {
     required this.createdAt,
     required this.roleId,
     this.role,
-    //required this.themesdark,
   });
 
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
@@ -41,7 +38,6 @@ class UserAdmin {
       role: map['role'] == null
           ? null
           : Role.fromMap((map['role'] as Map).cast<String, dynamic>()),
-        //themesdark: map['themesdark'] as bool
     );
   }
 }

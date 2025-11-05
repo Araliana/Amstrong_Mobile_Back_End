@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 enum InputMode { text, number, mixed }
 
@@ -57,10 +60,7 @@ Widget buildInput({
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: textColor ?? Colors.blue,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: textColor ?? Colors.blue, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
@@ -89,10 +89,9 @@ Widget buildDropdownField({
   //Color? iconColor,
 }) {
   assert(
-  items != null || simpleItems != null,
-  'Either items or simpleItems must be provided',
+    items != null || simpleItems != null,
+    'Either items or simpleItems must be provided',
   );
-
 
   if (isLoading) {
     return InputDecorator(
@@ -128,27 +127,35 @@ Widget buildDropdownField({
   List<DropdownMenuItem<String>> dropdownItems;
   if (simpleItems != null) {
     dropdownItems = simpleItems
-        .map((item) => DropdownMenuItem(
-      value: item,
-      child: Text(item, style: TextStyle(color: textColor ?? Colors.black)),
-    ))
+        .map(
+          (item) => DropdownMenuItem(
+            value: item,
+            child: Text(
+              item,
+              style: TextStyle(color: textColor ?? Colors.black),
+            ),
+          ),
+        )
         .toList();
   } else {
     dropdownItems = items!
         .map(
           (item) => DropdownMenuItem(
-        value: item.value,
-        child: Row(
-          children: [
-            if (item.icon != null) ...[
-              Icon(item.icon, size: 20),
-              const SizedBox(width: 6),
-            ],
-            Text(item.label, style: TextStyle(color: textColor ?? Colors.black)),
-          ],
-        ),
-      ),
-    )
+            value: item.value,
+            child: Row(
+              children: [
+                if (item.icon != null) ...[
+                  Icon(item.icon, size: 20),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  item.label,
+                  style: TextStyle(color: textColor ?? Colors.black),
+                ),
+              ],
+            ),
+          ),
+        )
         .toList();
   }
 
@@ -160,8 +167,7 @@ Widget buildDropdownField({
     decoration: InputDecoration(
       labelText: label,
       labelStyle: TextStyle(color: textColor ?? Colors.black87),
-      prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon) : null,
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
       filled: true,
       fillColor: fillColor ?? Colors.grey.shade100,
       border: OutlineInputBorder(
@@ -170,10 +176,7 @@ Widget buildDropdownField({
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: textColor ?? Colors.blue,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: textColor ?? Colors.blue, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       errorMaxLines: 2,
@@ -359,5 +362,51 @@ void showDeleteConfirmation(
         },
       ),
     ),
+  );
+}
+
+void showLogoutDialog(BuildContext context) {
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar?'),
+        actions: [
+          TextButton(
+            onPressed: authProvider.isLoading
+                ? null
+                : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: authProvider.isLoading
+                ? null
+                : () async {
+                    await authProvider.logout();
+                    context.go('/login');
+                  },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: authProvider.isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Logout', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
   );
 }

@@ -378,12 +378,15 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
             isLoading: adminProvider.isLoading,
             onConfirm: () async {
               if (formKey.currentState!.validate()) {
-                final userAdmin = await adminProvider.checkUsername(
+                final check = await adminProvider.checkUsername(
                   username: usernameController.text,
                 );
-                if (userAdmin != null) {
+                if (check) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Username already existed!')),
+                    const SnackBar(
+                      content: Text('Username already existed!'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                   return;
                 }
@@ -493,11 +496,11 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
             isLoading: adminProvider.isLoading,
             onConfirm: () async {
               if (formKey.currentState!.validate()) {
-                final userAdmin = await adminProvider.checkUsername(
+                final check = await adminProvider.checkUsername(
                   username: usernameController.text,
                   id: user.id,
                 );
-                if (userAdmin != null) {
+                if (check) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Username already existed!'),

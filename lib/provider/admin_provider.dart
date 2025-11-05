@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
@@ -6,6 +8,8 @@ import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
 
 class AdminProvider with ChangeNotifier {
+  final _userController = StreamController<UserAdmin>.broadcast();
+  Stream<UserAdmin> get userStream => _userController.stream;
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<UserAdmin> userAdmins = [];
   final DBHelper db = DBHelper();
@@ -75,6 +79,7 @@ class AdminProvider with ChangeNotifier {
       name: 'get_id_by_id',
       parameters: {'count': userAdmins.length},
     );
+    _userController.add(UserAdmin.fromMap(res));
     return UserAdmin.fromMap(res);
   }
 
@@ -150,10 +155,12 @@ class AdminProvider with ChangeNotifier {
         "role_id": roleId ?? userAdmin.roleId,
       },
     );
-    if(userAdmins.indexWhere((item) => item.id == id) == -1){
+    if (userAdmins.indexWhere((item) => item.id == id) == -1) {
       await loadUserAdmin();
     }
-    final index = (userAdmins.indexWhere((item) => item.id == id)) == -1 ? id : userAdmins.indexWhere((item) => item.id == id);
+    final index = (userAdmins.indexWhere((item) => item.id == id)) == -1
+        ? id
+        : userAdmins.indexWhere((item) => item.id == id);
     userAdmins[index] = UserAdmin(
       id: id,
       fullname: fullname ?? userAdmin.fullname,
@@ -165,6 +172,11 @@ class AdminProvider with ChangeNotifier {
       roleId: roleId ?? userAdmin.roleId,
       role: role,
     );
+
+    if (fullname != null || img != null) {
+      _userController.add(userAdmins[index]);
+    }
+
     _setLoading(false);
     await analytics.logEvent(
       name: 'edit_admin',
@@ -177,13 +189,39 @@ class AdminProvider with ChangeNotifier {
     );
   }
 
-  Future<UserAdmin?> checkUsername({required String username, int? id}) async {
+  Future<bool> changePassword({
+    required String newPassword,
+    required String oldPassword,
+    required int id,
+  }) async {
     _setLoading(true);
-    final userAdmin = await db.get(
-      adminTables,
-      where: "username = ? ${id != null ? "AND id != ?" : ""}",
-      whereArgs: [username],
+
+    final userAdmin = UserAdmin.fromMap(
+      (await db.get(adminTables, where: "id = ?", whereArgs: [id]))[0],
     );
+
+    if (!verifyPassword(oldPassword, userAdmin.password)) {
+      _setLoading(false);
+      return false;
+    }
+
+    await editUserAdmin(id: id, password: hashPassword(newPassword));
+
+    _setLoading(false);
+    print(isLoading);
+    await analytics.logEvent(name: 'change_password', parameters: {'id': id});
+
+    return true;
+  }
+
+  Future<bool> checkUsername({required String username, int? id}) async {
+    _setLoading(true);
+
+    final query = "username = ? ${id != null ? "AND id != ?" : ""}";
+    final args = id != null ? [username, id] : [username];
+
+    final userAdmin = await db.get(adminTables, where: query, whereArgs: args);
+
     _setLoading(false);
 
     await analytics.logEvent(
@@ -191,14 +229,11 @@ class AdminProvider with ChangeNotifier {
       parameters: {
         'username': username,
         'found': userAdmin.isNotEmpty.toString(),
+        'checked_with_id': (id != null).toString(),
       },
     );
 
-    if (userAdmin.isEmpty) {
-      return null;
-    }
-
-    return UserAdmin.fromMap(userAdmin[0]);
+    return userAdmin.isNotEmpty;
   }
 
   Future<void> deleteUserAdmin(int id) async {

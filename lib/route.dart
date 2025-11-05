@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:flutter_application_1/screen/profile/index.dart';
+import 'package:flutter_application_1/screen/ChangePass/ChangePassword.dart';
 import 'package:provider/provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -38,6 +39,10 @@ class AppRoute {
         GoRoute(
           path: '/profile',
           builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/change-password',
+          builder: (context, state) => const ChangePasswordScreen(),
         ),
         ShellRoute(
           observers: [observer],
@@ -526,6 +531,8 @@ class _AppShellState extends State<_AppShell> {
   }
 
   Widget _buildMenuCategory(String title) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.getTheme();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
       child: Text(
@@ -533,7 +540,7 @@ class _AppShellState extends State<_AppShell> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Colors.grey[600],
+          color: isDark ? Colors.white : Colors.grey[600],
           letterSpacing: 0.5,
         ),
       ),
@@ -549,10 +556,14 @@ class _AppShellState extends State<_AppShell> {
     required VoidCallback onTap,
     bool isLogout = false,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.getTheme();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.brown[50] : Colors.transparent,
+        color: isDark ?
+              (isSelected ? Colors.brown[700] : Colors.transparent) :
+              (isSelected ? Colors.brown[50] : Colors.transparent),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -560,19 +571,22 @@ class _AppShellState extends State<_AppShell> {
           icon,
           color: isLogout
               ? Colors.red[700]
-              : (isSelected ? Colors.brown[700] : Colors.grey[600]),
+              : (isDark ? (isSelected ? Colors.grey[200] : Colors.white60) :
+                (isSelected ? Colors.brown[700] : Colors.grey[800])),
         ),
         title: Text(
           title,
           style: TextStyle(
             color: isLogout
                 ? Colors.red[700]
-                : (isSelected ? Colors.brown[700] : Colors.grey[800]),
+                : (isDark ? (isSelected ? Colors.grey[200] : Colors.white60) :
+                  (isSelected ? Colors.brown[700] : Colors.grey[800])),
+                //: (isSelected ? Colors.brown[700] : isDark ? Colors.white60 : Colors.grey[800]),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         trailing: isSelected
-            ? Icon(Icons.chevron_right, color: Colors.brown[700])
+            ? Icon(Icons.chevron_right, color: isDark ? Colors.brown[200] : Colors.brown[700])
             : null,
         onTap: onTap,
       ),

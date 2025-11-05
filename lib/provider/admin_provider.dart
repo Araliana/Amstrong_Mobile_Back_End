@@ -137,7 +137,6 @@ class AdminProvider with ChangeNotifier {
         whereArgs: [roleId ?? userAdmin.roleId],
       ))[0],
     );
-
     await db.update(
       adminTables,
       id: id,
@@ -151,8 +150,10 @@ class AdminProvider with ChangeNotifier {
         "role_id": roleId ?? userAdmin.roleId,
       },
     );
-
-    final index = userAdmins.indexWhere((item) => item.id == id);
+    if(userAdmins.indexWhere((item) => item.id == id) == -1){
+      await loadUserAdmin();
+    }
+    final index = (userAdmins.indexWhere((item) => item.id == id)) == -1 ? id : userAdmins.indexWhere((item) => item.id == id);
     userAdmins[index] = UserAdmin(
       id: id,
       fullname: fullname ?? userAdmin.fullname,
@@ -165,7 +166,6 @@ class AdminProvider with ChangeNotifier {
       role: role,
     );
     _setLoading(false);
-
     await analytics.logEvent(
       name: 'edit_admin',
       parameters: {

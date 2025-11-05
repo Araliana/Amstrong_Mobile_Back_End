@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
+import 'package:flutter_application_1/provider/admin_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   // final UserAdmin user; // Pass current user data
@@ -17,14 +20,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late Future<void> _loadFuture;
 
   final _formKey = GlobalKey<FormState>();
-  final _fullnameController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _bioController = TextEditingController();
+  final nameController = TextEditingController();
+  final usernameController = TextEditingController();
+  final roleController = TextEditingController();
+  //final _phoneController = TextEditingController();
+  //final _bioController = TextEditingController();
 
   File? _selectedImage;
-  String? _currentImageUrl;
+  String? imageUrlController;
   bool _isEditing = false;
   bool _isLoading = false;
 
@@ -34,15 +37,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  void _loadUserData() {
-    // TODO: Load from widget.user or your state management
-    _fullnameController.text = "John Doe";
-    _usernameController.text = "johndoe";
-    _emailController.text = "johndoe@example.com";
-    _phoneController.text = "+1 234 567 890";
-    _bioController.text = "Coffee enthusiast ☕\nFlutter developer 💙";
-    _currentImageUrl = "assets/logo.png"; // or user.img
+  void _loadUserData() async {
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final prefs = await SharedPreferences.getInstance();
+    final currUsername = prefs.getString("curr_username") ?? "none";
+    final currUser = await adminProvider.getCurrUser(currUsername);
+    if (currUsername == "none") {
+      print('⚠️ failed getting user info');
+    }
+    else {
+      setState(() {
+        nameController.text = currUser.fullname;
+        usernameController.text = currUser.username;
+        roleController.text = currUser.role?.name ?? "unknown";
+        imageUrlController = currUser.img ?? "assets/logo.png";
+      });
+    }
+
   }
+
+  //print(roleController.text);
+  //_phoneController.text = "+1 234 567 890";
+  //_bioController.text = "Coffee enthusiast ☕\nFlutter developer 💙";
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -96,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _pickImage(ImageSource.gallery);
                 },
               ),
-              if (_selectedImage != null || _currentImageUrl != null)
+              if (_selectedImage != null || imageUrlController != null)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
                   title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
@@ -104,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pop(context);
                     setState(() {
                       _selectedImage = null;
-                      _currentImageUrl = null;
+                      imageUrlController = null;
                     });
                   },
                 ),
@@ -116,51 +132,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt("curr_id") ?? -1;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    try {
-      // TODO: Implement your save logic here
-      // 1. Upload image if _selectedImage is not null
-      // 2. Update user profile with API call
-      // Example:
-      // final imageUrl = _selectedImage != null
-      //     ? await uploadImage(_selectedImage!)
-      //     : _currentImageUrl;
-      //
-      // await updateUserProfile(
-      //   fullname: _fullnameController.text,
-      //   username: _usernameController.text,
-      //   img: imageUrl,
-      //   ...
-      // );
-
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
+    if ( id != -1){
+      try {
+        await adminProvider.editUserAdmin(
+          id: id,
+          fullname: nameController.text,
+          username: usernameController.text, 
+          img: imageUrlController,
         );
-        setState(() => _isEditing = false);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error updating profile: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+
+
+        await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() => _isEditing = false);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating profile: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
+
   }
 
   @override
@@ -197,10 +212,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundColor: Colors.grey[300],
                     backgroundImage: _selectedImage != null
                         ? FileImage(_selectedImage!)
-                        : (_currentImageUrl != null
-                        ? AssetImage(_currentImageUrl!) as ImageProvider
+                        : (imageUrlController != null
+                        ? AssetImage(imageUrlController!) as ImageProvider
                         : null),
-                    child: _selectedImage == null && _currentImageUrl == null
+                    child: _selectedImage == null && imageUrlController == null
                         ? const Icon(Icons.person, size: 70, color: Colors.grey)
                         : null,
                   ),
@@ -231,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // Full Name
               TextFormField(
-                controller: _fullnameController,
+                controller: nameController,
                 enabled: _isEditing,
                 decoration: InputDecoration(
                   labelText: 'Full Name',
@@ -255,7 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               // Username
               TextFormField(
-                controller: _usernameController,
+                controller: usernameController,
                 enabled: _isEditing,
                 decoration: InputDecoration(
                   labelText: 'Username',
@@ -280,72 +295,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Email
-              TextFormField(
-                controller: _emailController,
-                enabled: _isEditing,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: _isEditing
-                      ? null
-                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+              // Role
 
               // Phone
-              TextFormField(
-                controller: _phoneController,
-                enabled: _isEditing,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Phone',
-                  prefixIcon: const Icon(Icons.phone_android),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: _isEditing
-                      ? null
-                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                ),
-              ),
+              //TextFormField(
+              //  controller: _phoneController,
+              //  enabled: _isEditing,
+              //  keyboardType: TextInputType.phone,
+              //  decoration: InputDecoration(
+              //    labelText: 'Phone',
+              //    prefixIcon: const Icon(Icons.phone_android),
+              //    border: OutlineInputBorder(
+              //      borderRadius: BorderRadius.circular(12),
+              //    ),
+              //    filled: true,
+              //    fillColor: _isEditing
+              //        ? null
+              //        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              //  ),
+              //),
               const SizedBox(height: 16),
 
               // Bio
-              TextFormField(
-                controller: _bioController,
-                enabled: _isEditing,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Bio',
-                  prefixIcon: const Icon(Icons.info_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: _isEditing
-                      ? null
-                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  alignLabelWithHint: true,
-                ),
-                maxLength: 150,
-              ),
+              //TextFormField(
+              //  controller: _bioController,
+              //  enabled: _isEditing,
+              //  maxLines: 3,
+              //  decoration: InputDecoration(
+              //    labelText: 'Bio',
+              //    prefixIcon: const Icon(Icons.info_outline),
+              //    border: OutlineInputBorder(
+              //      borderRadius: BorderRadius.circular(12),
+              //    ),
+              //    filled: true,
+              //    fillColor: _isEditing
+              //        ? null
+              //        : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              //    alignLabelWithHint: true,
+              //  ),
+              //  maxLength: 150,
+              //),
               const SizedBox(height: 30),
 
               // Action Button
@@ -385,15 +374,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Additional Options
               if (!_isEditing) ...[
+                // Role
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.badge_outlined),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Role',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              roleController.text, // <- replace with your actual role variable
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Additional Options
+
                 const Divider(height: 40),
                 ListTile(
                   leading: const Icon(Icons.lock_outline),
                   title: const Text('Change Password'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    // TODO: Navigate to change password screen
+                    context.push('/change-password');
                   },
                 ),
 
@@ -443,11 +473,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _fullnameController.dispose();
-    _usernameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _bioController.dispose();
+    nameController.dispose();
+    usernameController.dispose();
+    roleController.dispose();
+    //_phoneController.dispose();
+    //_bioController.dispose();
     super.dispose();
   }
 }

@@ -1,11 +1,11 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
-import 'package:bcrypt/bcrypt.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
@@ -95,7 +95,7 @@ class AuthProvider with ChangeNotifier {
       final user = UserAdmin.fromMap(resData.first);
 
       // ✅ Verifikasi password lokal
-      if (!BCrypt.checkpw(password, user.password)) {
+      if (!verifyPassword(password, user.password)) {
         _setLoading(false);
         await analytics.logEvent(
           name: 'login_failed',
@@ -256,6 +256,70 @@ class AuthProvider with ChangeNotifier {
         name: 'auto_logout_due_to_password_change',
         parameters: {'user_id': currUserId ?? 'unknown'},
       );
+    }
+  }
+
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || currUserUid == null) {
+      print('❌ Tidak ada user yang sedang login.');
+      return false;
+    }
+
+    _setLoading(true);
+    try {
+      // 🔐 Reauthenticate dulu pakai password lama
+      final email = user.email ?? "${currUserId ?? 'unknown'}@kjm.admin.app";
+      final cred = EmailAuthProvider.credential(
+        email: email,
+        password: oldPassword,
+      );
+      await user.reauthenticateWithCredential(cred);
+
+      // 🔒 Simpan double hash baru di secure storage
+      final hashed = hashPassword(newPassword); // gunakan fungsi hash kamu
+      final doubleHash = _doubleHash(hashed);
+
+      // 🔁 Ganti password di Firebase
+      await user.updatePassword(hashPassword(hashed));
+
+      await secureStorage.write(key: 'curr_user_pass_hash', value: doubleHash);
+
+      // 🧾 Log ke Firebase Analytics
+      await analytics.logEvent(
+        name: 'change_password_success',
+        parameters: {
+          'firebase_user_id': currUserUid!,
+          if (currUserId != null) 'user_id': currUserId!,
+        },
+      );
+
+      print('✅ Password berhasil diubah di Firebase untuk $email');
+      _setLoading(false);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      print('⚠️ Firebase error: ${e.code} — ${e.message}');
+      await analytics.logEvent(
+        name: 'change_password_failed',
+        parameters: {'reason': e.code, 'firebase_user_id': currUserUid ?? ''},
+      );
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      print('💥 Gagal ubah password: $e');
+      await analytics.logEvent(
+        name: 'change_password_failed',
+        parameters: {
+          'reason': 'exception',
+          'error': e.toString(),
+          'firebase_user_id': currUserUid ?? '',
+        },
+      );
+      _setLoading(false);
+      return false;
     }
   }
 }

@@ -14,7 +14,7 @@ class ImageSelector extends StatefulWidget {
     this.mode = PickerMode.document,
   });
 
-  final File? initValue;
+  final String? initValue;
   final Function(File?)? onChanged;
   final bool? isLoading;
   final PickerMode mode;
@@ -199,12 +199,6 @@ class _ImageSelectorState extends State<ImageSelector> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedImage = widget.initValue;
-  }
-
   Widget _buildAvatarMode(bool isSmall) {
     return Stack(
       children: [
@@ -213,8 +207,10 @@ class _ImageSelectorState extends State<ImageSelector> {
           backgroundColor: Colors.grey[300],
           backgroundImage: _selectedImage != null
               ? FileImage(_selectedImage!)
+              : widget.initValue != null
+              ? NetworkImage(widget.initValue!)
               : null,
-          child: _selectedImage == null
+          child: _selectedImage == null && widget.initValue == null
               ? Icon(
                   Icons.person,
                   size: isSmall ? 80 : 100,
@@ -268,15 +264,22 @@ class _ImageSelectorState extends State<ImageSelector> {
       ),
       child: Stack(
         children: [
-          if (_selectedImage != null)
+          if (_selectedImage != null || widget.initValue != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                _selectedImage!,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: _selectedImage != null
+                  ? Image.file(
+                      _selectedImage!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.network(
+                      widget.initValue!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
             )
           else
             Center(

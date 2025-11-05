@@ -1,21 +1,26 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:flutter_application_1/model/user_admin.dart';
+import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/changePass/index.dart';
+import 'package:flutter_application_1/screen/editProfile/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
+import 'package:flutter_application_1/screen/setting/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:flutter_application_1/screen/profile/index.dart';
-import 'package:flutter_application_1/screen/ChangePass/ChangePassword.dart';
 import 'package:provider/provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -41,8 +46,16 @@ class AppRoute {
           builder: (context, state) => const ProfileScreen(),
         ),
         GoRoute(
+          path: '/edit-profile',
+          builder: (context, state) => const EditProfileScreen(),
+        ),
+        GoRoute(
           path: '/change-password',
           builder: (context, state) => const ChangePasswordScreen(),
+        ),
+        GoRoute(
+          path: '/setting',
+          builder: (context, state) => const SettingScreen(),
         ),
         ShellRoute(
           observers: [observer],
@@ -149,16 +162,19 @@ class _AppShell extends StatefulWidget {
 
 class _AppShellState extends State<_AppShell> {
   String selectedPeriod = 'Hari Ini';
+  late Future<void> _loadFuture;
 
   @override
   void initState() {
     super.initState();
+    final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    _loadFuture = adminProvider.getCurrUser(authProvider.currUserId!);
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> actions = [];
-
     // AppBar dinamis
     switch (widget.state.uri.path) {
       case '/':
@@ -206,11 +222,11 @@ class _AppShellState extends State<_AppShell> {
 
   Widget _buildDrawer(BuildContext context) {
     final currentPath = widget.state.uri.path;
+    final adminProvider = Provider.of<AdminProvider>(context);
 
     return Drawer(
       child: Column(
         children: [
-          // Header dengan gradient
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -260,7 +276,7 @@ class _AppShellState extends State<_AppShell> {
                                 child: IconButton(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    context.go("/");
+                                    context.push('/setting');
                                   },
                                   splashColor: Colors.white.withValues(
                                     alpha: 0.3,
@@ -322,49 +338,63 @@ class _AppShellState extends State<_AppShell> {
                             vertical: 12,
                             horizontal: 10,
                           ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 22,
-                                backgroundColor: Colors.white,
-                                child: Icon(
-                                  Icons.person,
-                                  color: Colors.brown[700],
-                                  size: 26,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Admin User',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Text(
-                                      'admin@kjmcafe.com',
-                                      style: TextStyle(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.8,
+                          child: StreamBuilder(
+                            stream: adminProvider.userStream,
+                            builder: (context, streamSnap) {
+                              final user = streamSnap.data as UserAdmin;
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.white,
+                                    backgroundImage:
+                                        user.img != null && user.img!.isNotEmpty
+                                        ? NetworkImage(user.img!)
+                                        : null,
+                                    child: user.img == null || user.img!.isEmpty
+                                        ? const Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.grey,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          user.fullname,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                        fontSize: 12,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                                        Text(
+                                          "@${user.username}",
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.8,
+                                            ),
+                                            fontSize: 12,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ],
+                                  ),
+
+                                  Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -519,7 +549,7 @@ class _AppShellState extends State<_AppShell> {
                   isSelected: false,
                   isLogout: true,
                   onTap: () {
-                    _showLogoutDialog(context);
+                    showLogoutDialog(context);
                   },
                 ),
               ],
@@ -561,9 +591,9 @@ class _AppShellState extends State<_AppShell> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: isDark ?
-              (isSelected ? Colors.brown[700] : Colors.transparent) :
-              (isSelected ? Colors.brown[50] : Colors.transparent),
+        color: isDark
+            ? (isSelected ? Colors.brown[700] : Colors.transparent)
+            : (isSelected ? Colors.brown[50] : Colors.transparent),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -571,77 +601,30 @@ class _AppShellState extends State<_AppShell> {
           icon,
           color: isLogout
               ? Colors.red[700]
-              : (isDark ? (isSelected ? Colors.grey[200] : Colors.white60) :
-                (isSelected ? Colors.brown[700] : Colors.grey[800])),
+              : (isDark
+                    ? (isSelected ? Colors.grey[200] : Colors.white60)
+                    : (isSelected ? Colors.brown[700] : Colors.grey[800])),
         ),
         title: Text(
           title,
           style: TextStyle(
             color: isLogout
                 ? Colors.red[700]
-                : (isDark ? (isSelected ? Colors.grey[200] : Colors.white60) :
-                  (isSelected ? Colors.brown[700] : Colors.grey[800])),
-                //: (isSelected ? Colors.brown[700] : isDark ? Colors.white60 : Colors.grey[800]),
+                : (isDark
+                      ? (isSelected ? Colors.grey[200] : Colors.white60)
+                      : (isSelected ? Colors.brown[700] : Colors.grey[800])),
+            //: (isSelected ? Colors.brown[700] : isDark ? Colors.white60 : Colors.grey[800]),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         trailing: isSelected
-            ? Icon(Icons.chevron_right, color: isDark ? Colors.brown[200] : Colors.brown[700])
+            ? Icon(
+                Icons.chevron_right,
+                color: isDark ? Colors.brown[200] : Colors.brown[700],
+              )
             : null,
         onTap: onTap,
       ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Apakah Anda yakin ingin keluar?'),
-          actions: [
-            TextButton(
-              onPressed: authProvider.isLoading
-                  ? null
-                  : () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: authProvider.isLoading
-                  ? null
-                  : () async {
-                      //TODO save dark theme, dan hapus ini breh
-                      await themeProvider.setTheme(ThemeMode.light);
-                      await authProvider.logout();
-                      context.go('/login');
-                    },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: authProvider.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Logout', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
     );
   }
 }

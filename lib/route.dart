@@ -236,11 +236,16 @@ class _AppShellState extends State<_AppShell> {
                 colors: [Colors.brown[700]!, Colors.brown[500]!],
               ),
             ),
-            child: SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.only(
+                      left: 20,
+                      right: 20,
+                      top: 50, // Fixed top padding
+                    ),
                     child: Column(
                       children: [
                         // Logo Cafe dengan Settings Button
@@ -250,7 +255,7 @@ class _AppShellState extends State<_AppShell> {
                             Align(
                               alignment: Alignment.center,
                               child: Container(
-                                width: 80,
+                                width: 80, // Fixed size, tidak relatif
                                 height: 80,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
@@ -265,7 +270,10 @@ class _AppShellState extends State<_AppShell> {
                                     ),
                                   ],
                                 ),
-                                child: Image.asset("assets/logo.png"),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Image.asset("assets/logo.png"),
+                                ),
                               ),
                             ),
                             Positioned(
@@ -314,13 +322,13 @@ class _AppShellState extends State<_AppShell> {
                             letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 12),
                         const Divider(color: Colors.white30, thickness: 1),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),
-                  // Profile User Section - Padding horizontal 10
+                  // Profile User Section
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Material(
@@ -341,58 +349,71 @@ class _AppShellState extends State<_AppShell> {
                           child: StreamBuilder(
                             stream: adminProvider.userStream,
                             builder: (context, streamSnap) {
-                              final user = streamSnap.data as UserAdmin;
-                              return Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: Colors.white,
-                                    backgroundImage:
-                                        user.img != null && user.img!.isNotEmpty
-                                        ? NetworkImage(user.img!)
-                                        : null,
-                                    child: user.img == null || user.img!.isEmpty
-                                        ? const Icon(
-                                            Icons.person,
-                                            size: 60,
-                                            color: Colors.grey,
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          user.fullname,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          "@${user.username}",
-                                          style: TextStyle(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.8,
+                              return FutureBuilder(
+                                future: _loadFuture,
+                                builder: (context, snapshot) {
+                                  final user =
+                                      streamSnap.data ??
+                                      snapshot.data as UserAdmin;
+                                  return Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 28,
+                                        backgroundColor: Colors.white,
+                                        backgroundImage:
+                                            user.img != null &&
+                                                user.img!.isNotEmpty
+                                            ? NetworkImage(user.img!)
+                                            : null,
+                                        child:
+                                            user.img == null ||
+                                                user.img!.isEmpty
+                                            ? const Icon(
+                                                Icons.person,
+                                                size: 36,
+                                                color: Colors.grey,
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              user.fullname,
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            fontSize: 12,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              "@${user.username}",
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.8,
+                                                ),
+                                                fontSize: 15,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ],
+                                      ),
+                                      const Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                             },
                           ),
@@ -400,6 +421,7 @@ class _AppShellState extends State<_AppShell> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),

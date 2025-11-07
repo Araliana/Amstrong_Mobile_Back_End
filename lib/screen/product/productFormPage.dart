@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,7 +33,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   File? _pickedFile;
   String? _currentImageUrl;
-  String _profitType = 'percent'; // Default percent
+  String _profitType = 'percent';
   bool _isLoading = false;
 
   @override

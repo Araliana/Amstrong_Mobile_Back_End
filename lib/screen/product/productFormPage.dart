@@ -23,7 +23,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   // Controllers
   late TextEditingController _nameCtl;
-  late TextEditingController _hppCtl;
   late TextEditingController _profitAmountCtl;
   late TextEditingController _priceCtl;
   late TextEditingController _discountPriceCtl;
@@ -41,10 +40,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
     final product = widget.editProduct;
 
     _nameCtl = TextEditingController(text: product?.name ?? '');
-    _hppCtl = TextEditingController(text: product?.hpp?.toString() ?? '');
-    _profitAmountCtl = TextEditingController(
-      text: product?.profitAmount?.toString() ?? '',
-    );
     _priceCtl = TextEditingController(text: product?.price.toString() ?? '');
     _discountPriceCtl = TextEditingController(
       text: product?.discountPrice?.toString() ?? '',
@@ -53,46 +48,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _descCtl = TextEditingController(text: product?.description ?? '');
 
     _currentImageUrl = product?.img;
-    _profitType = product?.profitType ?? 'percent';
-
-    // Listen to HPP and profit changes to auto-calculate price
-    _hppCtl.addListener(_calculatePrice);
-    _profitAmountCtl.addListener(_calculatePrice);
 
     // Listen to discount and price changes to update preview
     _discountPriceCtl.addListener(() => setState(() {}));
     _priceCtl.addListener(() => setState(() {}));
-
-    // Trigger initial calculation jika edit mode dan ada data
-    if (product != null &&
-        product.hpp != null &&
-        product.profitAmount != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _calculatePrice();
-      });
-    }
-  }
-
-  void _calculatePrice() {
-    final hpp = double.tryParse(_hppCtl.text) ?? 0;
-    final profitAmount = double.tryParse(_profitAmountCtl.text) ?? 0;
-
-    if (hpp > 0 && profitAmount > 0) {
-      double price;
-      if (_profitType == 'percent') {
-        price = hpp + (hpp * profitAmount / 100);
-      } else {
-        price = hpp + profitAmount;
-      }
-      _priceCtl.text = price.toStringAsFixed(0);
-    }
   }
 
   @override
   void dispose() {
     _nameCtl.dispose();
-    _hppCtl.dispose();
-    _profitAmountCtl.dispose();
     _priceCtl.dispose();
     _discountPriceCtl.dispose();
     _stockCtl.dispose();
@@ -139,9 +103,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
               ? 'No description'
               : _descCtl.text.trim(),
           img: imageUrl,
-          hpp: double.tryParse(_hppCtl.text.trim()),
-          profitType: _profitType,
-          profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
           discountPrice: double.tryParse(_discountPriceCtl.text.trim()),
         );
       } else {
@@ -156,9 +117,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 ? 'No description'
                 : _descCtl.text.trim(),
             img: imageUrl,
-            hpp: double.tryParse(_hppCtl.text.trim()),
-            profitType: _profitType,
-            profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
             discountPrice: double.tryParse(_discountPriceCtl.text.trim()),
           );
         } else {
@@ -265,86 +223,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
                   // Pricing Card
                   _buildCard(
-                    title: 'Pricing & Profit',
+                    title: 'Pricing',
                     icon: Icons.attach_money_rounded,
                     children: [
-                      _buildTextField(
-                        controller: _hppCtl,
-                        label: 'HPP (Cost Price)',
-                        icon: Icons.receipt_long_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter HPP';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Invalid number';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-
-                      // Profit Type Selection
-                      Text(
-                        'Profit Type',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.brown[700],
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildProfitTypeChip(
-                              label: 'Flat Amount',
-                              value: 'flat',
-                              icon: Icons.money,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: _buildProfitTypeChip(
-                              label: 'Percentage',
-                              value: 'percent',
-                              icon: Icons.percent,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-
-                      _buildTextField(
-                        controller: _profitAmountCtl,
-                        label: _profitType == 'percent'
-                            ? 'Profit Percentage (%)'
-                            : 'Profit Amount (IDR)',
-                        icon: _profitType == 'percent'
-                            ? Icons.percent
-                            : Icons.add_circle_outline,
-                        hint: _profitType == 'percent' ? '0' : '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter profit amount';
-                          }
-                          if (double.tryParse(value) == null) {
-                            return 'Invalid number';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-
                       _buildTextField(
                         controller: _priceCtl,
                         label: 'Selling Price',
@@ -354,11 +235,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        readOnly: true,
-                        suffixIcon: Icon(
-                          Icons.calculate_outlined,
-                          color: Colors.brown[400],
-                        ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Price is required';
@@ -577,53 +453,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
           SizedBox(height: 20),
           ...children,
         ],
-      ),
-    );
-  }
-
-  Widget _buildProfitTypeChip({
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    final isSelected = _profitType == value;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _profitType = value;
-          _calculatePrice();
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.brown[700] : Colors.brown[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? Colors.brown[700]! : Colors.brown[200]!,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.brown[700],
-              size: 20,
-            ),
-            SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.brown[700],
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

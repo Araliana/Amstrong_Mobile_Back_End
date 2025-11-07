@@ -346,15 +346,66 @@ class _AppShellState extends State<_AppShell> {
                             vertical: 12,
                             horizontal: 10,
                           ),
-                          child: StreamBuilder(
+                          child: StreamBuilder<UserAdmin?>(
                             stream: adminProvider.userStream,
                             builder: (context, streamSnap) {
-                              return FutureBuilder(
+                              return FutureBuilder<void>(
                                 future: _loadFuture,
                                 builder: (context, snapshot) {
-                                  final user =
-                                      streamSnap.data ??
-                                      snapshot.data as UserAdmin;
+                                  // Handle loading state
+                                  if (snapshot.connectionState ==
+                                          ConnectionState.waiting &&
+                                      !streamSnap.hasData) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                      ),
+                                    );
+                                  }
+
+                                  // Get user data from stream only
+                                  final user = streamSnap.data;
+
+                                  // Handle null user (loading or error state)
+                                  if (user == null) {
+                                    return Row(
+                                      children: [
+                                        const CircleAvatar(
+                                          radius: 28,
+                                          backgroundColor: Colors.white,
+                                          child: Icon(
+                                            Icons.person,
+                                            size: 36,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: const [
+                                              Text(
+                                                'Loading...',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.arrow_forward_ios,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    );
+                                  }
+
+                                  // Display user data
                                   return Row(
                                     children: [
                                       CircleAvatar(

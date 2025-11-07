@@ -7,9 +7,6 @@ class Product {
   String? img;
   String? description;
   DateTime? createdAt;
-  double? hpp; // Harga Pokok Penjualan
-  String? profitType; // 'flat' atau 'percent'
-  double? profitAmount; // Jumlah laba (flat atau persen)
 
   Product({
     this.id,
@@ -20,9 +17,6 @@ class Product {
     this.img,
     this.description,
     this.createdAt,
-    this.hpp,
-    this.profitType,
-    this.profitAmount,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
@@ -43,17 +37,6 @@ class Product {
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
-      hpp: map['hpp'] == null
-          ? null
-          : (map['hpp'] is int)
-          ? (map['hpp'] as int).toDouble()
-          : (map['hpp'] as double?),
-      profitType: map['profit_type'] as String?,
-      profitAmount: map['profit_amount'] == null
-          ? null
-          : (map['profit_amount'] is int)
-          ? (map['profit_amount'] as int).toDouble()
-          : (map['profit_amount'] as double?),
     );
   }
 
@@ -67,9 +50,6 @@ class Product {
       'img': img,
       'description': description,
       'created_at': createdAt?.toIso8601String(),
-      'hpp': hpp,
-      'profit_type': profitType,
-      'profit_amount': profitAmount,
     };
   }
 }

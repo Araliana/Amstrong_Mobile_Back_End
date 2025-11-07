@@ -40,9 +40,6 @@ class ProductProvider with ChangeNotifier {
     required int stock,
     required String description,
     required String? img,
-    double? hpp,
-    String? profitType,
-    double? profitAmount,
     double? discountPrice,
   }) async {
     _setLoading(true);
@@ -53,9 +50,6 @@ class ProductProvider with ChangeNotifier {
       'stock': stock,
       'description': description,
       'img': img,
-      'hpp': hpp,
-      'profit_type': profitType,
-      'profit_amount': profitAmount,
     });
 
     // Reload products dari database untuk memastikan sinkronisasi
@@ -79,9 +73,6 @@ class ProductProvider with ChangeNotifier {
     required String description,
     required String? img,
     required int id,
-    double? hpp,
-    String? profitType,
-    double? profitAmount,
     double? discountPrice,
   }) async {
     _setLoading(true);
@@ -99,9 +90,6 @@ class ProductProvider with ChangeNotifier {
         'stock': stock,
         'description': description,
         'img': img ?? product.img,
-        'hpp': hpp,
-        'profit_type': profitType,
-        'profit_amount': profitAmount,
       },
     );
 

@@ -50,8 +50,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               snapshot.connectionState == ConnectionState.waiting ||
               adminProvider.isLoading ||
               isUploading;
-          final user = snapshot.data as UserAdmin;
-          _fullNameController.text = user.fullname;
+          final user = snapshot.data as UserAdmin?;
+          _fullNameController.text = user?.fullname ?? "";
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Form(
@@ -64,7 +64,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // Profile Image
                   ImageSelector(
                     mode: PickerMode.avatar,
-                    initValue: user.img,
+                    initValue: user?.img,
                     onChanged: (val) => setState(() {
                       _newPP = val;
                     }),

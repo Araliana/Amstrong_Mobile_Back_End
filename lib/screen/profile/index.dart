@@ -40,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return FutureBuilder(
             future: _loadFuture,
             builder: (context, snapshot) {
-              final user = streamSnap.data ?? snapshot.data as UserAdmin;
+              final user = streamSnap.data ?? snapshot.data as UserAdmin?;
               return SingleChildScrollView(
                 child: Column(
                   children: [
@@ -62,11 +62,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               CircleAvatar(
                                 radius: 60,
                                 backgroundColor: Colors.white,
-                                backgroundImage:
-                                    user.img != null && user.img!.isNotEmpty
-                                    ? NetworkImage(user.img!)
+                                backgroundImage: user?.img != null
+                                    ? NetworkImage(user?.img ?? "")
                                     : null,
-                                child: user.img == null || user.img!.isEmpty
+                                child: user?.img == null
                                     ? const Icon(
                                         Icons.person,
                                         size: 60,
@@ -78,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            user.fullname,
+                            user?.fullname ?? "",
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -87,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '@${user.username}',
+                            '@${user?.username ?? ""}',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.white.withValues(alpha: 0.9),
@@ -105,19 +104,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildInfoTile(
                       icon: Icons.person_outline,
                       title: 'Full Name',
-                      value: user.fullname,
+                      value: user?.fullname ?? "",
                     ),
 
                     _buildInfoTile(
                       icon: Icons.alternate_email,
                       title: 'Username',
-                      value: user.username,
+                      value: user?.username ?? "",
                     ),
 
                     _buildInfoTile(
                       icon: Icons.badge_outlined,
                       title: 'Role',
-                      value: user.role!.name,
+                      value: user?.role!.name ?? "",
                     ),
 
                     const SizedBox(height: 20),

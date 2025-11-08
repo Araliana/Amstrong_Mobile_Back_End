@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -64,18 +65,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _stockCtl.dispose();
     _descCtl.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (image != null) {
-      setState(() {
-        _pickedFile = File(image.path);
-      });
-    }
   }
 
   Future<void> _saveProduct() async {
@@ -191,7 +180,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Image Section
-                  _buildImageSection(),
+                  ImageSelector(
+                    initValue: widget.editProduct?.img,
+                    onChanged: (val) => setState(() {
+                      _pickedFile = val;
+                    }),
+                  ),
                   SizedBox(height: 24),
 
                   // Basic Info Card
@@ -345,74 +339,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildImageSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          if (_pickedFile != null || _currentImageUrl != null)
-            Container(
-              height: 250,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                color: Colors.brown[50],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                child: _pickedFile != null
-                    ? Image.file(_pickedFile!, fit: BoxFit.cover)
-                    : (_currentImageUrl != null
-                          ? Image.network(
-                              _currentImageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
-                                child: Icon(
-                                  Icons.broken_image_rounded,
-                                  size: 60,
-                                  color: Colors.brown[300],
-                                ),
-                              ),
-                            )
-                          : null),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: OutlinedButton.icon(
-              onPressed: _pickImage,
-              icon: Icon(Icons.add_photo_alternate_outlined),
-              label: Text(
-                _pickedFile != null || _currentImageUrl != null
-                    ? 'Change Image'
-                    : 'Add Product Image',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.brown[700],
-                side: BorderSide(color: Colors.brown[300]!),
-                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

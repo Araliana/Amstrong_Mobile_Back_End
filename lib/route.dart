@@ -352,31 +352,21 @@ class _AppShellState extends State<_AppShell> {
                               return FutureBuilder<void>(
                                 future: _loadFuture,
                                 builder: (context, snapshot) {
-                                  // Handle loading state
-                                  if (snapshot.connectionState ==
-                                          ConnectionState.waiting &&
-                                      !streamSnap.hasData) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                      ),
-                                    );
-                                  }
+                                  final user =
+                                      streamSnap.data ??
+                                      snapshot.data as UserAdmin?;
 
-                                  // Get user data from stream only
-                                  final user = streamSnap.data;
-
-                                  // Handle null user (loading or error state)
                                   if (user == null) {
                                     return Row(
                                       children: [
-                                        const CircleAvatar(
+                                        CircleAvatar(
                                           radius: 28,
-                                          backgroundColor: Colors.white,
-                                          child: Icon(
-                                            Icons.person,
+                                          backgroundColor: Colors.white
+                                              .withValues(alpha: 0.3),
+                                          child: const Icon(
+                                            Icons.person_outline,
                                             size: 36,
-                                            color: Colors.grey,
+                                            color: Colors.white54,
                                           ),
                                         ),
                                         const SizedBox(width: 12),
@@ -384,28 +374,42 @@ class _AppShellState extends State<_AppShell> {
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
-                                            children: const [
-                                              Text(
-                                                'Loading...',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
+                                            children: [
+                                              Container(
+                                                height: 18,
+                                                width: 120,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.3),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Container(
+                                                height: 15,
+                                                width: 80,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
                                                 ),
                                               ),
                                             ],
                                           ),
                                         ),
-                                        const Icon(
+                                        Icon(
                                           Icons.arrow_forward_ios,
-                                          color: Colors.white,
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           size: 18,
                                         ),
                                       ],
                                     );
                                   }
 
-                                  // Display user data
                                   return Row(
                                     children: [
                                       CircleAvatar(

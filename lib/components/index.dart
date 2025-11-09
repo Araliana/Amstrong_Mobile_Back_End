@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -15,10 +16,16 @@ Widget buildInput({
   String? prefixText,
   String? Function(String?)? validator,
   InputMode mode = InputMode.mixed,
-  Color? fillColor,
-  Color? textColor,
-  //Color? iconColor,
 }) {
+  final isDark = ThemeProvider().isDarkMode;
+
+  // Dark mode colors
+  final textColor = isDark ? Colors.white : Colors.black;
+  final labelColor = isDark ? Colors.white70 : Colors.black87;
+  final fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
+  final borderColor = isDark ? Colors.blueAccent : Colors.blue;
+  final iconColor = isDark ? Colors.white70 : Colors.black54;
+
   TextInputType keyboardType = TextInputType.text;
   List<TextInputFormatter> formatters = [];
 
@@ -44,23 +51,23 @@ Widget buildInput({
     validator: validator,
     keyboardType: keyboardType,
     inputFormatters: formatters,
-    style: TextStyle(color: textColor ?? Colors.black), // ✅ text color
+    style: TextStyle(color: textColor),
     decoration: InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: textColor ?? Colors.black87),
-      prefixIcon: Icon(icon),
+      labelStyle: TextStyle(color: labelColor),
+      prefixIcon: Icon(icon, color: iconColor),
       suffixIcon: suffix,
       prefixText: prefixText,
-      prefixStyle: TextStyle(color: textColor ?? Colors.black87),
+      prefixStyle: TextStyle(color: labelColor),
       filled: true,
-      fillColor: fillColor ?? Colors.grey.shade100, // ✅ background
+      fillColor: fillColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: textColor ?? Colors.blue, width: 1.5),
+        borderSide: BorderSide(color: borderColor, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     ),
@@ -84,10 +91,18 @@ Widget buildDropdownField({
   String? Function(String?)? validator,
   IconData? prefixIcon,
   bool isLoading = false,
-  Color? fillColor,
-  Color? textColor,
-  //Color? iconColor,
 }) {
+  final isDark = ThemeProvider().isDarkMode;
+
+  // Dark mode colors
+  final textColor = isDark ? Colors.white : Colors.black;
+  final labelColor = isDark ? Colors.white70 : Colors.black87;
+  final fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
+  final dropdownBgColor = isDark ? Colors.grey.shade900 : Colors.white;
+  final borderColor = isDark ? Colors.blueAccent : Colors.blue;
+  final iconColor = isDark ? Colors.white70 : Colors.black54;
+  final loadingTextColor = isDark ? Colors.white54 : Colors.black54;
+
   assert(
     items != null || simpleItems != null,
     'Either items or simpleItems must be provided',
@@ -97,17 +112,22 @@ Widget buildDropdownField({
     return InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: textColor ?? Colors.black87),
+        labelStyle: TextStyle(color: labelColor),
         prefixIcon: Padding(
           padding: const EdgeInsets.all(14),
           child: SizedBox(
             width: 4,
             height: 4,
-            child: const CircularProgressIndicator(strokeWidth: 2),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isDark ? Colors.blueAccent : Colors.blue,
+              ),
+            ),
           ),
         ),
         filled: true,
-        fillColor: fillColor ?? Colors.grey.shade100,
+        fillColor: fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -117,10 +137,7 @@ Widget buildDropdownField({
           vertical: 14,
         ),
       ),
-      child: Text(
-        "Loading...",
-        style: TextStyle(color: textColor ?? Colors.black54),
-      ),
+      child: Text("Loading...", style: TextStyle(color: loadingTextColor)),
     );
   }
 
@@ -130,10 +147,7 @@ Widget buildDropdownField({
         .map(
           (item) => DropdownMenuItem(
             value: item,
-            child: Text(
-              item,
-              style: TextStyle(color: textColor ?? Colors.black),
-            ),
+            child: Text(item, style: TextStyle(color: textColor)),
           ),
         )
         .toList();
@@ -145,13 +159,10 @@ Widget buildDropdownField({
             child: Row(
               children: [
                 if (item.icon != null) ...[
-                  Icon(item.icon, size: 20),
+                  Icon(item.icon, size: 20, color: iconColor),
                   const SizedBox(width: 6),
                 ],
-                Text(
-                  item.label,
-                  style: TextStyle(color: textColor ?? Colors.black),
-                ),
+                Text(item.label, style: TextStyle(color: textColor)),
               ],
             ),
           ),
@@ -163,20 +174,22 @@ Widget buildDropdownField({
 
   return DropdownButtonFormField<String>(
     value: isValueValid ? value : null,
-    dropdownColor: fillColor ?? Colors.white,
+    dropdownColor: dropdownBgColor,
     decoration: InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: textColor ?? Colors.black87),
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+      labelStyle: TextStyle(color: labelColor),
+      prefixIcon: prefixIcon != null
+          ? Icon(prefixIcon, color: iconColor)
+          : null,
       filled: true,
-      fillColor: fillColor ?? Colors.grey.shade100,
+      fillColor: fillColor,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: textColor ?? Colors.blue, width: 1.5),
+        borderSide: BorderSide(color: borderColor, width: 1.5),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       errorMaxLines: 2,
@@ -184,7 +197,8 @@ Widget buildDropdownField({
     items: dropdownItems,
     onChanged: onChanged,
     validator: validator,
-    style: TextStyle(color: textColor ?? Colors.black),
+    style: TextStyle(color: textColor),
+    icon: Icon(Icons.arrow_drop_down, color: iconColor),
   );
 }
 

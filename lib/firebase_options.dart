@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'kjm-admin.firebasestorage.app',
     iosBundleId: 'com.example.flutterApplication1',
   );
-
 }

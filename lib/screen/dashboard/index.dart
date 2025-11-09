@@ -126,17 +126,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Produk Terlaris',isDark),
+                    _buildSectionTitle('Produk Terlaris', isDark),
                     const SizedBox(height: 12),
                     _buildTopProductsList(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Penjualan per Kategori',isDark),
+                    _buildSectionTitle('Penjualan per Kategori', isDark),
                     const SizedBox(height: 12),
                     _buildCategoryChart(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Transaksi Terbaru',isDark),
+                    _buildSectionTitle('Transaksi Terbaru', isDark),
                     const SizedBox(height: 12),
                     _buildRecentTransactions(isDark),
                   ],
@@ -175,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme == true ? Colors.grey[900] : Colors.white,//Colors.white,
+        color: theme == true ? Colors.grey[900] : Colors.white, //Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -217,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title,bool theme) {
+  Widget _buildSectionTitle(String title, bool theme) {
     return Text(
       title,
       style: TextStyle(
@@ -325,7 +325,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
-                        color: theme == true ? Colors.brown[100] : Colors.brown[700],
+                        color: theme == true
+                            ? Colors.brown[100]
+                            : Colors.brown[700],
                       ),
                     ),
                   ],
@@ -335,8 +337,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percentage,
-                    backgroundColor: theme == true ? Colors.grey[500] : Colors.grey[200],
-                    color: theme == true ? Colors.brown[600] : Colors.brown[400],
+                    backgroundColor: theme == true
+                        ? Colors.grey[500]
+                        : Colors.grey[200],
+                    color: theme == true
+                        ? Colors.brown[600]
+                        : Colors.brown[400],
                     minHeight: 8,
                   ),
                 ),

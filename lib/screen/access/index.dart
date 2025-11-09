@@ -224,8 +224,6 @@ class _AccessScreenState extends State<AccessScreen> {
 
   void _showAddEditDialog(BuildContext context, [Access? access]) {
     final accessProvider = Provider.of<AccessProvider>(context, listen: false);
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final isDark = themeProvider.getTheme();
     final isEdit = access != null;
     final nameController = TextEditingController(text: access?.name ?? '');
     final pathController = TextEditingController(
@@ -250,8 +248,6 @@ class _AccessScreenState extends State<AccessScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   buildInput(
-                    fillColor: isDark ? Colors.grey[900] : Colors.white,
-                    textColor: isDark ? Colors.white : Colors.black,
                     controller: nameController,
                     label: 'Name',
                     icon: Icons.label,
@@ -267,8 +263,6 @@ class _AccessScreenState extends State<AccessScreen> {
                   ),
                   const SizedBox(height: 16),
                   buildInput(
-                    fillColor: isDark ? Colors.grey[900] : Colors.white,
-                    textColor: isDark ? Colors.white : Colors.black,
                     controller: pathController,
                     label: 'Access Path',
                     icon: Icons.link,
@@ -283,8 +277,6 @@ class _AccessScreenState extends State<AccessScreen> {
                   const SizedBox(height: 16),
                   buildDropdownField(
                     label: 'Category',
-                    fillColor: isDark ? Colors.grey[900] : Colors.white,
-                    textColor: isDark ? Colors.white : Colors.black,
                     value: selectedCategory,
                     simpleItems: accessCategory,
                     prefixIcon: Icons.category,
@@ -303,8 +295,6 @@ class _AccessScreenState extends State<AccessScreen> {
                   const SizedBox(height: 16),
                   buildDropdownField(
                     label: 'Icon',
-                    fillColor: isDark ? Colors.grey[900] : Colors.white,
-                    textColor: isDark ? Colors.white : Colors.black,
                     value: selectedIcon,
                     items: appIcons
                         .map(
@@ -336,8 +326,6 @@ class _AccessScreenState extends State<AccessScreen> {
                   ),
                   const SizedBox(height: 16),
                   buildInput(
-                    fillColor: isDark ? Colors.grey[900] : Colors.white,
-                    textColor: isDark ? Colors.white : Colors.black,
                     controller: sortController,
                     label: 'ID Sort',
                     icon: Icons.sort_by_alpha_outlined,

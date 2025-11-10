@@ -3,6 +3,7 @@ import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -25,6 +26,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   @override
   Widget build(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context);
+
 
     return Scaffold(
       body: FutureBuilder(
@@ -60,6 +62,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
 
   Widget _buildUserAdminCard(UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDark = themeProvider.getTheme();
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -258,6 +262,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   void _showCreateDialog(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final nameController = TextEditingController();
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
@@ -291,6 +297,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 buildInput(
@@ -306,6 +313,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 buildInput(
@@ -332,6 +340,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 FutureBuilder(
@@ -361,6 +370,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                         }
                         return null;
                       },
+                      isDark: dark,
                     );
                   },
                 ),
@@ -414,6 +424,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   void _showEditDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
@@ -439,6 +451,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 buildInput(
@@ -454,6 +467,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 FutureBuilder(
@@ -532,6 +546,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
 
   void _showResetPasswordDialog(BuildContext context, UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -570,6 +586,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
                 const SizedBox(height: 16),
                 buildInput(
@@ -594,6 +611,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                     }
                     return null;
                   },
+                  isDark: dark,
                 ),
               ],
             ),

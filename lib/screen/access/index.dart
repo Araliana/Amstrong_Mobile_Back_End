@@ -224,6 +224,8 @@ class _AccessScreenState extends State<AccessScreen> {
 
   void _showAddEditDialog(BuildContext context, [Access? access]) {
     final accessProvider = Provider.of<AccessProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final isEdit = access != null;
     final nameController = TextEditingController(text: access?.name ?? '');
     final pathController = TextEditingController(
@@ -260,6 +262,7 @@ class _AccessScreenState extends State<AccessScreen> {
                       }
                       return null;
                     },
+                    isDark: dark,
                   ),
                   const SizedBox(height: 16),
                   buildInput(
@@ -273,6 +276,7 @@ class _AccessScreenState extends State<AccessScreen> {
                       }
                       return null;
                     },
+                    isDark: dark,
                   ),
                   const SizedBox(height: 16),
                   buildDropdownField(
@@ -291,6 +295,7 @@ class _AccessScreenState extends State<AccessScreen> {
                       }
                       return null;
                     },
+                    isDark: dark,
                   ),
                   const SizedBox(height: 16),
                   buildDropdownField(
@@ -323,6 +328,7 @@ class _AccessScreenState extends State<AccessScreen> {
                       }
                       return null;
                     },
+                    isDark: dark,
                   ),
                   const SizedBox(height: 16),
                   buildInput(
@@ -336,6 +342,7 @@ class _AccessScreenState extends State<AccessScreen> {
                       }
                       return null;
                     },
+                    isDark: dark,
                   ),
                 ],
               ),

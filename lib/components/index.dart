@@ -4,6 +4,7 @@ import 'package:flutter_application_1/provider/auth_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum InputMode { text, number, mixed }
 
@@ -16,9 +17,11 @@ Widget buildInput({
   String? prefixText,
   String? Function(String?)? validator,
   InputMode mode = InputMode.mixed,
+  bool isDark = false,
 }) {
-  final isDark = ThemeProvider().isDarkMode;
+  //final isDark = ThemeProvider().isDarkMode;
 
+  //print(isDark);
   // Dark mode colors
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
@@ -91,8 +94,9 @@ Widget buildDropdownField({
   String? Function(String?)? validator,
   IconData? prefixIcon,
   bool isLoading = false,
+  bool isDark = false,
 }) {
-  final isDark = ThemeProvider().isDarkMode;
+  //final isDark = ThemeProvider().isDarkMode;
 
   // Dark mode colors
   final textColor = isDark ? Colors.white : Colors.black;

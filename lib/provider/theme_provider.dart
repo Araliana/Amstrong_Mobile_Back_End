@@ -10,7 +10,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   ThemeMode get themeMode => _themeMode;
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
@@ -42,4 +42,6 @@ class ThemeProvider extends ChangeNotifier {
   bool getTheme() {
     return _themeMode == ThemeMode.dark;
   }
+
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
 }

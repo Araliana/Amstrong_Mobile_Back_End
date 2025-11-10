@@ -208,7 +208,7 @@ class AdminProvider with ChangeNotifier {
     await editUserAdmin(id: id, password: hashPassword(newPassword));
 
     _setLoading(false);
-    print(isLoading);
+
     await analytics.logEvent(name: 'change_password', parameters: {'id': id});
 
     return true;

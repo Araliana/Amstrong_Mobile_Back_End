@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +23,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   // State variables
   Set<int> _selectedAccessIds = {};
   Map<String, List<Access>>? _groupedAccesses;
-  dynamic _initRole;
+  Role? _initRole;
   bool _isLoading = true;
 
   @override
@@ -41,16 +42,19 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
 
     try {
-      // Load role access list
       await roleProvider.loadRole();
       _groupedAccesses = await groupAccessesByCategory(context);
 
-      // Load existing role if editing
       if (widget.roleId != null) {
         _initRole = await roleProvider.getRole(widget.roleId!);
-        _selectedAccessIds =
-            _initRole?.access?.map<int>((item) => item.id).toSet() ?? {};
+        if (_initRole != null) {
+          _selectedAccessIds = _initRole!.access!
+              .map<int>((item) => item.id)
+              .toSet();
+        }
         _nameController.text = _initRole?.name ?? "";
+      } else {
+        _selectedAccessIds = {};
       }
 
       setState(() {
@@ -60,6 +64,14 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
       setState(() {
         _isLoading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

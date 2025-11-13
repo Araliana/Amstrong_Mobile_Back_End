@@ -3,6 +3,7 @@ import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -40,6 +41,8 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
 
   Future<void> _loadData() async {
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
 
     try {
       await roleProvider.loadRole();
@@ -78,18 +81,20 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   @override
   Widget build(BuildContext context) {
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final isEdit = widget.roleId != null;
     MaterialColor color = widget.roleId != null ? Colors.indigo : Colors.purple;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: dark ? Colors.black : Colors.grey[50],
       body: Column(
         children: [
           // Header - FIXED
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: dark ? Colors.black : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -103,7 +108,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: color.shade50,
+                    color: dark ? Colors.grey[900] : color.shade50,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -127,7 +132,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.grey.shade100,
+                    backgroundColor: dark ? Colors.grey[900] : Colors.grey.shade100,
                   ),
                 ),
               ],
@@ -163,10 +168,10 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                           // Role Name Card
                           Card(
                             elevation: 0,
-                            color: Colors.white,
+                            color: dark ? Colors.grey[900] : Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.grey.shade200),
+                              side: BorderSide(color: dark ? Colors.grey.shade600 : Colors.grey.shade200),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
@@ -204,7 +209,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       filled: true,
-                                      fillColor: Colors.grey.shade50,
+                                      fillColor: dark ? Colors.grey[900] : Colors.grey.shade50,
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -243,13 +248,13 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: color.shade50,
+                                  color: dark ? Colors.grey[900] :color.shade50,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   '${_selectedAccessIds.length} selected',
                                   style: TextStyle(
-                                    color: color.shade700,
+                                    color: dark ? color.shade300 :color.shade700,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -337,11 +342,11 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                 return Card(
                                   elevation: 0,
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  color: Colors.white,
+                                  color: dark ? Colors.grey[900] : Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     side: BorderSide(
-                                      color: Colors.grey.shade200,
+                                      color: dark ? Colors.grey.shade300 :Colors.grey.shade700,
                                     ),
                                   ),
                                   child: Theme(
@@ -405,7 +410,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                 ? categoryColor.withValues(
                                                     alpha: 0.05,
                                                   )
-                                                : Colors.grey.shade50,
+                                                : dark ? Colors.grey.shade900 : Colors.grey.shade50,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -414,7 +419,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                   ? categoryColor.withValues(
                                                       alpha: 0.3,
                                                     )
-                                                  : Colors.grey.shade200,
+                                                  : dark ? Colors.grey.shade600 : Colors.grey.shade200,
                                             ),
                                           ),
                                           child: CheckboxListTile(
@@ -444,7 +449,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                               .withValues(
                                                                 alpha: 0.15,
                                                               )
-                                                        : Colors.grey.shade200,
+                                                        : dark ? Colors.grey.shade800 : Colors.grey.shade200,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           6,
@@ -455,7 +460,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                     size: 16,
                                                     color: isSelected
                                                         ? categoryColor
-                                                        : Colors.grey.shade600,
+                                                        : dark ? Colors.grey.shade50 : Colors.grey.shade600,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 10),
@@ -511,7 +516,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: dark ? Colors.black : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -535,7 +540,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                           content: Text(
                             'Please select the permission before submit!',
                           ),
-                          backgroundColor: Colors.red,
+                          backgroundColor:Colors.red,
                         ),
                       );
                       return;

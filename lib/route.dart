@@ -11,6 +11,7 @@ import 'package:flutter_application_1/screen/changePass/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
+import 'package:flutter_application_1/screen/menu/add.dart';
 import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';

@@ -12,13 +12,13 @@ class CategoryProvider with ChangeNotifier {
 
   bool isLoading = false;
 
-  /// 🔹 Setter untuk status loading
+  //Setter untuk status loading
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  /// 🔹 Ambil semua kategori dari database
+  //Ambil semua kategori dari database
   Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);
     final res = await db.get(
@@ -34,7 +34,7 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  /// 🔹 Tambah kategori baru
+  //Tambah kategori baru
   Future<void> addCategory(CategoryType type, String name) async {
     _setLoading(true);
 

@@ -2,21 +2,21 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/memory.dart';
-import '../../db/db_helper.dart'; // ubah path import sesuai posisi file db_helper.dart
+// ubah path import sesuai posisi file db_helper.dart
 // Jika kamu menempel class ke db_helper.dart, import tetap sama.
 // Pastikan Memory dan DBGalleryHelper tersedia.
 
 import 'add.dart';
 
 class GalleryScreen extends StatefulWidget {
-  const GalleryScreen({Key? key}) : super(key: key);
+  const GalleryScreen({super.key});
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  List<Memory> _posts = [];
+  final List<Memory> _posts = [];
   bool _loading = true;
 
   @override

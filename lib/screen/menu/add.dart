@@ -1,114 +1,120 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/menu.dart';
+import 'package:flutter_application_1/model/dish_type.dart';
 
-Future<void> showMenuDialog({
-  required BuildContext context,
-  Menu? existingMenu,
-  required Function(Menu, {int? index}) onSave,
-  int? index,
-}) async {
+class AddMenuPage extends StatefulWidget {
+  final Menu? existingMenu;
+  final List<DishType> dishTypes;
+
+  const AddMenuPage({super.key, this.existingMenu, required this.dishTypes});
+
+  @override
+  State<AddMenuPage> createState() => _AddMenuPageState();
+}
+
+class _AddMenuPageState extends State<AddMenuPage> {
+  final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final priceController = TextEditingController();
   final descController = TextEditingController();
   final imageController = TextEditingController();
-  MenuType selectedCategory = MenuType.makanan;
 
-  if (existingMenu != null) {
-    nameController.text = existingMenu.name;
-    priceController.text = existingMenu.price.toString();
-    descController.text = existingMenu.description;
-    imageController.text = existingMenu.img;
-    selectedCategory = existingMenu.category;
+  late DishType selectedType;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingMenu != null) {
+      final m = widget.existingMenu!;
+      nameController.text = m.name;
+      priceController.text = m.price.toString();
+      descController.text = m.description;
+      imageController.text = m.img;
+      selectedType = m.category;
+    } else {
+      selectedType = widget.dishTypes.first;
+    }
   }
 
-  await showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text(existingMenu == null ? "Tambah Menu" : "Edit Menu"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+  void _saveMenu() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final newMenu = Menu(
+      id: widget.existingMenu?.id ?? DateTime.now().millisecondsSinceEpoch,
+      name: nameController.text.trim(),
+      img: imageController.text.trim(),
+      price: int.parse(priceController.text.trim()),
+      description: descController.text.trim(),
+      category: selectedType,
+      isActive: widget.existingMenu?.isActive ?? true,
+      createdAt: widget.existingMenu?.createdAt ?? DateTime.now(),
+    );
+
+    Navigator.pop(context, newMenu);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.existingMenu != null;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(isEditing ? "Edit Menu" : "Tambah Menu")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
             children: [
-              TextField(
+              TextFormField(
                 controller: nameController,
                 decoration: const InputDecoration(labelText: "Nama Menu"),
+                validator: (val) =>
+                    val == null || val.isEmpty ? "Wajib diisi" : null,
               ),
-              TextField(
+              TextFormField(
                 controller: priceController,
                 decoration: const InputDecoration(labelText: "Harga"),
                 keyboardType: TextInputType.number,
+                validator: (val) {
+                  if (val == null || val.isEmpty) return "Wajib diisi";
+                  if (int.tryParse(val) == null) return "Harus angka";
+                  return null;
+                },
               ),
-              TextField(
+              TextFormField(
                 controller: descController,
                 decoration: const InputDecoration(labelText: "Deskripsi"),
+                maxLines: 3,
               ),
-              TextField(
+              TextFormField(
                 controller: imageController,
                 decoration: const InputDecoration(
                   labelText: "URL/path Gambar (opsional)",
                 ),
               ),
               const SizedBox(height: 10),
-              StatefulBuilder(
-                builder: (context, setStateDialog) {
-                  return DropdownButton<MenuType>(
-                    value: selectedCategory,
-                    isExpanded: true,
-                    items: MenuType.values.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text(type.name.toUpperCase()),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        selectedCategory = value!;
-                      });
-                    },
-                  );
+              DropdownButtonFormField<DishType>(
+                value: selectedType,
+                items: widget.dishTypes.map((dish) {
+                  return DropdownMenuItem(value: dish, child: Text(dish.name));
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedType = value!;
+                  });
                 },
+                decoration: const InputDecoration(labelText: "Kategori"),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _saveMenu,
+                icon: const Icon(Icons.save),
+                label: Text(isEditing ? "Simpan Perubahan" : "Tambah Menu"),
               ),
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final price = int.tryParse(priceController.text.trim()) ?? 0;
-              final desc = descController.text.trim();
-              final img = imageController.text.trim();
-
-              if (name.isEmpty || price <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Nama & harga wajib diisi")),
-                );
-                return;
-              }
-
-              final newMenu = Menu(
-                id: existingMenu?.id ?? DateTime.now().millisecondsSinceEpoch,
-                name: name,
-                img: img,
-                price: price,
-                description: desc,
-                category: selectedCategory,
-                isActive: existingMenu?.isActive ?? true,
-                createdAt: existingMenu?.createdAt ?? DateTime.now(),
-              );
-
-              onSave(newMenu, index: index);
-              Navigator.pop(context);
-            },
-            child: Text(existingMenu == null ? "Simpan" : "Update"),
-          ),
-        ],
-      );
-    },
-  );
+      ),
+    );
+  }
 }

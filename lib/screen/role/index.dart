@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -73,6 +74,8 @@ class _RoleCardState extends State<RoleCard> {
   @override
   Widget build(BuildContext context) {
     final roleProvider = Provider.of<RoleProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     final accessCount = widget.role.access?.length ?? 0;
 
     return Card(
@@ -96,12 +99,12 @@ class _RoleCardState extends State<RoleCard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.brown.shade50,
+                      color:  dark ? Colors.grey.shade900 : Colors.brown.shade50,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.admin_panel_settings,
-                      color: Colors.brown.shade700,
+                      color: dark ? Colors.brown.shade300 : Colors.brown.shade700,
                       size: 24,
                     ),
                   ),
@@ -153,10 +156,10 @@ class _RoleCardState extends State<RoleCard> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit_outlined),
-                        color: Colors.blue.shade700,
+                        color: dark ? Colors.blue.shade300 : Colors.blue.shade700,
                         iconSize: 20,
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.blue.shade50,
+                          backgroundColor: dark ? Colors.grey[800] : Colors.blue.shade50,
                           padding: const EdgeInsets.all(8),
                         ),
                         onPressed: () {
@@ -167,10 +170,10 @@ class _RoleCardState extends State<RoleCard> {
                       const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.delete_outline),
-                        color: Colors.red.shade700,
+                        color:  dark ? Colors.red.shade300 : Colors.red.shade700,
                         iconSize: 20,
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.red.shade50,
+                          backgroundColor:  dark ? Colors.grey[800] : Colors.red.shade50,
                           padding: const EdgeInsets.all(8),
                         ),
                         onPressed: () async {
@@ -190,12 +193,12 @@ class _RoleCardState extends State<RoleCard> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: dark ? Colors.grey[900] : Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           _isExpanded ? Icons.expand_less : Icons.expand_more,
-                          color: Colors.grey.shade700,
+                          color: dark ? Colors.grey[200] : Colors.grey.shade700,
                         ),
                       ),
                     ],
@@ -209,7 +212,7 @@ class _RoleCardState extends State<RoleCard> {
           if (_isExpanded) ...[
             const Divider(height: 1),
             Container(
-              color: Colors.grey.shade50,
+              color: dark ? Colors.grey[900] : Colors.grey.shade50,
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +222,7 @@ class _RoleCardState extends State<RoleCard> {
                       Icon(
                         Icons.security,
                         size: 18,
-                        color: Colors.grey.shade700,
+                        color: dark ? Colors.grey[200] : Colors.grey.shade700,
                       ),
                       const SizedBox(width: 8),
                       const Text(
@@ -267,7 +270,7 @@ class _RoleCardState extends State<RoleCard> {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: dark ? Colors.grey[900] : Colors.white,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: categoryColor.withValues(alpha: 0.3),

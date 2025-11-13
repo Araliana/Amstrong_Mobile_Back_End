@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 enum PickerMode { avatar, document }
 
 class ImageSelector extends StatefulWidget {
-  ImageSelector({
+  const ImageSelector({
     super.key,
     this.initValue,
     this.onChanged,

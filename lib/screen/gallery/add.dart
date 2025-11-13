@@ -2,12 +2,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/image_picker.dart';
-import 'package:flutter_application_1/model/memory.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../db/db_helper.dart'; // sesuaikan path import
+// sesuaikan path import
 
 class AddPostScreen extends StatefulWidget {
-  const AddPostScreen({Key? key}) : super(key: key);
+  const AddPostScreen({super.key});
 
   @override
   State<AddPostScreen> createState() => _AddPostScreenState();
@@ -147,7 +146,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               ),
               SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _category,
+                initialValue: _category,
                 decoration: InputDecoration(
                   labelText: 'Kategori',
                   border: OutlineInputBorder(

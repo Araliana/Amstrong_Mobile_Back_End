@@ -2,11 +2,14 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:flutter_application_1/provider/category_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
+import 'package:flutter_application_1/screen/category/index.dart';
 import 'package:flutter_application_1/screen/changePass/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
@@ -77,6 +80,12 @@ class AppRoute {
               path: '/products',
               builder: (context, state) => const ProductPage(),
             ),
+            GoRoute(
+              path: '/categories',
+              builder: (context, state) =>
+                  const CategoryPage(type: CategoryType.menu),
+            ),
+
             //FINANCE
             //CONTENT & MEDIA
             GoRoute(

@@ -7,7 +7,7 @@ import 'package:flutter_application_1/screen/gallery/galleryDelete.dart';
 import 'package:provider/provider.dart';
 
 class GalleryScreen extends StatefulWidget {
-  const GalleryScreen({Key? key}) : super(key: key);
+  const GalleryScreen({super.key});
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();

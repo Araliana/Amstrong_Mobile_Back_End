@@ -1,4 +1,4 @@
-enum MenuType { makanan, minuman, cemilan, desert }
+import 'dish_type.dart';
 
 class Menu {
   final int id;
@@ -6,7 +6,7 @@ class Menu {
   final String img;
   final int price;
   final String description;
-  final MenuType category;
+  final DishType category;
   final bool isActive;
   final DateTime createdAt;
 
@@ -20,7 +20,6 @@ class Menu {
     required this.isActive,
     required this.createdAt,
   });
-
   factory Menu.fromMap(Map<String, dynamic> map) {
     return Menu(
       id: map['id'],

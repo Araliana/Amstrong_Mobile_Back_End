@@ -1,3 +1,4 @@
+// lib/screen/gallery/galleryDelete.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/gallery_provider.dart';

@@ -16,11 +16,17 @@ class _CategoryPageState extends State<CategoryPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      Provider.of<CategoryProvider>(
-        context,
-        listen: false,
-      ).loadCategories(widget.type);
+
+    Future.microtask(() async {
+      final provider = Provider.of<CategoryProvider>(context, listen: false);
+
+      // 🔥 Auto Seed Dish Type jika kategori adalah menu
+      if (widget.type == CategoryType.menu) {
+        await provider.seedDefaultDishTypes();
+      }
+
+      // Load kategori setelah seeding (jika perlu)
+      provider.loadCategories(widget.type);
     });
   }
 
@@ -45,6 +51,7 @@ class _CategoryPageState extends State<CategoryPage> {
               itemCount: provider.categories.length,
               itemBuilder: (context, index) {
                 final Category category = provider.categories[index];
+
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
@@ -68,15 +75,16 @@ class _CategoryPageState extends State<CategoryPage> {
                               widget.type,
                               category.id,
                             );
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Kategori "${category.name}" dihapus',
-                                  ),
+
+                            if (!mounted) return;
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Kategori "${category.name}" dihapus',
                                 ),
-                              );
-                            }
+                              ),
+                            );
                           },
                         ),
                       ],
@@ -92,6 +100,7 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
+  // ADD DIALOG
   void _showAddDialog(BuildContext context, CategoryProvider provider) {
     final TextEditingController nameController = TextEditingController();
 
@@ -126,6 +135,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 widget.type,
                 name,
               );
+
               if (exists != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Nama kategori sudah ada')),
@@ -134,6 +144,7 @@ class _CategoryPageState extends State<CategoryPage> {
               }
 
               await provider.addCategory(widget.type, name);
+
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Simpan'),
@@ -143,6 +154,7 @@ class _CategoryPageState extends State<CategoryPage> {
     );
   }
 
+  // EDIT DIALOG
   void _showEditDialog(
     BuildContext context,
     CategoryProvider provider,
@@ -182,6 +194,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 newName,
                 excludeId: category.id,
               );
+
               if (exists != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

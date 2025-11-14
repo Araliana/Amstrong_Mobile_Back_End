@@ -275,7 +275,7 @@ class AuthProvider with ChangeNotifier {
       final email = user.email ?? "${currUserId ?? 'unknown'}@kjm.admin.app";
       final cred = EmailAuthProvider.credential(
         email: email,
-        password: oldPassword,
+        password: hashPassword(oldPassword),
       );
       await user.reauthenticateWithCredential(cred);
 

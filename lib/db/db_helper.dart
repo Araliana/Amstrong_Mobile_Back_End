@@ -138,7 +138,7 @@ class DBHelper {
         name VARCHAR,
         category VARCHAR,
         quote VARCHAR,
-        imagePath VARCHAR
+        imagePath VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME

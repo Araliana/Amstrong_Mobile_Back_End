@@ -132,13 +132,26 @@ class DBHelper {
         deleted_at DATETIME
       )
     ''',
+    Tables.menu: '''
+      CREATE TABLE menu (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        img VARCHAR,
+        price REAL,
+        description VARCHAR,
+        type_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
+      )
+      ''',
     Tables.gallery: '''
       CREATE TABLE gallery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR,
         category VARCHAR,
         quote VARCHAR,
-        imagePath VARCHAR,
+        img VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME
@@ -162,14 +175,6 @@ class DBHelper {
         deleted_at DATETIME
       )
       ''',
-  };
-
-  static final Map<int, List<String>> tableMigrations = {
-    2: [
-      'ALTER TABLE product ADD COLUMN hpp REAL',
-      'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
-      'ALTER TABLE product ADD COLUMN profit_amount REAL',
-    ],
   };
 
   static final Map<Tables, String> tableNames = {
@@ -200,15 +205,6 @@ class DBHelper {
           await db.execute(schema);
         }
         await runSeeds(db: db, tableNames: tableNames);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        for (int i = oldVersion + 1; i <= newVersion; i++) {
-          if (tableMigrations.containsKey(i)) {
-            for (var script in tableMigrations[i]!) {
-              await db.execute(script);
-            }
-          }
-        }
       },
     );
   }

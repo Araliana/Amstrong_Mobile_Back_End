@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/model/gallery_post.dart';
+import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
 import 'package:flutter_application_1/screen/gallery/add.dart';
 import 'package:flutter_application_1/screen/gallery/galleryDelete.dart';

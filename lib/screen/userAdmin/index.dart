@@ -27,13 +27,11 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
   Widget build(BuildContext context) {
     final adminProvider = Provider.of<AdminProvider>(context);
 
-
     return Scaffold(
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              adminProvider.isLoading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return buildLoadingState("Fetching Admin Data...");
           }
           final userAdmins = adminProvider.userAdmins;
@@ -62,8 +60,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
 
   Widget _buildUserAdminCard(UserAdmin user) {
     final adminProvider = Provider.of<AdminProvider>(context);
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final isDark = themeProvider.getTheme();
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -348,7 +345,8 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                   builder: (context, snapshot) {
                     return buildDropdownField(
                       label: 'Role',
-                      isLoading: roleProvider.isLoading,
+                      isLoading:
+                          snapshot.connectionState == ConnectionState.waiting,
                       value: selectedRole.toString(),
                       items: roleProvider.roles
                           .map(

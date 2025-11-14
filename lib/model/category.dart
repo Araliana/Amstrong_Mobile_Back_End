@@ -1,9 +1,9 @@
 class Category {
   final int id;
   final String name;
-  final DateTime createdAt;
+  final DateTime? createdAt;
 
-  Category({required this.id, required this.name, required this.createdAt});
+  Category({required this.id, required this.name, this.createdAt});
 
   factory Category.fromMap(Map<String, dynamic> map) {
     return Category(
@@ -14,6 +14,6 @@ class Category {
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'name': name, 'created_at': createdAt.toIso8601String()};
+    return {'id': id, 'name': name, 'created_at': createdAt?.toIso8601String()};
   }
 }

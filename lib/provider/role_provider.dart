@@ -47,17 +47,17 @@ class RoleProvider with ChangeNotifier {
     );
   }
 
-  Future<Role> getRole(int id) async {
+  Future<Role?> getRoleById(int id) async {
     _setLoading(true);
     final res = (await db.get(
-      Tables.role,
+      roleTable,
       joins: [
-        Join(joinTable: Tables.roleAccess, fromKey: 'id', toKey: 'role_id'),
+        Join(joinTable: roleAccessTable, fromKey: 'id', toKey: 'role_id'),
         Join(
-          joinTable: Tables.access,
+          joinTable: accessTable,
           fromKey: 'access_id',
           toKey: 'id',
-          fromTable: Tables.roleAccess,
+          fromTable: roleAccessTable,
         ),
       ],
       where: "role.id = ?",
@@ -106,9 +106,6 @@ class RoleProvider with ChangeNotifier {
     required int id,
   }) async {
     _setLoading(true);
-    final role = Role.fromMap(
-      (await db.get(roleTable, where: "id = ?", whereArgs: [id]))[0],
-    );
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     final List<Access> newAcc = [];
     for (int access in accesses) {
@@ -122,7 +119,7 @@ class RoleProvider with ChangeNotifier {
     await db.update(roleTable, id: id, data: {'name': name});
 
     final index = roles.indexWhere((item) => item.id == id);
-    roles[index] = Role(id: id, name: role.name, access: newAcc);
+    roles[index] = Role(id: id, name: name, access: newAcc);
     _setLoading(false);
 
     await analytics.logEvent(

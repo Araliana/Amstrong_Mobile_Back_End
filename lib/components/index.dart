@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
-import 'package:flutter_application_1/provider/theme_provider.dart';
+import 'package:flutter_application_1/provider/category_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum InputMode { text, number, mixed }
 
@@ -19,10 +19,6 @@ Widget buildInput({
   InputMode mode = InputMode.mixed,
   bool isDark = false,
 }) {
-  //final isDark = ThemeProvider().isDarkMode;
-
-  //print(isDark);
-  // Dark mode colors
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
   final fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
@@ -426,5 +422,124 @@ void showLogoutDialog(BuildContext context) {
         ],
       );
     },
+  );
+}
+
+Widget buildCategoryCard(
+  BuildContext context,
+  Category category,
+  CategoryProvider provider,
+  CategoryType categoryMode,
+) {
+  return Card(
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    child: ListTile(
+      title: Text(category.name),
+      subtitle: Text(
+        'Created at: ${category.createdAt}',
+        style: const TextStyle(fontSize: 12),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.blue),
+            onPressed: () =>
+                showAddEditDialog(context, provider, categoryMode, category),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              showDeleteConfirmation(
+                context,
+                title: "Category",
+                label: category.name,
+                isLoading: provider.isLoading,
+                onDelete: () async {
+                  await provider.deleteCategory(categoryMode, category.id);
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void showAddEditDialog(
+  BuildContext context,
+  CategoryProvider provider,
+  CategoryType categoryMode, [
+  Category? category,
+]) {
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController(
+    text: category?.name,
+  );
+  final isEdit = category != null;
+
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(
+          isEdit
+              ? 'Edit ${categoryMode == CategoryType.menu ? "Dish Type" : "Product Category"}'
+              : 'Add ${categoryMode == CategoryType.menu ? "Dish Type" : "Product Category"}',
+        ),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                buildInput(
+                  controller: nameController,
+                  label: "Category Name",
+                  icon: categoryMode == CategoryType.menu
+                      ? Icons.restaurant_menu
+                      : Icons.inventory_2,
+                  validator: (val) => val == null || val.isEmpty
+                      ? "Category name is required"
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: buildDialogActions(
+          context: context,
+          confirmText: isEdit ? "Edit" : "Create",
+          confirmColor: isEdit ? Colors.indigoAccent : Colors.purple,
+          isLoading: provider.isLoading,
+          onConfirm: () async {
+            if (formKey.currentState!.validate()) {
+              if (!isEdit) {
+                await provider.addCategory(
+                  categoryMode,
+                  nameController.text.trim(),
+                );
+              } else {
+                await provider.editCategory(
+                  categoryMode,
+                  id: category.id,
+                  name: nameController.text.trim(),
+                );
+              }
+
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(isEdit ? 'Category updated' : 'Category added'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    ),
   );
 }

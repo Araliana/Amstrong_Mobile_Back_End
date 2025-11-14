@@ -41,15 +41,13 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
 
   Future<void> _loadData() async {
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    final dark = themeProvider.getTheme();
 
     try {
       await roleProvider.loadRole();
       _groupedAccesses = await groupAccessesByCategory(context);
 
       if (widget.roleId != null) {
-        _initRole = await roleProvider.getRole(widget.roleId!);
+        _initRole = await roleProvider.getRoleById(widget.roleId!);
         if (_initRole != null) {
           _selectedAccessIds = _initRole!.access!
               .map<int>((item) => item.id)
@@ -132,7 +130,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                   icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
-                    backgroundColor: dark ? Colors.grey[900] : Colors.grey.shade100,
+                    backgroundColor: dark
+                        ? Colors.grey[900]
+                        : Colors.grey.shade100,
                   ),
                 ),
               ],
@@ -171,7 +171,11 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                             color: dark ? Colors.grey[900] : Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: dark ? Colors.grey.shade600 : Colors.grey.shade200),
+                              side: BorderSide(
+                                color: dark
+                                    ? Colors.grey.shade600
+                                    : Colors.grey.shade200,
+                              ),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
@@ -209,7 +213,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       filled: true,
-                                      fillColor: dark ? Colors.grey[900] : Colors.grey.shade50,
+                                      fillColor: dark
+                                          ? Colors.grey[900]
+                                          : Colors.grey.shade50,
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -248,13 +254,17 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: dark ? Colors.grey[900] :color.shade50,
+                                  color: dark
+                                      ? Colors.grey[900]
+                                      : color.shade50,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   '${_selectedAccessIds.length} selected',
                                   style: TextStyle(
-                                    color: dark ? color.shade300 :color.shade700,
+                                    color: dark
+                                        ? color.shade300
+                                        : color.shade700,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -346,7 +356,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     side: BorderSide(
-                                      color: dark ? Colors.grey.shade300 :Colors.grey.shade700,
+                                      color: dark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700,
                                     ),
                                   ),
                                   child: Theme(
@@ -410,7 +422,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                 ? categoryColor.withValues(
                                                     alpha: 0.05,
                                                   )
-                                                : dark ? Colors.grey.shade900 : Colors.grey.shade50,
+                                                : dark
+                                                ? Colors.grey.shade900
+                                                : Colors.grey.shade50,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -419,7 +433,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                   ? categoryColor.withValues(
                                                       alpha: 0.3,
                                                     )
-                                                  : dark ? Colors.grey.shade600 : Colors.grey.shade200,
+                                                  : dark
+                                                  ? Colors.grey.shade600
+                                                  : Colors.grey.shade200,
                                             ),
                                           ),
                                           child: CheckboxListTile(
@@ -449,7 +465,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                               .withValues(
                                                                 alpha: 0.15,
                                                               )
-                                                        : dark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                                        : dark
+                                                        ? Colors.grey.shade800
+                                                        : Colors.grey.shade200,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                           6,
@@ -460,7 +478,9 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                     size: 16,
                                                     color: isSelected
                                                         ? categoryColor
-                                                        : dark ? Colors.grey.shade50 : Colors.grey.shade600,
+                                                        : dark
+                                                        ? Colors.grey.shade50
+                                                        : Colors.grey.shade600,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 10),
@@ -540,7 +560,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                           content: Text(
                             'Please select the permission before submit!',
                           ),
-                          backgroundColor:Colors.red,
+                          backgroundColor: Colors.red,
                         ),
                       );
                       return;

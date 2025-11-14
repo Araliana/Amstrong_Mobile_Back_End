@@ -1,14 +1,14 @@
-import 'dish_type.dart';
+import 'package:flutter_application_1/model/category.dart';
 
 class Menu {
   final int id;
   final String name;
   final String img;
-  final int price;
+  final double price;
   final String description;
-  final DishType category;
+  final int typeId;
+  final Category category;
   final bool isActive;
-  final DateTime createdAt;
 
   Menu({
     required this.id,
@@ -16,9 +16,9 @@ class Menu {
     required this.img,
     required this.price,
     required this.description,
+    required this.typeId,
     required this.category,
     required this.isActive,
-    required this.createdAt,
   });
   factory Menu.fromMap(Map<String, dynamic> map) {
     return Menu(
@@ -27,9 +27,9 @@ class Menu {
       img: map['img'],
       price: map['price'],
       description: map['description'],
-      category: map['category'],
+      category: Category.fromMap(map['category']),
+      typeId: map['type_id'],
       isActive: map['is_active'],
-      createdAt: DateTime.parse(map['created_at']),
     );
   }
 }

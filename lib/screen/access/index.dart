@@ -32,8 +32,7 @@ class _AccessScreenState extends State<AccessScreen> {
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              accessProvider.isLoading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return buildLoadingState("Fetching Access Data...");
           }
           final accesses = accessProvider.accesses;

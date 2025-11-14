@@ -21,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    _loadFuture = adminProvider.getCurrUser(authProvider.currUserId!);
+    _loadFuture = adminProvider.getUserById(authProvider.currUserId!);
   }
 
   @override

@@ -1,7 +1,7 @@
 // lib/provider/gallery_provider.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
-import 'package:flutter_application_1/model/gallery_post.dart';
+import 'package:flutter_application_1/model/gallery.dart';
 // import 'package:firebase_analytics/firebase_analytics.dart'; // Opsional jika Anda pakai analytics
 
 class GalleryProvider with ChangeNotifier {
@@ -41,7 +41,7 @@ class GalleryProvider with ChangeNotifier {
     await db.insert(galleryTable, {
       'name': name,
       'quote': quote,
-      'imagePath': imagePath,
+      'img': imagePath,
     });
 
     await loadPosts(); // Reload data setelah menambah
@@ -56,7 +56,7 @@ class GalleryProvider with ChangeNotifier {
 
     await loadPosts(); // Reload data setelah menghapus
     _setLoading(false);
-    
+
     // await analytics.logEvent(name: 'delete_gallery_post', parameters: {'id': id});
   }
 }

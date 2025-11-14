@@ -19,26 +19,6 @@ class CategoryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // AUTO-SEED DISH TYPE (HANYA UNTUK CATEGORYType.menu)
-  Future<void> seedDefaultDishTypes() async {
-    final res = await db.get(dishTypeTable);
-
-    // Jika sudah ada data → jangan seed lagi
-    if (res.isNotEmpty) return;
-
-    final defaultTypes = [
-      "Main Course",
-      "Appetizer",
-      "Dessert",
-      "Side Dish",
-      "Beverage",
-    ];
-
-    for (final name in defaultTypes) {
-      await db.insert(dishTypeTable, {"name": name});
-    }
-  }
-
   // LOAD CATEGORY
   Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);

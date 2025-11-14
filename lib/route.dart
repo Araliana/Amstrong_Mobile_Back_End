@@ -2,19 +2,18 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
-import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
-import 'package:flutter_application_1/provider/category_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/screen/access/index.dart';
 import 'package:flutter_application_1/screen/category/index.dart';
 import 'package:flutter_application_1/screen/changePass/index.dart';
+import 'package:flutter_application_1/screen/dishTypes/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
-import 'package:flutter_application_1/screen/menu/add.dart';
+import 'package:flutter_application_1/screen/menu/addEdit.dart';
 import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
@@ -82,15 +81,29 @@ class AppRoute {
             ),
             GoRoute(
               path: '/categories',
-              builder: (context, state) =>
-                  const CategoryPage(type: CategoryType.menu),
+              builder: (context, state) => const CategoryPage(),
             ),
 
             //FINANCE
             //CONTENT & MEDIA
             GoRoute(
               path: '/menu',
-              builder: (context, state) => const MenuPage(),
+              builder: (context, state) => const MenuScreen(),
+            ),
+            GoRoute(
+              path: '/add-edit-menu',
+              builder: (context, state) {
+                final id = state.extra as int?;
+                return AddEditMenuScreen(menuId: id);
+              },
+            ),
+            GoRoute(
+              path: '/dish-types',
+              builder: (context, state) => const DishTypePage(),
+            ),
+            GoRoute(
+              path: '/gallery',
+              builder: (context, state) => const GalleryScreen(),
             ),
             //MANAGEMENT
             GoRoute(
@@ -109,15 +122,9 @@ class AppRoute {
                 return AddEditRoleScreen(roleId: id);
               },
             ),
-
             GoRoute(
               path: '/accesses',
               builder: (context, state) => const AccessScreen(),
-            ),
-
-            GoRoute(
-              path: '/gallery',
-              builder: (context, state) => const GalleryScreen(),
             ),
           ],
         ),
@@ -179,7 +186,7 @@ class _AppShellState extends State<_AppShell> {
     super.initState();
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    _loadFuture = adminProvider.getCurrUser(authProvider.currUserId!);
+    _loadFuture = adminProvider.getUserById(authProvider.currUserId!);
   }
 
   @override

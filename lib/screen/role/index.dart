@@ -31,8 +31,7 @@ class _RoleScreenState extends State<RoleScreen> {
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting ||
-              roleProvider.isLoading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return buildLoadingState("Fetching Role Data...");
           }
           final roles = roleProvider.roles;
@@ -99,12 +98,14 @@ class _RoleCardState extends State<RoleCard> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color:  dark ? Colors.grey.shade900 : Colors.brown.shade50,
+                      color: dark ? Colors.grey.shade900 : Colors.brown.shade50,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.admin_panel_settings,
-                      color: dark ? Colors.brown.shade300 : Colors.brown.shade700,
+                      color: dark
+                          ? Colors.brown.shade300
+                          : Colors.brown.shade700,
                       size: 24,
                     ),
                   ),
@@ -156,10 +157,14 @@ class _RoleCardState extends State<RoleCard> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit_outlined),
-                        color: dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                        color: dark
+                            ? Colors.blue.shade300
+                            : Colors.blue.shade700,
                         iconSize: 20,
                         style: IconButton.styleFrom(
-                          backgroundColor: dark ? Colors.grey[800] : Colors.blue.shade50,
+                          backgroundColor: dark
+                              ? Colors.grey[800]
+                              : Colors.blue.shade50,
                           padding: const EdgeInsets.all(8),
                         ),
                         onPressed: () {
@@ -170,10 +175,12 @@ class _RoleCardState extends State<RoleCard> {
                       const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.delete_outline),
-                        color:  dark ? Colors.red.shade300 : Colors.red.shade700,
+                        color: dark ? Colors.red.shade300 : Colors.red.shade700,
                         iconSize: 20,
                         style: IconButton.styleFrom(
-                          backgroundColor:  dark ? Colors.grey[800] : Colors.red.shade50,
+                          backgroundColor: dark
+                              ? Colors.grey[800]
+                              : Colors.red.shade50,
                           padding: const EdgeInsets.all(8),
                         ),
                         onPressed: () async {

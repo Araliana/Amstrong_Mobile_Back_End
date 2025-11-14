@@ -29,7 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-    _loadFuture = adminProvider.getCurrUser(authProvider.currUserId!);
+    _loadFuture = adminProvider.getUserById(authProvider.currUserId!);
   }
 
   @override

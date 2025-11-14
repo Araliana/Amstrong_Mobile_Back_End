@@ -17,7 +17,7 @@ class _CategoryPageState extends State<DishTypePage> {
   void initState() {
     super.initState();
     final provider = Provider.of<CategoryProvider>(context, listen: false);
-    _loadFuture = provider.loadCategories(CategoryType.product);
+    _loadFuture = provider.loadCategories(CategoryType.menu);
   }
 
   @override
@@ -50,7 +50,7 @@ class _CategoryPageState extends State<DishTypePage> {
                       context,
                       category,
                       provider,
-                      CategoryType.product,
+                      CategoryType.menu,
                     );
                   },
                 );
@@ -59,7 +59,7 @@ class _CategoryPageState extends State<DishTypePage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.brown,
         onPressed: () =>
-            showAddEditDialog(context, provider, CategoryType.product),
+            showAddEditDialog(context, provider, CategoryType.menu),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

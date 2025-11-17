@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class GalleryAddScreen extends StatefulWidget {
@@ -21,9 +22,9 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pilih gambar terlebih dahulu.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Pilih gambar terlebih dahulu.')));
       return;
     }
 
@@ -31,24 +32,36 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
     final provider = Provider.of<GalleryProvider>(context, listen: false);
 
     try {
-      // NOTE: Ini menyimpan path file lokal. Untuk aplikasi nyata,
-      // Anda mungkin perlu mengunggah _imageFile ke server/firebase storage
-      // dan menyimpan URL-nya. Untuk saat ini, kita simpan path lokal.
-      String imagePath = _imageFile!.path;
+      // Upload gambar ke ImageKit
+      String? imageUrl;
+      if (_imageFile != null) {
+        imageUrl = await uploadFile(_imageFile!, folder: 'gallery');
+      }
 
       await provider.addPost(
         name: _uploaderType,
         quote: _quoteCtrl.text.trim(),
-        imagePath: imagePath,
+        imagePath: imageUrl,
       );
 
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Postingan berhasil ditambahkan!'),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         Navigator.pop(context, true); // Kembali & indikasikan sukses
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan: $e')),
+          SnackBar(
+            content: Text('Gagal menyimpan: $e'),
+            backgroundColor: Colors.red[700],
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {
@@ -84,7 +97,10 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
                       ),
                     ),
                   )
-                : Text('Post', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontSize: 16)),
+                : Text(
+                    'Post',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
           ),
         ],
       ),
@@ -112,11 +128,15 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
-              items: ['User', 'Admin']
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
+              items: [
+                'User',
+                'Admin',
+              ].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _uploaderType = v);
               },

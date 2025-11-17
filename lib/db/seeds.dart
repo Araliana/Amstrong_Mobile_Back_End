@@ -55,7 +55,7 @@ Future<void> runSeeds({
         icon: "categories",
       ),
       DataPermission(
-        name: "Inventory",
+      name: "Inventory",
         accessPath: "/inventory",
         icon: "inventory",
       ),

@@ -104,32 +104,66 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
-      // ✅ Coba login ke Firebase
+      // ✅ Coba login ke Firebase dengan password PLAIN (bukan hash bcrypt)
       UserCredential userCred;
       try {
         userCred = await _auth.signInWithEmailAndPassword(
           email: email,
-          password: user.password,
+          password:
+              password, // PENTING: Gunakan password plain, bukan user.password
         );
+        print('✅ Firebase login successful');
       } on FirebaseAuthException catch (e) {
+        print('⚠️ Firebase login error: ${e.code} - ${e.message}');
+
         // Jika user belum ada → buat baru
-        if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-          userCred = await _auth.createUserWithEmailAndPassword(
-            email: email,
-            password: user.password,
-          );
-        } else if (e.code == 'wrong-password') {
+        if (e.code == 'user-not-found') {
+          print('📝 User not found, creating new Firebase account...');
+          try {
+            userCred = await _auth.createUserWithEmailAndPassword(
+              email: email,
+              password: password,
+            );
+            print('✅ Firebase account created');
+          } on FirebaseAuthException catch (createError) {
+            if (createError.code == 'email-already-in-use') {
+              // Email sudah ada tapi dengan password berbeda
+              _setLoading(false);
+              print('❌ Email sudah terdaftar dengan password lain.');
+              print(
+                '💡 Solusi: Hapus user di Firebase Console atau gunakan password reset',
+              );
+              await analytics.logEvent(
+                name: 'login_failed',
+                parameters: {
+                  'reason': 'email_already_in_use',
+                  'username': username,
+                  'suggestion': 'delete_firebase_user_or_reset_password',
+                },
+              );
+              return false;
+            }
+            rethrow;
+          }
+        } else if (e.code == 'invalid-credential' ||
+            e.code == 'wrong-password' ||
+            e.code == 'INVALID_LOGIN_CREDENTIALS') {
+          // Password salah di Firebase
           _setLoading(false);
+          print('❌ Password Firebase tidak cocok.');
+          print('💡 Solusi: Hapus user ${email} di Firebase Console');
           await analytics.logEvent(
             name: 'login_failed',
             parameters: {
               'reason': 'firebase_wrong_password',
               'username': username,
+              'suggestion': 'delete_firebase_user',
             },
           );
           return false;
         } else {
           _setLoading(false);
+          print('❌ Firebase error: ${e.code}');
           await analytics.logEvent(
             name: 'login_failed',
             parameters: {'reason': e.code, 'username': username},
@@ -264,37 +298,57 @@ class AuthProvider with ChangeNotifier {
     required String newPassword,
   }) async {
     final user = _auth.currentUser;
-    if (user == null || currUserUid == null) {
+    if (user == null || currUserId == null) {
       print('❌ Tidak ada user yang sedang login.');
       return false;
     }
 
     _setLoading(true);
     try {
-      // 🔐 Reauthenticate dulu pakai password lama
-      final email = user.email ?? "${currUserId ?? 'unknown'}@kjm.admin.app";
+      // Ambil data user dari database untuk verifikasi password lama
+      final res = await db.get(
+        adminTables,
+        where: "id = ?",
+        whereArgs: [currUserId],
+      );
+
+      if (res.isEmpty) {
+        print('❌ User tidak ditemukan di database.');
+        _setLoading(false);
+        return false;
+      }
+
+      final userAdmin = UserAdmin.fromMap(res.first);
+      final email = user.email ?? "${currUserId}@kjm.admin.app";
+
+      // Verifikasi password lama dengan database lokal
+      if (!verifyPassword(oldPassword, userAdmin.password)) {
+        print('❌ Password lama tidak cocok.');
+        _setLoading(false);
+        return false;
+      }
+
+      // 🔐 Reauthenticate dengan Firebase menggunakan password PLAIN lama
       final cred = EmailAuthProvider.credential(
         email: email,
-        password: hashPassword(oldPassword),
+        password: oldPassword, // gunakan password plain
       );
       await user.reauthenticateWithCredential(cred);
 
-      // 🔒 Simpan double hash baru di secure storage
-      final hashed = hashPassword(newPassword); // gunakan fungsi hash kamu
-      final doubleHash = _doubleHash(hashed);
+      // 🔁 Ganti password di Firebase dengan password PLAIN baru
+      await user.updatePassword(newPassword); // password plain
 
-      // 🔁 Ganti password di Firebase
-      await user.updatePassword(hashed);
+      // 🔒 Hash password baru untuk secure storage
+      final hashedNewPassword = hashPassword(newPassword);
+      final doubleHash = _doubleHash(hashedNewPassword);
 
+      // Simpan double hash baru di secure storage
       await secureStorage.write(key: 'curr_user_pass_hash', value: doubleHash);
 
       // 🧾 Log ke Firebase Analytics
       await analytics.logEvent(
         name: 'change_password_success',
-        parameters: {
-          'firebase_user_id': currUserUid!,
-          if (currUserId != null) 'user_id': currUserId!,
-        },
+        parameters: {'firebase_user_id': currUserUid!, 'user_id': currUserId!},
       );
 
       print('✅ Password berhasil diubah di Firebase untuk $email');

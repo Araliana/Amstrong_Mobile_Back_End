@@ -77,8 +77,14 @@ class DropdownItem {
   final String label;
   final String value;
   final IconData? icon;
+  final String? photo; // URL atau path foto
 
-  DropdownItem({required this.label, required this.value, this.icon});
+  DropdownItem({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.photo,
+  });
 }
 
 Widget buildDropdownField({
@@ -92,21 +98,35 @@ Widget buildDropdownField({
   bool isLoading = false,
   bool isDark = false,
 }) {
-  //final isDark = ThemeProvider().isDarkMode;
-
   // Dark mode colors
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
   final fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
-  final dropdownBgColor = isDark ? Colors.grey.shade900 : Colors.white;
+  final dialogBgColor = isDark ? Colors.grey.shade900 : Colors.white;
   final borderColor = isDark ? Colors.blueAccent : Colors.blue;
   final iconColor = isDark ? Colors.white70 : Colors.black54;
   final loadingTextColor = isDark ? Colors.white54 : Colors.black54;
+  final dividerColor = isDark ? Colors.grey.shade700 : Colors.grey.shade300;
 
   assert(
     items != null || simpleItems != null,
     'Either items or simpleItems must be provided',
   );
+
+  // Convert simpleItems to DropdownItem if needed
+  final List<DropdownItem> dropdownItems = simpleItems != null
+      ? simpleItems
+            .map((item) => DropdownItem(label: item, value: item))
+            .toList()
+      : items!;
+
+  // Find selected item
+  final selectedItem = dropdownItems.firstWhere(
+    (item) => item.value == value,
+    orElse: () => DropdownItem(label: '', value: ''),
+  );
+
+  String? errorText;
 
   if (isLoading) {
     return InputDecorator(
@@ -141,64 +161,213 @@ Widget buildDropdownField({
     );
   }
 
-  List<DropdownMenuItem<String>> dropdownItems;
-  if (simpleItems != null) {
-    dropdownItems = simpleItems
-        .map(
-          (item) => DropdownMenuItem(
-            value: item,
-            child: Text(item, style: TextStyle(color: textColor)),
-          ),
-        )
-        .toList();
-  } else {
-    dropdownItems = items!
-        .map(
-          (item) => DropdownMenuItem(
-            value: item.value,
-            child: Row(
-              children: [
-                if (item.icon != null) ...[
-                  Icon(item.icon, size: 20, color: iconColor),
-                  const SizedBox(width: 6),
-                ],
-                Text(item.label, style: TextStyle(color: textColor)),
-              ],
-            ),
-          ),
-        )
-        .toList();
-  }
-
-  final isValueValid = dropdownItems.any((e) => e.value == value);
-
-  return DropdownButtonFormField<String>(
-    value: isValueValid ? value : null,
-    dropdownColor: dropdownBgColor,
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: labelColor),
-      prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, color: iconColor)
-          : null,
-      filled: true,
-      fillColor: fillColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: borderColor, width: 1.5),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      errorMaxLines: 2,
-    ),
-    items: dropdownItems,
-    onChanged: onChanged,
+  return FormField<String>(
+    initialValue: value,
     validator: validator,
-    style: TextStyle(color: textColor),
-    icon: Icon(Icons.arrow_drop_down, color: iconColor),
+    builder: (FormFieldState<String> field) {
+      return InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: labelColor),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: iconColor)
+              : null,
+          filled: true,
+          fillColor: fillColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: borderColor, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.red, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          errorText: field.errorText,
+          errorMaxLines: 2,
+        ),
+        child: InkWell(
+          onTap: () async {
+            final selected = await showDialog<String>(
+              context: field.context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  backgroundColor: dialogBgColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      maxWidth: 400,
+                      maxHeight: 600,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: Icon(Icons.close, color: iconColor),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(height: 1, color: dividerColor),
+
+                        // List items
+                        Flexible(
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: dropdownItems.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              color: dividerColor,
+                              indent: 16,
+                              endIndent: 16,
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = dropdownItems[index];
+                              final isSelected = item.value == value;
+
+                              return InkWell(
+                                onTap: () => Navigator.pop(context, item.value),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Photo (if exists)
+                                      if (item.photo != null) ...[
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.network(
+                                            item.photo!,
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  return Container(
+                                                    height: 120,
+                                                    color: fillColor,
+                                                    child: Icon(
+                                                      Icons.image_not_supported,
+                                                      color: iconColor,
+                                                      size: 40,
+                                                    ),
+                                                  );
+                                                },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+
+                                      // Label and Icon
+                                      Row(
+                                        children: [
+                                          if (item.icon != null) ...[
+                                            Icon(
+                                              item.icon,
+                                              size: 20,
+                                              color: isSelected
+                                                  ? borderColor
+                                                  : iconColor,
+                                            ),
+                                            const SizedBox(width: 12),
+                                          ],
+                                          Expanded(
+                                            child: Text(
+                                              item.label,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: isSelected
+                                                    ? borderColor
+                                                    : textColor,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.w600
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                          ),
+                                          if (isSelected)
+                                            Icon(
+                                              Icons.check_circle,
+                                              color: borderColor,
+                                              size: 20,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+
+            if (selected != null) {
+              field.didChange(selected);
+              onChanged(selected);
+            }
+          },
+          child: Row(
+            children: [
+              if (selectedItem.icon != null) ...[
+                Icon(selectedItem.icon, size: 20, color: iconColor),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  value != null && selectedItem.label.isNotEmpty
+                      ? selectedItem.label
+                      : 'Select $label',
+                  style: TextStyle(
+                    color: value != null && selectedItem.label.isNotEmpty
+                        ? textColor
+                        : loadingTextColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Icon(Icons.arrow_drop_down, color: iconColor),
+            ],
+          ),
+        ),
+      );
+    },
   );
 }
 

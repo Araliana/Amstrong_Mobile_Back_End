@@ -126,8 +126,6 @@ Widget buildDropdownField({
     orElse: () => DropdownItem(label: '', value: ''),
   );
 
-  String? errorText;
-
   if (isLoading) {
     return InputDecorator(
       decoration: InputDecoration(
@@ -195,147 +193,23 @@ Widget buildDropdownField({
         ),
         child: InkWell(
           onTap: () async {
-            final selected = await showDialog<String>(
-              context: field.context,
-              builder: (BuildContext context) {
-                return Dialog(
-                  backgroundColor: dialogBgColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      maxWidth: 400,
-                      maxHeight: 600,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Header
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              Text(
-                                label,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: textColor,
-                                ),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                icon: Icon(Icons.close, color: iconColor),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Divider(height: 1, color: dividerColor),
-
-                        // List items
-                        Flexible(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: dropdownItems.length,
-                            separatorBuilder: (context, index) => Divider(
-                              height: 1,
-                              color: dividerColor,
-                              indent: 16,
-                              endIndent: 16,
-                            ),
-                            itemBuilder: (context, index) {
-                              final item = dropdownItems[index];
-                              final isSelected = item.value == value;
-
-                              return InkWell(
-                                onTap: () => Navigator.pop(context, item.value),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 12,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Photo (if exists)
-                                      if (item.photo != null) ...[
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: Image.network(
-                                            item.photo!,
-                                            height: 120,
-                                            width: double.infinity,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                                  return Container(
-                                                    height: 120,
-                                                    color: fillColor,
-                                                    child: Icon(
-                                                      Icons.image_not_supported,
-                                                      color: iconColor,
-                                                      size: 40,
-                                                    ),
-                                                  );
-                                                },
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                      ],
-
-                                      // Label and Icon
-                                      Row(
-                                        children: [
-                                          if (item.icon != null) ...[
-                                            Icon(
-                                              item.icon,
-                                              size: 20,
-                                              color: isSelected
-                                                  ? borderColor
-                                                  : iconColor,
-                                            ),
-                                            const SizedBox(width: 12),
-                                          ],
-                                          Expanded(
-                                            child: Text(
-                                              item.label,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                color: isSelected
-                                                    ? borderColor
-                                                    : textColor,
-                                                fontWeight: isSelected
-                                                    ? FontWeight.w600
-                                                    : FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                          if (isSelected)
-                                            Icon(
-                                              Icons.check_circle,
-                                              color: borderColor,
-                                              size: 20,
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            final selected = await Navigator.of(field.context).push<String>(
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (context) => _FullScreenDropdownDialog(
+                  label: label,
+                  items: dropdownItems,
+                  selectedValue: value,
+                  isDark: isDark,
+                  textColor: textColor,
+                  labelColor: labelColor,
+                  fillColor: fillColor,
+                  dialogBgColor: dialogBgColor,
+                  borderColor: borderColor,
+                  iconColor: iconColor,
+                  dividerColor: dividerColor,
+                ),
+              ),
             );
 
             if (selected != null) {
@@ -369,6 +243,269 @@ Widget buildDropdownField({
       );
     },
   );
+}
+
+class _FullScreenDropdownDialog extends StatefulWidget {
+  final String label;
+  final List<DropdownItem> items;
+  final String? selectedValue;
+  final bool isDark;
+  final Color textColor;
+  final Color labelColor;
+  final Color fillColor;
+  final Color dialogBgColor;
+  final Color borderColor;
+  final Color iconColor;
+  final Color dividerColor;
+
+  const _FullScreenDropdownDialog({
+    required this.label,
+    required this.items,
+    required this.selectedValue,
+    required this.isDark,
+    required this.textColor,
+    required this.labelColor,
+    required this.fillColor,
+    required this.dialogBgColor,
+    required this.borderColor,
+    required this.iconColor,
+    required this.dividerColor,
+  });
+
+  @override
+  State<_FullScreenDropdownDialog> createState() =>
+      __FullScreenDropdownDialogState();
+}
+
+class __FullScreenDropdownDialogState extends State<_FullScreenDropdownDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  List<DropdownItem> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+    _searchController.addListener(_filterItems);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterItems() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        _filteredItems = widget.items
+            .where((item) => item.label.toLowerCase().contains(query))
+            .toList();
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: widget.dialogBgColor,
+      appBar: AppBar(
+        backgroundColor: widget.dialogBgColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.close, color: widget.iconColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.label,
+          style: TextStyle(
+            color: widget.textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(72),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: TextStyle(color: widget.textColor),
+              decoration: InputDecoration(
+                hintText: 'Search ${widget.label}...',
+                hintStyle: TextStyle(color: widget.iconColor),
+                prefixIcon: Icon(Icons.search, color: widget.iconColor),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: widget.iconColor),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                filled: true,
+                fillColor: widget.fillColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: widget.borderColor, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: _filteredItems.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: widget.iconColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No results found',
+                    style: TextStyle(fontSize: 16, color: widget.iconColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try a different search term',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: widget.iconColor.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _filteredItems.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: widget.dividerColor,
+                indent: 16,
+                endIndent: 16,
+              ),
+              itemBuilder: (context, index) {
+                final item = _filteredItems[index];
+                final isSelected = item.value == widget.selectedValue;
+
+                return InkWell(
+                  onTap: () => Navigator.pop(context, item.value),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Photo (if exists)
+                        if (item.photo != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              item.photo!,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 180,
+                                  color: widget.fillColor,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: widget.iconColor,
+                                    size: 48,
+                                  ),
+                                );
+                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      height: 180,
+                                      color: widget.fillColor,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                widget.borderColor,
+                                              ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Label and Icon
+                        Row(
+                          children: [
+                            if (item.icon != null) ...[
+                              Icon(
+                                item.icon,
+                                size: 24,
+                                color: isSelected
+                                    ? widget.borderColor
+                                    : widget.iconColor,
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            Expanded(
+                              child: Text(
+                                item.label,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isSelected
+                                      ? widget.borderColor
+                                      : widget.textColor,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: widget.borderColor,
+                                size: 24,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
 }
 
 List<Widget> buildDialogActions({

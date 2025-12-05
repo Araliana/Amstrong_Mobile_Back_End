@@ -32,8 +32,8 @@ class MenuProvider with ChangeNotifier {
           isList: false,
         ),
       ],
-      orderBy: "user_admin.id",
-      orderType: OrderType.asc,
+      orderBy: "created_at",
+      orderType: OrderType.desc,
     );
     menus
       ..clear()
@@ -77,35 +77,43 @@ class MenuProvider with ChangeNotifier {
     required int category,
   }) async {
     _setLoading(true);
-    final res = await db.insert(menuTables, {
-      'name': name,
-      'img': img,
-      'price': price,
-      'description': description,
-      'category': category,
-    });
-    final type = Category.fromMap(
-      (await db.get(dishTypesTable, where: "id = ?", whereArgs: [category]))[0],
-    );
+    try {
+      final res = await db.insert(menuTables, {
+        'name': name,
+        'img': img,
+        'price': price,
+        'description': description,
+        'type_id': category,
+      });
+      final type = Category.fromMap(
+        (await db.get(
+          dishTypesTable,
+          where: "id = ?",
+          whereArgs: [category],
+        ))[0],
+      );
 
-    menus.add(
-      Menu(
-        id: res,
-        name: name,
-        img: img,
-        price: price,
-        description: description,
-        typeId: category,
-        category: type,
-        isActive: true,
-      ),
-    );
-    _setLoading(false);
+      menus.add(
+        Menu(
+          id: res,
+          name: name,
+          img: img,
+          price: price,
+          description: description,
+          typeId: category,
+          category: type,
+          isActive: true,
+        ),
+      );
+      _setLoading(false);
 
-    await analytics.logEvent(
-      name: 'add_menu',
-      parameters: {'name': name, 'price': price, 'description': description},
-    );
+      await analytics.logEvent(
+        name: 'add_menu',
+        parameters: {'name': name, 'price': price, 'description': description},
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future<void> editMenu({

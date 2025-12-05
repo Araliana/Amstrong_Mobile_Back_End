@@ -55,14 +55,12 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
       setState(() {
         _isLoading = false;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading data: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -98,7 +96,6 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
               "Menu Image",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 12),
             ImageSelector(
               mode: PickerMode.document,
               initValue: _initMenu?.img,
@@ -140,7 +137,9 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
 
             // Category Dropdown
             FutureBuilder(
-              future: dishTypeProvider.loadCategories(CategoryType.menu),
+              future: _isLoading
+                  ? dishTypeProvider.loadCategories(CategoryType.menu)
+                  : null,
               builder: (context, snapshot) {
                 return buildDropdownField(
                   label: 'Category',
@@ -187,7 +186,7 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
             SizedBox(
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: _isLoading || menuProvider.isLoading
+                onPressed: _isLoading
                     ? null
                     : () async {
                         if (_formKey.currentState!.validate()) {
@@ -207,9 +206,6 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
                           if (_selectedImageFile != null) {
                             url = await uploadFile(_selectedImageFile!);
                           }
-                          setState(() {
-                            _isLoading = false;
-                          });
                           if (!isEdit) {
                             await menuProvider.addMenu(
                               name: _nameController.text,
@@ -229,20 +225,21 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
                               id: _initMenu!.id,
                             );
                           }
+                          setState(() {
+                            _isLoading = false;
+                          });
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                isEdit
-                                    ? 'Permission updated'
-                                    : 'Permission added',
+                                isEdit ? 'Menu updated' : 'Menu added',
                               ),
                               backgroundColor: Colors.green,
                             ),
                           );
                         }
                       },
-                icon: _isLoading || menuProvider.isLoading
+                icon: _isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -255,7 +252,7 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
                       )
                     : const Icon(Icons.save, color: Colors.white),
                 label: Text(
-                  _isLoading || menuProvider.isLoading
+                  _isLoading
                       ? (isEdit ? "Updating" : "Adding")
                       : (isEdit ? "Update Menu" : "Add Menu"),
                   style: const TextStyle(fontSize: 16, color: Colors.white),
@@ -274,9 +271,7 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
             SizedBox(
               height: 50,
               child: OutlinedButton.icon(
-                onPressed: _isLoading || menuProvider.isLoading
-                    ? null
-                    : () => Navigator.pop(context),
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
                 icon: const Icon(Icons.close),
                 label: const Text("Cancel", style: TextStyle(fontSize: 16)),
                 style: OutlinedButton.styleFrom(

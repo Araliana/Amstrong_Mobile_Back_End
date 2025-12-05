@@ -283,7 +283,7 @@ class _MenuScreenState extends State<MenuScreen> {
                   if (value == 'view') {
                     _showMenuDetails(context, menu);
                   } else if (value == 'edit') {
-                    context.push('/add-edit-menu/${menu.id}');
+                    context.push('/add-edit-menu', extra: menu.id);
                   } else if (value == 'toggle') {
                     menuProvider.editMenu(
                       name: menu.name,

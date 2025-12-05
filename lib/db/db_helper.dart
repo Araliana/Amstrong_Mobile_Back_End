@@ -184,6 +184,7 @@ class DBHelper {
     Tables.product: "product",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",
+    Tables.menu: "menu",
     Tables.productType: "product_type",
     Tables.dishType: "dish_type",
   };

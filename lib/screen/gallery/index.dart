@@ -94,8 +94,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
               CircleAvatar(
                 radius: 18,
                 backgroundColor: theme.brightness == Brightness.dark
-                    ? uploaderColor.withOpacity(0.3)
-                    : uploaderColor.withOpacity(0.1),
+                    ? uploaderColor.withValues(alpha: 0.3)
+                    : uploaderColor.withValues(alpha: 0.1),
                 child: Icon(uploaderIcon, size: 20, color: uploaderColor),
               ),
               SizedBox(width: 10),
@@ -204,7 +204,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         Divider(
           height: 1,
           thickness: 1,
-          color: theme.dividerColor.withOpacity(0.1),
+          color: theme.dividerColor.withValues(alpha: 0.1),
         ),
       ],
     );

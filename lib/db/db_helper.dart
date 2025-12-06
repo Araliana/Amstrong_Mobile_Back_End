@@ -80,7 +80,8 @@ class DBHelper {
         last_login DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.role: '''
@@ -89,7 +90,8 @@ class DBHelper {
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.access: '''
@@ -102,14 +104,14 @@ class DBHelper {
         icon VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.product: '''
       CREATE TABLE product(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR,
-        slug VARCHAR,
         price REAL,
         discount_price REAL,
         stock INTEGER,
@@ -120,7 +122,8 @@ class DBHelper {
         profit_amount REAL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.roleAccess: '''
@@ -129,7 +132,8 @@ class DBHelper {
         access_id INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.menu: '''
@@ -143,7 +147,8 @@ class DBHelper {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
       ''',
     Tables.gallery: '''
@@ -155,7 +160,8 @@ class DBHelper {
         img VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
       ''',
     Tables.productType: '''
@@ -164,7 +170,8 @@ class DBHelper {
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
       ''',
     Tables.dishType: '''
@@ -173,7 +180,8 @@ class DBHelper {
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
-        deleted_at DATETIME
+        deleted_at DATETIME,
+        is_synced INTEGER DEFAULT 0
       )
       ''',
   };

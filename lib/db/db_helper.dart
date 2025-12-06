@@ -132,6 +132,20 @@ class DBHelper {
         deleted_at DATETIME
       )
     ''',
+    Tables.menu: '''
+      CREATE TABLE menu (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        img VARCHAR,
+        price REAL,
+        description VARCHAR,
+        type_id INTEGER,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
+      )
+      ''',
     Tables.gallery: '''
       CREATE TABLE gallery (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -174,7 +188,6 @@ class DBHelper {
       'ALTER TABLE gallery ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP',
     ],
   };
-
 
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",

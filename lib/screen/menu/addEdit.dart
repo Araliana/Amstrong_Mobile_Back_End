@@ -55,6 +55,7 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
       setState(() {
         _isLoading = false;
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error loading data: $e'),

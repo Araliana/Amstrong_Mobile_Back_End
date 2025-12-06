@@ -27,14 +27,15 @@ class MenuProvider with ChangeNotifier {
       joins: [
         Join(
           joinTable: dishTypesTable,
-          fromKey: "category",
+          fromKey: "type_id",
           toKey: "id",
           isList: false,
         ),
       ],
-      orderBy: "created_at",
+      orderBy: "menu.created_at",
       orderType: OrderType.desc,
     );
+
     menus
       ..clear()
       ..addAll(res.map((e) => Menu.fromMap(e)).toList());
@@ -53,7 +54,7 @@ class MenuProvider with ChangeNotifier {
       joins: [
         Join(
           joinTable: dishTypesTable,
-          fromKey: "category",
+          fromKey: "type_id",
           toKey: "id",
           isList: false,
         ),
@@ -137,8 +138,8 @@ class MenuProvider with ChangeNotifier {
         'img': img,
         'price': price,
         'description': description,
-        'category': category,
-        'is_active': isActive,
+        'type_id': category,
+        'is_active': isActive ? 1 : 0,
       },
     );
     if (menus.indexWhere((item) => item.id == id) == -1) {

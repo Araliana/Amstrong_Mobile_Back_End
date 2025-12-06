@@ -27,9 +27,11 @@ class Menu {
       img: map['img'],
       price: map['price'],
       description: map['description'],
-      category: Category.fromMap(map['category']),
+      category: Category.fromMap(
+        (map['dish_type'] as Map).cast<String, dynamic>(),
+      ),
       typeId: map['type_id'],
-      isActive: map['is_active'],
+      isActive: map['is_active'] == 1,
     );
   }
 }

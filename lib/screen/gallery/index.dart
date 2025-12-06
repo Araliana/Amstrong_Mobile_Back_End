@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
@@ -17,33 +16,25 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   void initState() {
     super.initState();
-    // Gunakan addPostFrameCallback untuk memuat data setelah frame pertama
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPosts();
     });
   }
 
   Future<void> _loadPosts() async {
-    // Panggil provider untuk memuat data
     await Provider.of<GalleryProvider>(context, listen: false).loadPosts();
   }
 
   void _openAdd() async {
-    // Navigasi ke halaman add
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => GalleryAddScreen()),
     );
-    // Jika result == true (berhasil add), provider sudah auto-reload,
-    // tapi kita bisa panggil lagi untuk memastikan jika perlu.
-    if (result == true) {
-      // Data sudah di-reload oleh provider, tidak perlu _loadPosts() lagi
-    }
+    if (result == true) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan Consumer untuk mendengarkan perubahan pada GalleryProvider
     return Consumer<GalleryProvider>(
       builder: (context, provider, child) {
         return Scaffold(
@@ -162,11 +153,32 @@ class _GalleryScreenState extends State<GalleryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.file(
-                File(post.imagePath!),
+              child: Image.network(
+                post.imagePath!,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                // Error handling jika file tidak ditemukan
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.brown[400],
+                        value: progress.expectedTotalBytes != null
+                            ? progress.cumulativeBytesLoaded /
+                                  progress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+                // Error handling jika gambar gagal dimuat
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     width: double.infinity,

@@ -66,7 +66,7 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 2; // Increment version untuk migration
+  static const int _dbVersion = 3; // Increment version untuk migration
 
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
@@ -178,6 +178,17 @@ class DBHelper {
       ''',
   };
 
+  static final Map<int, List<String>> tableMigrations = {
+    2: [
+      'ALTER TABLE product ADD COLUMN hpp REAL',
+      'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
+      'ALTER TABLE product ADD COLUMN profit_amount REAL',
+    ],
+    3: [
+      'ALTER TABLE gallery ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP',
+    ],
+  };
+
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",
     Tables.role: "role",
@@ -207,6 +218,21 @@ class DBHelper {
           await db.execute(schema);
         }
         await runSeeds(db: db, tableNames: tableNames);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        for (int i = oldVersion + 1; i <= newVersion; i++) {
+          if (tableMigrations.containsKey(i)) {
+            for (var script in tableMigrations[i]!) {
+              try {
+                await db.execute(script);
+              } catch (e) {
+                // Kolom mungkin sudah ada atau error lain, skip
+                // ignore: avoid_print
+                print('Migration skipped for: $script. Error: $e');
+              }
+            }
+          }
+        }
       },
     );
   }

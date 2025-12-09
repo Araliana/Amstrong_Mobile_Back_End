@@ -2,6 +2,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:uuid/uuid.dart';
 
 class AccessProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -9,6 +10,7 @@ class AccessProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables accessTables = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -40,7 +42,11 @@ class AccessProvider with ChangeNotifier {
     required String icon,
   }) async {
     _setLoading(true);
-    final res = await db.insert(accessTables, {
+
+    final id = uuid.v4();
+
+    await db.insert(accessTables, {
+      "id": id,
       'name': name,
       'access_path': accessPath,
       'category': category,
@@ -49,7 +55,7 @@ class AccessProvider with ChangeNotifier {
 
     accesses.add(
       Access(
-        id: res,
+        id: id,
         name: name,
         accessPath: accessPath,
         category: category,
@@ -73,7 +79,7 @@ class AccessProvider with ChangeNotifier {
     required String category,
     required int idSort,
     required String icon,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
     final access = Access.fromMap(
@@ -111,7 +117,7 @@ class AccessProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteAccess(int id) async {
+  Future<void> deleteAccess(String id) async {
     _setLoading(true);
     await db.delete(accessTables, id: id);
     await db.delete(roleAccessTable, where: "access_id", whereArgs: [id]);

@@ -634,25 +634,6 @@ Widget buildHeader(String title, IconData icon) {
   );
 }
 
-Widget idRenderer(int id) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.green.shade50,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.green.shade200),
-    ),
-    child: Text(
-      'ID: $id',
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.green.shade700,
-        fontWeight: FontWeight.w500,
-      ),
-    ),
-  );
-}
-
 void showDeleteConfirmation(
   BuildContext context, {
   required bool isLoading,

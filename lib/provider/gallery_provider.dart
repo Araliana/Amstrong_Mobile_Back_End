@@ -1,14 +1,15 @@
-// lib/provider/gallery_provider.dart
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/gallery.dart';
-// import 'package:firebase_analytics/firebase_analytics.dart'; // Opsional jika Anda pakai analytics
+import 'package:uuid/uuid.dart';
 
 class GalleryProvider with ChangeNotifier {
-  // final FirebaseAnalytics analytics = FirebaseAnalytics.instance; // Opsional
-  final List<GalleryPost> posts = [];
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  final List<Memo> memos = [];
   final DBHelper db = DBHelper();
   final Tables galleryTable = Tables.gallery;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -17,46 +18,101 @@ class GalleryProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadPosts() async {
+  Future<void> loadMemos() async {
     _setLoading(true);
     final res = await db.get(
       galleryTable,
       orderBy: "created_at",
-      orderType: OrderType.desc, // Postingan terbaru di atas
+      orderType: OrderType.desc,
     );
-    posts
+    memos
       ..clear()
-      ..addAll(res.map((e) => GalleryPost.fromMap(e)).toList());
+      ..addAll(res.map((e) => Memo.fromMap(e)).toList());
     _setLoading(false);
 
-    // await analytics.logEvent(name: 'load_gallery', parameters: {'count': posts.length});
+    await analytics.logEvent(
+      name: 'load_gallery',
+      parameters: {'count': memos.length},
+    );
   }
 
-  Future<void> addPost({
-    required String name, // Admin atau User
+  Future<void> addMemo({
+    required String name,
     required String quote,
-    required String? imagePath,
+    required String img,
+    required String category,
   }) async {
     _setLoading(true);
+    final id = uuid.v4();
     await db.insert(galleryTable, {
       'name': name,
+      'category': category,
       'quote': quote,
-      'img': imagePath,
+      'img': img,
     });
 
-    await loadPosts(); // Reload data setelah menambah
+    memos.add(
+      Memo(
+        id: id,
+        name: name,
+        quote: quote,
+        img: img,
+        category: category,
+        isActive: true,
+      ),
+    );
+
     _setLoading(false);
 
-    // await analytics.logEvent(name: 'add_gallery_post', parameters: {'name': name});
+    await analytics.logEvent(
+      name: 'add_gallery_memo',
+      parameters: {'name': name, 'quote': quote},
+    );
   }
 
-  Future<void> deletePost(int id) async {
+  Future<void> editMemo({
+    required String name,
+    required String quote,
+    required String img,
+    required String category,
+    required String id,
+  }) async {
+    _setLoading(true);
+
+    await db.update(
+      galleryTable,
+      id: id,
+      data: {'name': name, 'category': category, 'quote': quote, 'img': img},
+    );
+    final index = memos.indexWhere((item) => item.id == id);
+    memos[index] = Memo(
+      id: id,
+      name: name,
+      quote: quote,
+      img: img,
+      category: category,
+      isActive: true,
+    );
+
+    _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'edit_gallery_memo',
+      parameters: {'id': id, 'name': name, 'quote': quote},
+    );
+  }
+
+  Future<void> deleteMemo(String id) async {
     _setLoading(true);
     await db.delete(galleryTable, id: id);
 
-    await loadPosts(); // Reload data setelah menghapus
+    memos.removeWhere((c) => c.id == id);
+
     _setLoading(false);
 
-    // await analytics.logEvent(name: 'delete_gallery_post', parameters: {'id': id});
+    await analytics.logEvent(
+      name: 'delete_gallery_memo',
+      parameters: {'id': id},
+    );
   }
 }

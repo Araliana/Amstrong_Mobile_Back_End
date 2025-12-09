@@ -140,8 +140,6 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        idRenderer(user.id),
                       ],
                     ),
                     Text(
@@ -266,7 +264,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool obscurePassword = true;
-    int? selectedRole;
+    String? selectedRole;
 
     showDialog(
       context: context,
@@ -359,7 +357,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                       prefixIcon: Icons.manage_accounts,
                       onChanged: (value) {
                         setDialogState(() {
-                          selectedRole = int.parse(value!);
+                          selectedRole = value;
                         });
                       },
                       validator: (value) {
@@ -427,7 +425,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
     final nameController = TextEditingController(text: user.fullname);
     final usernameController = TextEditingController(text: user.username);
     final formKey = GlobalKey<FormState>();
-    int? selectedRole = user.role!.id;
+    String? selectedRole = user.role!.id;
 
     showDialog(
       context: context,
@@ -486,7 +484,7 @@ class _UserAdminScreenState extends State<UserAdminScreen> {
                       prefixIcon: Icons.manage_accounts,
                       onChanged: (value) {
                         setDialogState(() {
-                          selectedRole = int.parse(value!);
+                          selectedRole = value;
                         });
                       },
                       validator: (value) {

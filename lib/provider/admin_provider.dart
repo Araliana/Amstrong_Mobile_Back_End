@@ -6,6 +6,7 @@ import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
+import 'package:uuid/uuid.dart';
 
 class AdminProvider with ChangeNotifier {
   final _userController = StreamController<UserAdmin>.broadcast();
@@ -17,6 +18,7 @@ class AdminProvider with ChangeNotifier {
   final Tables roleTable = Tables.role;
   final Tables accessTable = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -87,10 +89,14 @@ class AdminProvider with ChangeNotifier {
     required String fullname,
     required String username,
     required String password,
-    required int roleId,
+    required String roleId,
   }) async {
     _setLoading(true);
-    final res = await db.insert(adminTables, {
+
+    final id = uuid.v4();
+
+    await db.insert(adminTables, {
+      'id': id,
       'fullname': fullname,
       'username': username,
       'password': hashPassword(password),
@@ -102,7 +108,7 @@ class AdminProvider with ChangeNotifier {
 
     userAdmins.add(
       UserAdmin(
-        id: res,
+        id: id,
         fullname: fullname,
         username: username,
         password: hashPassword(password),
@@ -128,8 +134,8 @@ class AdminProvider with ChangeNotifier {
     String? username,
     String? password,
     String? img,
-    int? roleId,
-    required int id,
+    String? roleId,
+    required String id,
   }) async {
     _setLoading(true);
     final userAdmin = UserAdmin.fromMap(
@@ -158,9 +164,8 @@ class AdminProvider with ChangeNotifier {
     if (userAdmins.indexWhere((item) => item.id == id) == -1) {
       await loadUserAdmin();
     }
-    final index = (userAdmins.indexWhere((item) => item.id == id)) == -1
-        ? id
-        : userAdmins.indexWhere((item) => item.id == id);
+    final index = userAdmins.indexWhere((item) => item.id == id);
+
     userAdmins[index] = UserAdmin(
       id: id,
       fullname: fullname ?? userAdmin.fullname,
@@ -192,7 +197,7 @@ class AdminProvider with ChangeNotifier {
   Future<bool> changePassword({
     required String newPassword,
     required String oldPassword,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
 
@@ -214,7 +219,7 @@ class AdminProvider with ChangeNotifier {
     return true;
   }
 
-  Future<bool> checkUsername({required String username, int? id}) async {
+  Future<bool> checkUsername({required String username, String? id}) async {
     _setLoading(true);
 
     final query = "username = LOWER(?) ${id != null ? "AND id != ?" : ""}";
@@ -236,7 +241,7 @@ class AdminProvider with ChangeNotifier {
     return userAdmin.isNotEmpty;
   }
 
-  Future<void> deleteUserAdmin(int id) async {
+  Future<void> deleteUserAdmin(String id) async {
     _setLoading(true);
     await db.delete(adminTables, id: id);
     userAdmins.removeWhere((item) => item.id == id);

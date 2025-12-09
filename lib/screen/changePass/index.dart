@@ -177,7 +177,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             final result = await adminProvider.changePassword(
                               oldPassword: oldPassword,
                               newPassword: newPassword,
-                              id: int.parse(authProvider.currUserId!),
+                              id: authProvider.currUserId!,
                             );
 
                             if (result) {

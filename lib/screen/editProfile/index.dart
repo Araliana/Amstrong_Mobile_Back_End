@@ -108,7 +108,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 isUploading = false;
                               });
                               await adminProvider.editUserAdmin(
-                                id: int.parse(authProvider.currUserId!),
+                                id: authProvider.currUserId!,
                                 fullname: _fullNameController.text,
                                 img: ppUrl,
                               );

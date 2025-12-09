@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Access {
-  final int id;
+  final String id;
   final String name;
   final String accessPath;
   final String category;

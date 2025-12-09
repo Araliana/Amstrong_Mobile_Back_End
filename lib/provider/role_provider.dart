@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/model/role.dart';
+import 'package:uuid/uuid.dart';
 
 class RoleProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -11,6 +12,7 @@ class RoleProvider with ChangeNotifier {
   final Tables roleTable = Tables.role;
   final Tables accessTable = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -47,7 +49,7 @@ class RoleProvider with ChangeNotifier {
     );
   }
 
-  Future<Role?> getRoleById(int id) async {
+  Future<Role?> getRoleById(String id) async {
     _setLoading(true);
     final res = (await db.get(
       roleTable,
@@ -76,7 +78,8 @@ class RoleProvider with ChangeNotifier {
     required Set<int> accesses,
   }) async {
     _setLoading(true);
-    final res = await db.insert(roleTable, {'name': name});
+    final id = uuid.v4();
+    await db.insert(roleTable, {'id': id, 'name': name});
     final List<Access> newAcc = [];
     for (int access in accesses) {
       newAcc.add(
@@ -84,16 +87,16 @@ class RoleProvider with ChangeNotifier {
           (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
         ),
       );
-      await db.insert(roleAccessTable, {'role_id': res, "access_id": access});
+      await db.insert(roleAccessTable, {'role_id': id, "access_id": access});
     }
 
-    roles.add(Role(id: res, name: name, access: newAcc));
+    roles.add(Role(id: id, name: name, access: newAcc));
     _setLoading(false);
 
     await analytics.logEvent(
       name: 'add_role',
       parameters: {
-        'role_id': res,
+        'role_id': id,
         'name': name,
         'access_count': accesses.length,
       },
@@ -103,7 +106,7 @@ class RoleProvider with ChangeNotifier {
   Future<void> editRole({
     required String name,
     required Set<int> accesses,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
@@ -132,7 +135,7 @@ class RoleProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteRole(int id) async {
+  Future<void> deleteRole(String id) async {
     _setLoading(true);
     await db.delete(roleTable, id: id);
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);

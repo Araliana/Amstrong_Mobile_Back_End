@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/menu.dart';
+import 'package:uuid/uuid.dart';
 
 class MenuProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -12,6 +13,7 @@ class MenuProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables menuTables = Tables.menu;
   final Tables dishTypesTable = Tables.dishType;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -79,13 +81,16 @@ class MenuProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      final res = await db.insert(menuTables, {
+      final id = uuid.v4();
+      await db.insert(menuTables, {
+        'id': id,
         'name': name,
         'img': img,
         'price': price,
         'description': description,
         'type_id': category,
       });
+
       final type = Category.fromMap(
         (await db.get(
           dishTypesTable,
@@ -96,7 +101,7 @@ class MenuProvider with ChangeNotifier {
 
       menus.add(
         Menu(
-          id: res,
+          id: id,
           name: name,
           img: img,
           price: price,
@@ -124,7 +129,7 @@ class MenuProvider with ChangeNotifier {
     required String description,
     required int category,
     required bool isActive,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
     final type = Category.fromMap(
@@ -142,12 +147,7 @@ class MenuProvider with ChangeNotifier {
         'is_active': isActive ? 1 : 0,
       },
     );
-    if (menus.indexWhere((item) => item.id == id) == -1) {
-      await loadMenu();
-    }
-    final index = (menus.indexWhere((item) => item.id == id)) == -1
-        ? id
-        : menus.indexWhere((item) => item.id == id);
+    final index = menus.indexWhere((item) => item.id == id);
     menus[index] = Menu(
       id: id,
       name: name,
@@ -171,7 +171,7 @@ class MenuProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteMenu(int id) async {
+  Future<void> deleteMenu(String id) async {
     _setLoading(true);
     await db.delete(menuTables, id: id);
     menus.removeWhere((item) => item.id == id);

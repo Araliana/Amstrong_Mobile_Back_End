@@ -1,38 +1,28 @@
-// lib/model/gallery_post.dart
-class GalleryPost {
-  int? id;
-  String name; // Uploader (Admin / User)
-  String quote; // Caption
-  String? imagePath;
-  DateTime? createdAt;
+class Memo {
+  final String id;
+  final String name;
+  final String quote;
+  final String category;
+  final String img;
+  final bool isActive;
 
-  GalleryPost({
-    this.id,
+  Memo({
+    required this.id,
     required this.name,
     required this.quote,
-    this.imagePath,
-    this.createdAt,
+    required this.img,
+    required this.category,
+    required this.isActive,
   });
 
-  factory GalleryPost.fromMap(Map<String, dynamic> map) {
-    return GalleryPost(
-      id: map['id'] as int,
-      name: map['name'] as String? ?? '',
-      quote: map['quote'] as String? ?? '',
-      imagePath: map['imagePath'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
-          : null,
+  factory Memo.fromMap(Map<String, dynamic> map) {
+    return Memo(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      quote: map['quote'] as String,
+      img: map['img'] as String,
+      category: map['category'],
+      isActive: map['is_active'],
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'name': name,
-      'quote': quote,
-      'imagePath': imagePath,
-      'created_at': createdAt?.toIso8601String(),
-    };
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_application_1/model/category.dart';
 
 class Menu {
-  final int id;
+  final String id;
   final String name;
   final String img;
   final double price;

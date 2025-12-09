@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
 import 'package:flutter_application_1/screen/gallery/add.dart';
-import 'package:flutter_application_1/screen/gallery/galleryDelete.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class GalleryScreen extends StatefulWidget {
@@ -13,55 +14,50 @@ class GalleryScreen extends StatefulWidget {
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
+  late Future<void> _loadFuture;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadPosts();
-    });
-  }
-
-  Future<void> _loadPosts() async {
-    await Provider.of<GalleryProvider>(context, listen: false).loadPosts();
-  }
-
-  void _openAdd() async {
-    final result = await Navigator.push(
+    final galleryProvider = Provider.of<GalleryProvider>(
       context,
-      MaterialPageRoute(builder: (_) => GalleryAddScreen()),
+      listen: false,
     );
-    if (result == true) {}
+    _loadFuture = galleryProvider.loadMemos();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<GalleryProvider>(
-      builder: (context, provider, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Gallery'),
-            actions: [
-              IconButton(
-                onPressed: _openAdd,
-                icon: Icon(Icons.add_circle_outline),
-              ),
-            ],
-          ),
-          body: provider.isLoading && provider.posts.isEmpty
-              ? Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _loadPosts,
-                  child: provider.posts.isEmpty
-                      ? _buildEmptyState()
-                      : _buildPostList(provider.posts),
-                ),
-        );
-      },
+    final galleryProvider = Provider.of<GalleryProvider>(context);
+
+    return Scaffold(
+      body: FutureBuilder(
+        future: _loadFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return buildLoadingState("Fetching Memo...");
+          }
+
+          final memos = galleryProvider.memos;
+
+          return RefreshIndicator(
+            onRefresh: () => _loadFuture,
+            child: memos.isEmpty
+                ? buildEmptyState("Memo", Icons.collections_outlined)
+                : _buildPostList(memos),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.brown,
+        onPressed: () => context.push('/add-edit-gallery'),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
   // Widget untuk tampilan daftar postingan
-  Widget _buildPostList(List<GalleryPost> posts) {
+  Widget _buildPostList(List<Memo> posts) {
     return ListView.builder(
       itemCount: posts.length,
       itemBuilder: (context, index) {
@@ -75,162 +71,279 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Widget _buildPostCard(GalleryPost post) {
     final theme = Theme.of(context);
 
-    // Tentukan icon berdasarkan uploader
-    IconData uploaderIcon = post.name == 'Admin'
-        ? Icons.shield_outlined
-        : Icons.person_outline;
-    Color uploaderColor = post.name == 'Admin'
-        ? Colors.blueAccent
-        : Colors.grey.shade600;
+    // Tentukan icon dan color berdasarkan category
+    IconData uploaderIcon;
+    Color uploaderColor;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-          child: Row(
-            children: [
-              // Avatar/Icon Uploader
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: theme.brightness == Brightness.dark
-                    ? uploaderColor.withValues(alpha: 0.3)
-                    : uploaderColor.withValues(alpha: 0.1),
-                child: Icon(uploaderIcon, size: 20, color: uploaderColor),
-              ),
-              SizedBox(width: 10),
-              // Nama Uploader
-              Text(
-                post.name, // "Admin" atau "User"
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: theme.colorScheme.onSurface,
+    switch (post.category.toLowerCase()) {
+      case 'bands':
+        uploaderIcon = Icons.music_note_outlined;
+        uploaderColor = Colors.purple;
+        break;
+      case 'employees':
+        uploaderIcon = Icons.badge_outlined;
+        uploaderColor = Colors.blueAccent;
+        break;
+      case 'customers':
+      default:
+        uploaderIcon = Icons.person_outline;
+        uploaderColor = Colors.grey.shade600;
+        break;
+    }
+
+    return Opacity(
+      opacity: post.isActive ? 1.0 : 0.5,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+            child: Row(
+              children: [
+                // Avatar/Icon Uploader
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: theme.brightness == Brightness.dark
+                      ? uploaderColor.withValues(alpha: 0.3)
+                      : uploaderColor.withValues(alpha: 0.1),
+                  child: Icon(uploaderIcon, size: 20, color: uploaderColor),
                 ),
-              ),
-              Spacer(),
-              // Tombol Opsi (Hapus)
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
-                onSelected: (value) {
-                  if (value == 'delete') {
-                    // Panggil fungsi hapus dari galleryDelete.dart
-                    confirmDeleteGalleryPost(context, post.id!);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.red[700]),
-                        SizedBox(width: 8),
-                        Text('Hapus', style: TextStyle(color: Colors.red[700])),
-                      ],
-                    ),
+                SizedBox(width: 10),
+                // Nama Uploader
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            post.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          // Badge status aktif
+                          if (!post.isActive)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Nonaktif',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Text(
+                        post.category,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        // Caption / Quote
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            post.quote,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.4,
-              color: theme.colorScheme.onSurface,
+                ),
+                // Tombol Opsi (Toggle Active, Edit & Hapus)
+                Consumer<GalleryProvider>(
+                  builder: (context, provider, child) {
+                    return PopupMenuButton<String>(
+                      icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
+                      onSelected: (value) {
+                        if (value == 'toggle') {
+                          _toggleActiveStatus(post);
+                        } else if (value == 'edit') {
+                          _openEdit(post);
+                        } else if (value == 'delete') {
+                          showDeleteConfirmation(
+                            context,
+                            title: "Hapus Postingan",
+                            label: post.name,
+                            isLoading: provider.isLoading,
+                            onDelete: () async {
+                              await provider.deletePost(post.id);
+                              _refreshPosts();
+                            },
+                          );
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'toggle',
+                          child: Row(
+                            children: [
+                              Icon(
+                                post.isActive
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: post.isActive
+                                    ? Colors.orange[700]
+                                    : Colors.green[700],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                post.isActive ? 'Nonaktifkan' : 'Aktifkan',
+                                style: TextStyle(
+                                  color: post.isActive
+                                      ? Colors.orange[700]
+                                      : Colors.green[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_outlined,
+                                color: Colors.blue[700],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Edit',
+                                style: TextStyle(color: Colors.blue[700]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline,
+                                color: Colors.red[700],
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Hapus',
+                                style: TextStyle(color: Colors.red[700]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-        ),
-        SizedBox(height: 12),
-        // Gambar Postingan
-        if (post.imagePath != null && post.imagePath!.isNotEmpty)
+          // Caption / Quote
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                post.imagePath!,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.brown[400],
-                        value: progress.expectedTotalBytes != null
-                            ? progress.cumulativeBytesLoaded /
-                                  progress.expectedTotalBytes!
-                            : null,
-                      ),
-                    ),
-                  );
-                },
-                // Error handling jika gambar gagal dimuat
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        color: Colors.grey.shade400,
-                        size: 40,
-                      ),
-                    ),
-                  );
-                },
+            child: Text(
+              post.quote,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
-        SizedBox(height: 16),
-        // Pembatas antar postingan
-        Divider(
-          height: 1,
-          thickness: 1,
-          color: theme.dividerColor.withValues(alpha: 0.1),
-        ),
-      ],
+          SizedBox(height: 12),
+          // Gambar Postingan
+          if (post.img.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  post.img,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.brown[400],
+                          value: progress.expectedTotalBytes != null
+                              ? progress.cumulativeBytesLoaded /
+                                    progress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: double.infinity,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.grey.shade400,
+                          size: 40,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          // Timestamp
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Text(
+              _formatDate(post.createdAt),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+            ),
+          ),
+          // Pembatas antar postingan
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.dividerColor.withValues(alpha: 0.1),
+          ),
+        ],
+      ),
     );
   }
 
-  // Widget untuk tampilan kosong
-  Widget _buildEmptyState() {
-    return ListView(
-      // Ini membuat "pull-to-refresh" tetap aktif
-      children: [
-        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-        Icon(Icons.photo_library_outlined, size: 60, color: Colors.grey[400]),
-        SizedBox(height: 16),
-        Center(
-          child: Text(
-            'Belum ada postingan.',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-        ),
-        Center(
-          child: Text(
-            'Tekan ikon + untuk menambah postingan baru.',
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-          ),
-        ),
-      ],
-    );
+  // Format tanggal
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Baru saja';
+        }
+        return '${difference.inMinutes} menit yang lalu';
+      }
+      return '${difference.inHours} jam yang lalu';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} hari yang lalu';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 }

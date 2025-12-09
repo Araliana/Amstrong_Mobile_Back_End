@@ -42,7 +42,7 @@ class _RoleScreenState extends State<RoleScreen> {
                   itemCount: roles.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return buildHeader("Role", Icons.manage_accounts);
+                      return buildHeader("Role", Icons.collections_rounded);
                     }
                     return RoleCard(role: roles[index - 1]);
                   },
@@ -126,8 +126,6 @@ class _RoleCardState extends State<RoleCard> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            idRenderer(widget.role.id),
                           ],
                         ),
                         const SizedBox(height: 4),

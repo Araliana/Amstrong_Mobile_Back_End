@@ -11,6 +11,7 @@ import 'package:flutter_application_1/screen/category/index.dart';
 import 'package:flutter_application_1/screen/changePass/index.dart';
 import 'package:flutter_application_1/screen/dishTypes/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
+import 'package:flutter_application_1/screen/gallery/add.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/menu/addEdit.dart';
@@ -93,7 +94,7 @@ class AppRoute {
             GoRoute(
               path: '/add-edit-menu',
               builder: (context, state) {
-                final id = state.extra as int?;
+                final id = state.extra as String?;
                 return AddEditMenuScreen(menuId: id);
               },
             ),
@@ -104,6 +105,13 @@ class AppRoute {
             GoRoute(
               path: '/gallery',
               builder: (context, state) => const GalleryScreen(),
+            ),
+            GoRoute(
+              path: '/add-edit-gallery',
+              builder: (context, state) {
+                final id = state.extra as String?;
+                return GalleryAddEditScreen(id);
+              },
             ),
             //MANAGEMENT
             GoRoute(
@@ -117,7 +125,7 @@ class AppRoute {
             GoRoute(
               path: '/add-edit-role',
               builder: (context, state) {
-                final id = state.extra as int?;
+                final id = state.extra as String?;
 
                 return AddEditRoleScreen(roleId: id);
               },

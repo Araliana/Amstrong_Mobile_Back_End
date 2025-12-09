@@ -5,17 +5,18 @@ import 'package:flutter_application_1/provider/gallery_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
-class GalleryAddScreen extends StatefulWidget {
-  const GalleryAddScreen({Key? key}) : super(key: key);
+class GalleryAddEditScreen extends StatefulWidget {
+  final String? memoId;
+  const GalleryAddEditScreen(this.memoId, {super.key}) 
 
   @override
-  State<GalleryAddScreen> createState() => _GalleryAddScreenState();
+  State<GalleryAddEditScreen> createState() => _GalleryAddEditScreenState();
 }
 
-class _GalleryAddScreenState extends State<GalleryAddScreen> {
+class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _quoteCtrl = TextEditingController();
-  String _uploaderType = 'User'; // Default value
+  String _uploaderType = 'User'; 
   File? _imageFile;
   bool _saving = false;
 
@@ -41,7 +42,7 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
       await provider.addPost(
         name: _uploaderType,
         quote: _quoteCtrl.text.trim(),
-        imagePath: imageUrl,
+        img: imageUrl,
       );
 
       if (mounted) {

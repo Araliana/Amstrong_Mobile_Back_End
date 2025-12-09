@@ -1,14 +1,14 @@
 import 'package:flutter_application_1/model/role.dart';
 
 class UserAdmin {
-  final int id;
+  final String id;
   final String fullname;
   final String username;
   final String? img;
   final String password;
   final DateTime? lastLogin;
   final DateTime createdAt;
-  final int roleId;
+  final String roleId;
   final Role? role;
 
   UserAdmin({
@@ -25,7 +25,7 @@ class UserAdmin {
 
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
     return UserAdmin(
-      id: map['id'] as int,
+      id: map['id'] as String,
       fullname: map['fullname'] as String,
       username: map['username'] as String,
       img: map['img'] as String?,

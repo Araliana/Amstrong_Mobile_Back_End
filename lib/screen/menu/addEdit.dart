@@ -10,7 +10,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class AddEditMenuScreen extends StatefulWidget {
-  final int? menuId;
+  final String? menuId;
 
   const AddEditMenuScreen({super.key, this.menuId});
 

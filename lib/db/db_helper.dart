@@ -76,7 +76,7 @@ class DBHelper {
         username VARCHAR,
         img VARCHAR,
         password VARCHAR,
-        role_id INTEGER,
+        role_id TEXT,
         last_login DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
@@ -112,8 +112,7 @@ class DBHelper {
       CREATE TABLE product(
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        price REAL,
-        discount_price REAL,
+        discount REAL,
         img VARCHAR,
         description TEXT
         profit_type VARCHAR,
@@ -250,7 +249,7 @@ class DBHelper {
 
   Future<int> update(
     Tables table, {
-    int? id,
+    String? id,
     String? where,
     List<Object?>? whereArgs,
     required Map<String, dynamic> data,
@@ -284,7 +283,7 @@ class DBHelper {
 
   Future<int> delete(
     Tables table, {
-    int? id,
+    String? id,
     String? where,
     List<Object?>? whereArgs,
   }) async {

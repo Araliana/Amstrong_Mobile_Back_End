@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:uuid/uuid.dart';
 
 enum CategoryType { menu, product }
 
@@ -10,16 +11,15 @@ class CategoryProvider with ChangeNotifier {
 
   final Tables productTypeTable = Tables.productType;
   final Tables dishTypeTable = Tables.dishType;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
-  // PRIVATE SET LOADING STATE
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  // LOAD CATEGORY
   Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);
 
@@ -36,23 +36,22 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  // ADD CATEGORY
   Future<void> addCategory(CategoryType type, String name) async {
     _setLoading(true);
+    final id = uuid.v4();
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
 
-    final id = await db.insert(table, {"name": name});
+    await db.insert(table, {'id': id, "name": name});
 
     categories.add(Category(id: id, name: name, createdAt: DateTime.now()));
 
     _setLoading(false);
   }
 
-  // EDIT CATEGORY
   Future<void> editCategory(
     CategoryType type, {
-    required int id,
+    required String id,
     String? name,
   }) async {
     _setLoading(true);
@@ -82,8 +81,7 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  // DELETE CATEGORY
-  Future<void> deleteCategory(CategoryType type, int id) async {
+  Future<void> deleteCategory(CategoryType type, String id) async {
     _setLoading(true);
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
@@ -95,7 +93,6 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  // CHECK DUPLICATE NAME
   Future<Category?> checkCategoryName(
     CategoryType type,
     String name, {

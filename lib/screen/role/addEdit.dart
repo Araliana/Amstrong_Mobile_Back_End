@@ -8,7 +8,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class AddEditRoleScreen extends StatefulWidget {
-  final int? roleId;
+  final String? roleId;
 
   const AddEditRoleScreen({super.key, this.roleId});
 
@@ -22,7 +22,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   final selectedAcc = {};
 
   // State variables
-  Set<int> _selectedAccessIds = {};
+  Set<String> _selectedAccessIds = {};
   Map<String, List<Access>>? _groupedAccesses;
   Role? _initRole;
   bool _isLoading = true;
@@ -50,7 +50,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
         _initRole = await roleProvider.getRoleById(widget.roleId!);
         if (_initRole != null) {
           _selectedAccessIds = _initRole!.access!
-              .map<int>((item) => item.id)
+              .map<String>((item) => item.id)
               .toSet();
         }
         _nameController.text = _initRole?.name ?? "";

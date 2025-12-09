@@ -100,8 +100,6 @@ class _AccessScreenState extends State<AccessScreen> {
                                 fontSize: 16,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            idRenderer(access.id),
                           ],
                         ),
                         subtitle: Column(

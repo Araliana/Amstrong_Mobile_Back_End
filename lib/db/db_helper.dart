@@ -66,12 +66,12 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 3; // Increment version untuk migration
+  static const int _dbVersion = 1; // Increment version untuk migration
 
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
       CREATE TABLE user_admin(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         fullname VARCHAR,
         username VARCHAR,
         img VARCHAR,
@@ -86,7 +86,7 @@ class DBHelper {
     ''',
     Tables.role: '''
       CREATE TABLE role(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
@@ -96,7 +96,7 @@ class DBHelper {
     ''',
     Tables.access: '''
       CREATE TABLE access(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         access_path VARCHAR,
         category VARCHAR,
@@ -110,14 +110,12 @@ class DBHelper {
     ''',
     Tables.product: '''
       CREATE TABLE product(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         price REAL,
         discount_price REAL,
-        stock INTEGER,
         img VARCHAR,
-        description TEXT,
-        hpp REAL,
+        description TEXT
         profit_type VARCHAR,
         profit_amount REAL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -128,8 +126,8 @@ class DBHelper {
     ''',
     Tables.roleAccess: '''
       CREATE TABLE role_access(
-        role_id INTEGER,
-        access_id INTEGER,
+        role_id TEXT,
+        access_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME,
@@ -138,7 +136,7 @@ class DBHelper {
     ''',
     Tables.menu: '''
       CREATE TABLE menu (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         img VARCHAR,
         price REAL,
@@ -153,7 +151,7 @@ class DBHelper {
       ''',
     Tables.gallery: '''
       CREATE TABLE gallery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         category VARCHAR,
         quote VARCHAR,
@@ -166,7 +164,7 @@ class DBHelper {
       ''',
     Tables.productType: '''
       CREATE TABLE product_type (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
@@ -176,7 +174,7 @@ class DBHelper {
       ''',
     Tables.dishType: '''
       CREATE TABLE dish_type (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
@@ -186,16 +184,7 @@ class DBHelper {
       ''',
   };
 
-  static final Map<int, List<String>> tableMigrations = {
-    2: [
-      'ALTER TABLE product ADD COLUMN hpp REAL',
-      'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
-      'ALTER TABLE product ADD COLUMN profit_amount REAL',
-    ],
-    3: [
-      'ALTER TABLE gallery ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP',
-    ],
-  };
+  static final Map<int, List<String>> tableMigrations = {};
 
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",
@@ -375,7 +364,6 @@ class DBHelper {
       }
     }
 
-    // Add filter for soft delete - exclude deleted items
     final whereClause = StringBuffer();
     final whereArgsList = <Object?>[];
 

@@ -26,6 +26,9 @@ dependencies:
   google_mobile_ads: ^5.1.0
   flutter_secure_storage: ^9.2.4
   crypto: ^3.0.6
+  cloud_firestore: ^4.0.0
+  connectivity_plus: ^4.0.0
+  uuid: ^3.0.0
 
 flutter_icons:
   android: true

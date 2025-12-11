@@ -11,7 +11,7 @@ import 'package:flutter_application_1/screen/category/index.dart';
 import 'package:flutter_application_1/screen/changePass/index.dart';
 import 'package:flutter_application_1/screen/dishTypes/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
-import 'package:flutter_application_1/screen/gallery/add.dart';
+import 'package:flutter_application_1/screen/gallery/addEdit.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/menu/addEdit.dart';
@@ -110,7 +110,7 @@ class AppRoute {
               path: '/add-edit-gallery',
               builder: (context, state) {
                 final id = state.extra as String?;
-                return GalleryAddEditScreen(id);
+                return GalleryAddEditScreen(memoId: id);
               },
             ),
             //MANAGEMENT

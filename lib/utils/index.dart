@@ -32,6 +32,34 @@ List<MapEntry<String, List<Access>>> sortAccess(
   return sortedEntries;
 }
 
+Future<Map<String, List<Access>>> groupAccessesByCategory(
+  BuildContext context,
+) async {
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final adminProvider = Provider.of<AdminProvider>(context, listen: false);
+
+  final userID = authProvider.currUserId;
+
+  if (userID == null) {
+    return {};
+  }
+
+  final currUser = await adminProvider.getUserById(userID);
+  final Map<String, List<Access>> grouped = {};
+
+  // Check if user has role and access
+  if (currUser.role?.access != null) {
+    for (var access in currUser.role!.access!) {
+      if (!grouped.containsKey(access.category)) {
+        grouped[access.category] = [];
+      }
+      grouped[access.category]!.add(access);
+    }
+  }
+
+  return grouped;
+}
+
 T enumFromString<T extends Enum>(Iterable<T> values, String value) {
   return values.firstWhere(
     (e) => e.name == value,
@@ -83,33 +111,6 @@ String formatCurrency(num value) {
     decimalDigits: 0,
   );
   return formatter.format(value);
-}
-
-Future<Map<String, List<Access>>> groupAccessesByCategory(
-  BuildContext context,
-) async {
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-
-  final userID = authProvider.currUserId;
-  if (userID == null) {
-    return {}; // Return empty map if no username
-  }
-
-  final currUser = await adminProvider.getUserById(userID);
-  final Map<String, List<Access>> grouped = {};
-
-  // Check if user has role and access
-  if (currUser.role?.access != null) {
-    for (var access in currUser.role!.access!) {
-      if (!grouped.containsKey(access.category)) {
-        grouped[access.category] = [];
-      }
-      grouped[access.category]!.add(access);
-    }
-  }
-
-  return grouped;
 }
 
 Color getCategoryColor(String category) {

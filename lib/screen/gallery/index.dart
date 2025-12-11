@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
-import 'package:flutter_application_1/screen/gallery/add.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -57,25 +56,25 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   // Widget untuk tampilan daftar postingan
-  Widget _buildPostList(List<Memo> posts) {
+  Widget _buildPostList(List<Memo> memos) {
     return ListView.builder(
-      itemCount: posts.length,
+      itemCount: memos.length,
       itemBuilder: (context, index) {
-        final post = posts[index];
-        return _buildPostCard(post);
+        final memo = memos[index];
+        return _buildPostCard(memo);
       },
     );
   }
 
   // Widget untuk tampilan "Threads-like"
-  Widget _buildPostCard(GalleryPost post) {
+  Widget _buildPostCard(Memo memo) {
     final theme = Theme.of(context);
 
     // Tentukan icon dan color berdasarkan category
     IconData uploaderIcon;
     Color uploaderColor;
 
-    switch (post.category.toLowerCase()) {
+    switch (memo.category.toLowerCase()) {
       case 'bands':
         uploaderIcon = Icons.music_note_outlined;
         uploaderColor = Colors.purple;
@@ -92,7 +91,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
     }
 
     return Opacity(
-      opacity: post.isActive ? 1.0 : 0.5,
+      opacity: memo.isActive ? 1.0 : 0.5,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -117,7 +116,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       Row(
                         children: [
                           Text(
-                            post.name,
+                            memo.name,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
@@ -126,7 +125,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           ),
                           SizedBox(width: 6),
                           // Badge status aktif
-                          if (!post.isActive)
+                          if (!memo.isActive)
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -148,7 +147,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         ],
                       ),
                       Text(
-                        post.category,
+                        memo.category,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,
@@ -157,25 +156,30 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     ],
                   ),
                 ),
-                // Tombol Opsi (Toggle Active, Edit & Hapus)
                 Consumer<GalleryProvider>(
                   builder: (context, provider, child) {
                     return PopupMenuButton<String>(
                       icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
                       onSelected: (value) {
                         if (value == 'toggle') {
-                          _toggleActiveStatus(post);
+                          provider.editMemo(
+                            name: memo.name,
+                            quote: memo.quote,
+                            img: memo.img,
+                            category: memo.category,
+                            id: memo.id,
+                            isActive: !memo.isActive,
+                          );
                         } else if (value == 'edit') {
-                          _openEdit(post);
+                          context.push('/add-edit-gallery', extra: memo.id);
                         } else if (value == 'delete') {
                           showDeleteConfirmation(
                             context,
                             title: "Hapus Postingan",
-                            label: post.name,
+                            label: memo.name,
                             isLoading: provider.isLoading,
                             onDelete: () async {
-                              await provider.deletePost(post.id);
-                              _refreshPosts();
+                              await provider.deleteMemo(memo.id);
                             },
                           );
                         }
@@ -186,18 +190,18 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           child: Row(
                             children: [
                               Icon(
-                                post.isActive
+                                memo.isActive
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: post.isActive
+                                color: memo.isActive
                                     ? Colors.orange[700]
                                     : Colors.green[700],
                               ),
                               SizedBox(width: 8),
                               Text(
-                                post.isActive ? 'Nonaktifkan' : 'Aktifkan',
+                                memo.isActive ? 'Nonaktifkan' : 'Aktifkan',
                                 style: TextStyle(
-                                  color: post.isActive
+                                  color: memo.isActive
                                       ? Colors.orange[700]
                                       : Colors.green[700],
                                 ),
@@ -248,7 +252,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              post.quote,
+              memo.quote,
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
@@ -258,13 +262,13 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ),
           SizedBox(height: 12),
           // Gambar Postingan
-          if (post.img.isNotEmpty)
+          if (memo.img.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.network(
-                  post.img,
+                  memo.img,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, progress) {
@@ -308,15 +312,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 ),
               ),
             ),
-          // Timestamp
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              _formatDate(post.createdAt),
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
-            ),
-          ),
-          // Pembatas antar postingan
           Divider(
             height: 1,
             thickness: 1,
@@ -325,25 +320,5 @@ class _GalleryScreenState extends State<GalleryScreen> {
         ],
       ),
     );
-  }
-
-  // Format tanggal
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      if (difference.inHours == 0) {
-        if (difference.inMinutes == 0) {
-          return 'Baru saja';
-        }
-        return '${difference.inMinutes} menit yang lalu';
-      }
-      return '${difference.inHours} jam yang lalu';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} hari yang lalu';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
   }
 }

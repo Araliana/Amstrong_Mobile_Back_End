@@ -89,7 +89,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         await provider.addProduct(
           name: _nameCtl.text.trim(),
           price: double.tryParse(_priceCtl.text.trim()) ?? 0.0,
-          stock: int.tryParse(_stockCtl.text.trim()) ?? 0,
+          // stock: int.tryParse(_stockCtl.text.trim()) ?? 0,
           description: _descCtl.text.trim().isEmpty
               ? 'No description'
               : _descCtl.text.trim(),

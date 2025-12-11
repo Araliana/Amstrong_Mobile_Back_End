@@ -49,7 +49,7 @@ class MenuProvider with ChangeNotifier {
     );
   }
 
-  Future<Menu?> getMenuById(int id) async {
+  Future<Menu?> getMenuById(String id) async {
     _setLoading(true);
     final res = (await db.get(
       menuTables,

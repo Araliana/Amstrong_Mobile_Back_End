@@ -75,13 +75,13 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> addRole({
     required String name,
-    required Set<int> accesses,
+    required Set<String> accesses,
   }) async {
     _setLoading(true);
     final id = uuid.v4();
     await db.insert(roleTable, {'id': id, 'name': name});
     final List<Access> newAcc = [];
-    for (int access in accesses) {
+    for (String access in accesses) {
       newAcc.add(
         Access.fromMap(
           (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
@@ -105,13 +105,13 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> editRole({
     required String name,
-    required Set<int> accesses,
+    required Set<String> accesses,
     required String id,
   }) async {
     _setLoading(true);
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     final List<Access> newAcc = [];
-    for (int access in accesses) {
+    for (String access in accesses) {
       newAcc.add(
         Access.fromMap(
           (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],

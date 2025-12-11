@@ -18,6 +18,8 @@ Widget buildInput({
   String? Function(String?)? validator,
   InputMode mode = InputMode.mixed,
   bool isDark = false,
+  int maxLines = 1,
+  int? minLines,
 }) {
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
@@ -40,7 +42,9 @@ Widget buildInput({
       break;
 
     case InputMode.mixed:
-      keyboardType = TextInputType.text;
+      keyboardType = maxLines > 1
+          ? TextInputType.multiline
+          : TextInputType.text;
       break;
   }
 
@@ -50,16 +54,24 @@ Widget buildInput({
     validator: validator,
     keyboardType: keyboardType,
     inputFormatters: formatters,
+    maxLines: obscure ? 1 : maxLines,
+    minLines: obscure ? 1 : minLines,
     style: TextStyle(color: textColor),
     decoration: InputDecoration(
       labelText: label,
       labelStyle: TextStyle(color: labelColor),
-      prefixIcon: Icon(icon, color: iconColor),
+      prefixIcon: maxLines > 1
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 60),
+              child: Icon(icon, color: iconColor),
+            )
+          : Icon(icon, color: iconColor),
       suffixIcon: suffix,
       prefixText: prefixText,
       prefixStyle: TextStyle(color: labelColor),
       filled: true,
       fillColor: fillColor,
+      alignLabelWithHint: maxLines > 1,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -68,7 +80,10 @@ Widget buildInput({
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: maxLines > 1 ? 16 : 14,
+      ),
     ),
   );
 }

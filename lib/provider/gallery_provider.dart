@@ -36,6 +36,21 @@ class GalleryProvider with ChangeNotifier {
     );
   }
 
+  Future<Memo?> getMemoById(String id) async {
+    _setLoading(true);
+    final res = (await db.get(
+      galleryTable,
+      where: "id = ?",
+      whereArgs: [id],
+    ))[0];
+    _setLoading(false);
+    await analytics.logEvent(
+      name: 'get_memo_detail',
+      parameters: {'memo_id': id},
+    );
+    return Memo.fromMap(res);
+  }
+
   Future<void> addMemo({
     required String name,
     required String quote,
@@ -75,6 +90,7 @@ class GalleryProvider with ChangeNotifier {
     required String quote,
     required String img,
     required String category,
+    required bool isActive,
     required String id,
   }) async {
     _setLoading(true);

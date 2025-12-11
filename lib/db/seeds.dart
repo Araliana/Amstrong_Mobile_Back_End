@@ -1,34 +1,46 @@
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:uuid/uuid.dart';
 
 Future<void> runSeeds({
   required Database db,
   required Map<Tables, String> tableNames,
 }) async {
+  final uuid = const Uuid();
+
+  final roleNames = ["Master", "Owner", "Staff"];
+  final roleIds = <int, String>{};
+
+  for (int i = 0; i < roleNames.length; i++) {
+    final id = uuid.v4();
+    roleIds[i + 1] = id;
+
+    await db.insert(tableNames[Tables.role]!, {'id': id, 'name': roleNames[i]});
+  }
+
   await db.insert(tableNames[Tables.userAdmin]!, {
+    "id": uuid.v4(),
     "fullname": "Master",
     "username": "admin",
     "password": hashPassword("Asdf1234!"),
-    "role_id": 1,
+    "role_id": roleIds[1],
   });
   await db.insert(tableNames[Tables.userAdmin]!, {
+    "id": uuid.v4(),
     "fullname": "Sendirian",
     "username": "xav",
     "password": hashPassword("Asdf1234!"),
-    "role_id": 2,
+    "role_id": roleIds[2],
   });
   await db.insert(tableNames[Tables.userAdmin]!, {
+    "id": uuid.v4(),
     "fullname": "Who Are You",
     "username": "who?",
     "password": hashPassword("Asdf1234!"),
-    "role_id": 3,
+    "role_id": roleIds[3],
   });
 
-  final List<String> roles = ["Master", "Owner", "Staff"];
-  for (String role in roles) {
-    await db.insert(tableNames[Tables.role]!, {"name": role});
-  }
   final Map<String, List<DataPermission>> permissions = {
     "ORDERS": [
       DataPermission(name: "All Orders", accessPath: "/orders", icon: "orders"),
@@ -43,6 +55,7 @@ Future<void> runSeeds({
         icon: "orders_completed",
       ),
     ],
+
     "PRODUCTS & STOCK": [
       DataPermission(
         name: "Products",
@@ -60,6 +73,7 @@ Future<void> runSeeds({
         icon: "inventory",
       ),
     ],
+
     "FINANCE": [
       DataPermission(
         name: "Cash Flow",
@@ -68,6 +82,7 @@ Future<void> runSeeds({
       ),
       DataPermission(name: "Report", accessPath: "/report", icon: "report"),
     ],
+
     "CONTENT & MEDIA": [
       DataPermission(name: "Menu", accessPath: "/menu", icon: "menu_food"),
       DataPermission(
@@ -77,6 +92,7 @@ Future<void> runSeeds({
       ),
       DataPermission(name: "Gallery", accessPath: "/gallery", icon: "gallery"),
     ],
+
     "MANAGEMENT": [
       DataPermission(
         name: "Admin Users",
@@ -97,25 +113,31 @@ Future<void> runSeeds({
     2: [12, 13, 14],
     3: [7, 8, 12, 13, 14],
   };
-  for (var entry in permissions.entries) {
-    final String category = entry.key;
-    final List<DataPermission> perms = entry.value;
 
-    for (int i = 0; i < perms.length; i++) {
+  int globalIndex = 0;
+
+  for (var entry in permissions.entries) {
+    final category = entry.key;
+    final perms = entry.value;
+
+    for (int i = 0; i < perms.length; i++, globalIndex++) {
       final access = perms[i];
-      final accessId = await db.insert(tableNames[Tables.access]!, {
-        "name": access.name,
-        "access_path": access.accessPath,
-        "category": category,
-        "icon": access.icon,
-        "id_sort": i + 1,
+      final accessId = uuid.v4();
+
+      await db.insert(tableNames[Tables.access]!, {
+        'id': accessId,
+        'name': access.name,
+        'access_path': access.accessPath,
+        'category': category,
+        'icon': access.icon,
+        'id_sort': globalIndex + 1,
       });
 
-      for (int roleId = 1; roleId <= 3; roleId++) {
-        if (!exclude[roleId]!.contains(accessId)) {
+      for (int role = 1; role <= 3; role++) {
+        if (!exclude[role]!.contains(globalIndex)) {
           await db.insert(tableNames[Tables.roleAccess]!, {
-            "role_id": roleId,
-            "access_id": accessId,
+            'role_id': roleIds[role],
+            'access_id': accessId,
           });
         }
       }

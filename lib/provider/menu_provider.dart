@@ -77,7 +77,7 @@ class MenuProvider with ChangeNotifier {
     required String img,
     required double price,
     required String description,
-    required int category,
+    required String category,
   }) async {
     _setLoading(true);
     try {
@@ -127,7 +127,7 @@ class MenuProvider with ChangeNotifier {
     required String img,
     required double price,
     required String description,
-    required int category,
+    required String category,
     required bool isActive,
     required String id,
   }) async {

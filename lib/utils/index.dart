@@ -47,7 +47,6 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
   final currUser = await adminProvider.getUserById(userID);
   final Map<String, List<Access>> grouped = {};
 
-  // Check if user has role and access
   if (currUser.role?.access != null) {
     for (var access in currUser.role!.access!) {
       if (!grouped.containsKey(access.category)) {

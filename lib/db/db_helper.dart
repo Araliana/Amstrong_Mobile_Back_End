@@ -155,6 +155,7 @@ class DBHelper {
         category VARCHAR,
         quote VARCHAR,
         img VARCHAR,
+        is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME,

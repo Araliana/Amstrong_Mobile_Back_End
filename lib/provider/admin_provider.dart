@@ -63,7 +63,12 @@ class AdminProvider with ChangeNotifier {
           toKey: "id",
           isList: false,
         ),
-        Join(joinTable: roleAccessTable, fromKey: 'id', toKey: 'role_id'),
+        Join(
+          joinTable: roleAccessTable,
+          fromKey: 'id',
+          toKey: 'role_id',
+          fromTable: roleTable,
+        ),
         Join(
           joinTable: accessTable,
           fromKey: 'access_id',

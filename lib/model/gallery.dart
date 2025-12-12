@@ -22,7 +22,7 @@ class Memo {
       quote: map['quote'] as String,
       img: map['img'] as String,
       category: map['category'],
-      isActive: map['is_active'],
+      isActive: map['is_active'] == 1,
     );
   }
 }

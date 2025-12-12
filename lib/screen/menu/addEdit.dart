@@ -25,7 +25,7 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
   final _descController = TextEditingController();
   Menu? _initMenu;
 
-  int? _selectedCategory;
+  String? _selectedCategory;
   File? _selectedImageFile;
   bool _isLoading = true;
 
@@ -149,16 +149,13 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
                   value: _selectedCategory?.toString(),
                   items: dishTypeProvider.categories
                       .map(
-                        (cat) => DropdownItem(
-                          label: cat.name,
-                          value: cat.id.toString(),
-                        ),
+                        (cat) => DropdownItem(label: cat.name, value: cat.id),
                       )
                       .toList(),
                   prefixIcon: Icons.manage_accounts,
                   onChanged: (value) {
                     setState(() {
-                      _selectedCategory = int.parse(value!);
+                      _selectedCategory = value;
                     });
                   },
                   validator: (value) {

@@ -6,7 +6,7 @@ class Menu {
   final String img;
   final double price;
   final String description;
-  final int typeId;
+  final String typeId;
   final Category category;
   final bool isActive;
 

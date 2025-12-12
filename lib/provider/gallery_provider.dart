@@ -25,6 +25,7 @@ class GalleryProvider with ChangeNotifier {
       orderBy: "created_at",
       orderType: OrderType.desc,
     );
+
     memos
       ..clear()
       ..addAll(res.map((e) => Memo.fromMap(e)).toList());
@@ -60,6 +61,7 @@ class GalleryProvider with ChangeNotifier {
     _setLoading(true);
     final id = uuid.v4();
     await db.insert(galleryTable, {
+      'id': id,
       'name': name,
       'category': category,
       'quote': quote,
@@ -98,7 +100,13 @@ class GalleryProvider with ChangeNotifier {
     await db.update(
       galleryTable,
       id: id,
-      data: {'name': name, 'category': category, 'quote': quote, 'img': img},
+      data: {
+        'name': name,
+        'category': category,
+        'quote': quote,
+        'img': img,
+        'is_active': isActive ? 1 : 0,
+      },
     );
     final index = memos.indexWhere((item) => item.id == id);
     memos[index] = Memo(
@@ -107,7 +115,7 @@ class GalleryProvider with ChangeNotifier {
       quote: quote,
       img: img,
       category: category,
-      isActive: true,
+      isActive: isActive,
     );
 
     _setLoading(false);

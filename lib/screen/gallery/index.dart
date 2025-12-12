@@ -34,17 +34,24 @@ class _GalleryScreenState extends State<GalleryScreen> {
         future: _loadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return buildLoadingState("Fetching Memo...");
+            return buildLoadingState("Fetching Gallery...");
           }
 
           final memos = galleryProvider.memos;
 
-          return RefreshIndicator(
-            onRefresh: () => _loadFuture,
-            child: memos.isEmpty
-                ? buildEmptyState("Memo", Icons.collections_outlined)
-                : _buildPostList(memos),
-          );
+          return memos.isEmpty
+              ? buildEmptyState("Gallery", Icons.photo_library_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: memos.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildHeader("Gallery", Icons.collections_rounded);
+                    }
+                    final memo = memos[index - 1];
+                    return _buildPolaroidCard(memo);
+                  },
+                );
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -55,269 +62,350 @@ class _GalleryScreenState extends State<GalleryScreen> {
     );
   }
 
-  // Widget untuk tampilan daftar postingan
-  Widget _buildPostList(List<Memo> memos) {
-    return ListView.builder(
-      itemCount: memos.length,
-      itemBuilder: (context, index) {
-        final memo = memos[index];
-        return _buildPostCard(memo);
-      },
-    );
-  }
-
-  // Widget untuk tampilan "Threads-like"
-  Widget _buildPostCard(Memo memo) {
-    final theme = Theme.of(context);
+  Widget _buildPolaroidCard(Memo memo) {
+    final galleryProvider = Provider.of<GalleryProvider>(context);
 
     // Tentukan icon dan color berdasarkan category
-    IconData uploaderIcon;
-    Color uploaderColor;
+    IconData categoryIcon;
+    Color categoryColor;
 
     switch (memo.category.toLowerCase()) {
       case 'bands':
-        uploaderIcon = Icons.music_note_outlined;
-        uploaderColor = Colors.purple;
+        categoryIcon = Icons.music_note_outlined;
+        categoryColor = Colors.purple;
         break;
       case 'employees':
-        uploaderIcon = Icons.badge_outlined;
-        uploaderColor = Colors.blueAccent;
+        categoryIcon = Icons.badge_outlined;
+        categoryColor = Colors.blueAccent;
         break;
       case 'customers':
       default:
-        uploaderIcon = Icons.person_outline;
-        uploaderColor = Colors.grey.shade600;
+        categoryIcon = Icons.person_outline;
+        categoryColor = Colors.grey.shade600;
         break;
     }
 
-    return Opacity(
-      opacity: memo.isActive ? 1.0 : 0.5,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
-            child: Row(
-              children: [
-                // Avatar/Icon Uploader
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: theme.brightness == Brightness.dark
-                      ? uploaderColor.withValues(alpha: 0.3)
-                      : uploaderColor.withValues(alpha: 0.1),
-                  child: Icon(uploaderIcon, size: 20, color: uploaderColor),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Transform.rotate(
+        angle: (memo.id.hashCode % 3 - 1) * 0.02, // Slight random rotation
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Polaroid Image Section
+              Container(
+                padding: const EdgeInsets.all(12),
+                child: Stack(
+                  children: [
+                    // Image
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: memo.img.isNotEmpty
+                          ? Image.network(
+                              memo.img,
+                              width: double.infinity,
+                              height: 280,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  width: double.infinity,
+                                  height: 280,
+                                  color: Colors.grey.shade100,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.brown[400],
+                                      value: progress.expectedTotalBytes != null
+                                          ? progress.cumulativeBytesLoaded /
+                                                progress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  height: 280,
+                                  color: Colors.grey.shade100,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: Colors.grey.shade400,
+                                      size: 60,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              width: double.infinity,
+                              height: 280,
+                              color: Colors.grey.shade100,
+                              child: Icon(
+                                Icons.photo_library_outlined,
+                                size: 60,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                    ),
+
+                    // Status Badge (Top Left) - Always Show
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: memo.isActive ? Colors.green : Colors.red,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          memo.isActive ? 'ACTIVE' : 'INACTIVE',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Menu Button (Top Right)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: PopupMenuButton(
+                          icon: Icon(
+                            Icons.more_horiz,
+                            color: Colors.grey.shade800,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit_outlined, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Edit'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'toggle',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    memo.isActive
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    size: 20,
+                                    color: Colors.orange,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    memo.isActive ? 'Deactivate' : 'Activate',
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) async {
+                            if (value == 'edit') {
+                              context.push('/add-edit-gallery', extra: memo.id);
+                            } else if (value == 'toggle') {
+                              await galleryProvider.editMemo(
+                                name: memo.name,
+                                quote: memo.quote,
+                                img: memo.img,
+                                category: memo.category,
+                                id: memo.id,
+                                isActive: !memo.isActive,
+                              );
+                            } else if (value == 'delete') {
+                              showDeleteConfirmation(
+                                context,
+                                title: "Gallery Post",
+                                label: memo.name,
+                                isLoading: galleryProvider.isLoading,
+                                onDelete: () async {
+                                  await galleryProvider.deleteMemo(memo.id);
+                                },
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 10),
-                // Nama Uploader
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              ),
+
+              // Polaroid Bottom Section (Quote Area)
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quote dengan styling aesthetic
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border(
+                          left: BorderSide(color: categoryColor, width: 4),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Opening Quote Mark
+                          Icon(
+                            Icons.format_quote,
+                            size: 24,
+                            color: categoryColor.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 8),
+                          // Quote Text
                           Text(
-                            memo.name,
+                            memo.quote,
                             style: TextStyle(
-                              fontWeight: FontWeight.w600,
                               fontSize: 15,
-                              color: theme.colorScheme.onSurface,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey.shade800,
+                              height: 1.6,
+                              letterSpacing: 0.3,
                             ),
                           ),
-                          SizedBox(width: 6),
-                          // Badge status aktif
-                          if (!memo.isActive)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Nonaktif',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                          const SizedBox(height: 8),
+                          // Closing Quote Mark (aligned right)
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Icon(
+                              Icons.format_quote,
+                              size: 24,
+                              color: categoryColor.withValues(alpha: 0.5),
                             ),
+                          ),
                         ],
                       ),
-                      Text(
-                        memo.category,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Author Info
+                    Row(
+                      children: [
+                        // Avatar
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: categoryColor.withValues(alpha: 0.1),
+                          child: Icon(
+                            categoryIcon,
+                            size: 18,
+                            color: categoryColor,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Consumer<GalleryProvider>(
-                  builder: (context, provider, child) {
-                    return PopupMenuButton<String>(
-                      icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
-                      onSelected: (value) {
-                        if (value == 'toggle') {
-                          provider.editMemo(
-                            name: memo.name,
-                            quote: memo.quote,
-                            img: memo.img,
-                            category: memo.category,
-                            id: memo.id,
-                            isActive: !memo.isActive,
-                          );
-                        } else if (value == 'edit') {
-                          context.push('/add-edit-gallery', extra: memo.id);
-                        } else if (value == 'delete') {
-                          showDeleteConfirmation(
-                            context,
-                            title: "Hapus Postingan",
-                            label: memo.name,
-                            isLoading: provider.isLoading,
-                            onDelete: () async {
-                              await provider.deleteMemo(memo.id);
-                            },
-                          );
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'toggle',
-                          child: Row(
+                        const SizedBox(width: 10),
+                        // Name & Category
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                memo.isActive
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: memo.isActive
-                                    ? Colors.orange[700]
-                                    : Colors.green[700],
-                              ),
-                              SizedBox(width: 8),
                               Text(
-                                memo.isActive ? 'Nonaktifkan' : 'Aktifkan',
-                                style: TextStyle(
-                                  color: memo.isActive
-                                      ? Colors.orange[700]
-                                      : Colors.green[700],
+                                memo.name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.edit_outlined,
-                                color: Colors.blue[700],
-                              ),
-                              SizedBox(width: 8),
                               Text(
-                                'Edit',
-                                style: TextStyle(color: Colors.blue[700]),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                color: Colors.red[700],
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Hapus',
-                                style: TextStyle(color: Colors.red[700]),
+                                memo.category.toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: categoryColor,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          // Caption / Quote
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              memo.quote,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.4,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-          SizedBox(height: 12),
-          // Gambar Postingan
-          if (memo.img.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  memo.img,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.brown[400],
-                          value: progress.expectedTotalBytes != null
-                              ? progress.cumulativeBytesLoaded /
-                                    progress.expectedTotalBytes!
-                              : null,
-                        ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.grey.shade400,
-                          size: 40,
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               ),
-            ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: theme.dividerColor.withValues(alpha: 0.1),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

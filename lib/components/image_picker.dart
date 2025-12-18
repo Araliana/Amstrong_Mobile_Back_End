@@ -261,8 +261,8 @@ class _ImageSelectorState extends State<ImageSelector> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _selectedImage != null
-              ? neutralMedium.withOpacity(0.4)
-              : neutralBorder.withOpacity(0.5),
+              ? neutralMedium.withValues(alpha: 0.4)
+              : neutralBorder.withValues(alpha: 0.5),
           width: 2,
           strokeAlign: BorderSide.strokeAlignInside,
         ),
@@ -294,7 +294,7 @@ class _ImageSelectorState extends State<ImageSelector> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: neutralPrimary.withOpacity(0.1),
+                      color: neutralPrimary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

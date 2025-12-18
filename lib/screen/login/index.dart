@@ -193,8 +193,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : () async {
                                     if (_formKey.currentState!.validate()) {
                                       final res = await authProvider.login(
-                                        _usernameController.text,
-                                        _passwordController.text,
+                                        username: _usernameController.text,
+                                        password: _passwordController.text,
                                       );
                                       if (res) {
                                         context.go("/");

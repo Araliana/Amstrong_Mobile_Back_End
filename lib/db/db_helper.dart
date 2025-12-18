@@ -223,8 +223,6 @@ class DBHelper {
               try {
                 await db.execute(script);
               } catch (e) {
-                // Kolom mungkin sudah ada atau error lain, skip
-                // ignore: avoid_print
                 print('Migration skipped for: $script. Error: $e');
               }
             }

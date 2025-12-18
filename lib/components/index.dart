@@ -398,7 +398,7 @@ class __FullScreenDropdownDialogState extends State<_FullScreenDropdownDialog> {
                     'Try a different search term',
                     style: TextStyle(
                       fontSize: 14,
-                      color: widget.iconColor.withOpacity(0.7),
+                      color: widget.iconColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

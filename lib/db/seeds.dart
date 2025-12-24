@@ -1,151 +1,172 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
-import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/utils/index.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
-Future<void> runSeeds({
-  required Database db,
-  required Map<Tables, String> tableNames,
-}) async {
-  final sync = SyncManager();
+class SeedService {
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final uuid = const Uuid();
 
-  final roleNames = ["Master", "Owner", "Staff"];
-  final roleIds = <int, String>{};
-
-  for (int i = 0; i < roleNames.length; i++) {
-    final id = uuid.v4();
-    roleIds[i + 1] = id;
-
-    await db.insert(tableNames[Tables.role]!, {'id': id, 'name': roleNames[i]});
+  Map<String, FieldValue?> baseTimestamps() {
+    return {
+      'created_at': FieldValue.serverTimestamp(),
+      'updated_at': FieldValue.serverTimestamp(),
+      'deleted_at': null,
+    };
   }
 
-  await db.insert(tableNames[Tables.userAdmin]!, {
-    "id": uuid.v4(),
-    "fullname": "Master",
-    "username": "admin",
-    "password": hashPassword("Asdf1234!"),
-    "role_id": roleIds[1],
-  });
-  await db.insert(tableNames[Tables.userAdmin]!, {
-    "id": uuid.v4(),
-    "fullname": "Sendirian",
-    "username": "xav",
-    "password": hashPassword("Asdf1234!"),
-    "role_id": roleIds[2],
-  });
-  await db.insert(tableNames[Tables.userAdmin]!, {
-    "id": uuid.v4(),
-    "fullname": "Who Are You",
-    "username": "who?",
-    "password": hashPassword("Asdf1234!"),
-    "role_id": roleIds[3],
-  });
+  Future<void> bootstrapIfNeeded() async {
+    final metaRef = firestore.collection('meta').doc('app');
+    final metaSnap = await metaRef.get();
 
-  final Map<String, List<DataPermission>> permissions = {
-    "ORDERS": [
-      DataPermission(name: "All Orders", accessPath: "/orders", icon: "orders"),
-      DataPermission(
-        name: "Pending Orders",
-        accessPath: "/pending-order",
-        icon: "orders_pending",
-      ),
-      DataPermission(
-        name: "Completed Orders",
-        accessPath: "/completed-orders",
-        icon: "orders_completed",
-      ),
-    ],
+    if (metaSnap.exists) {
+      print('✅ Struktur sudah ada');
+      return;
+    }
 
-    "PRODUCTS & STOCK": [
-      DataPermission(
-        name: "Products",
-        accessPath: "/products",
-        icon: "products",
-      ),
-      DataPermission(
-        name: "Categories",
-        accessPath: "/categories",
-        icon: "categories",
-      ),
-      DataPermission(
-        name: "Inventory",
-        accessPath: "/inventory",
-        icon: "inventory",
-      ),
-    ],
+    // 1️⃣ ROLES
+    final roleIds = <int, String>{};
+    final roleNames = ["Master", "Owner", "Staff"];
 
-    "FINANCE": [
-      DataPermission(
-        name: "Cash Flow",
-        accessPath: "/cash-flow",
-        icon: "cashflow",
-      ),
-      DataPermission(name: "Report", accessPath: "/report", icon: "report"),
-    ],
+    for (int i = 0; i < roleNames.length; i++) {
+      final id = uuid.v4();
+      roleIds[i + 1] = id;
 
-    "CONTENT & MEDIA": [
-      DataPermission(name: "Menu", accessPath: "/menu", icon: "menu_food"),
-      DataPermission(
-        name: "Dish Types",
-        accessPath: "/dish-types",
-        icon: "dish_types",
-      ),
-      DataPermission(name: "Gallery", accessPath: "/gallery", icon: "gallery"),
-    ],
+      await firestore.collection(DBHelper.tableNames[Tables.role]!).doc(id).set(
+        {'id': id, 'name': roleNames[i], ...baseTimestamps()},
+      );
+    }
 
-    "MANAGEMENT": [
-      DataPermission(
-        name: "Admin Users",
-        accessPath: "/user-admin",
-        icon: "user_admin",
-      ),
-      DataPermission(name: "Roles", accessPath: "/roles", icon: "roles"),
-      DataPermission(
-        name: "Accesses",
-        accessPath: "/accesses",
-        icon: "accesses",
-      ),
-    ],
-  };
+    // 2️⃣ ACCESS + ROLE_ACCESS
+    int globalIndex = 0;
 
-  final exclude = {
-    1: [],
-    2: [12, 13, 14],
-    3: [7, 8, 12, 13, 14],
-  };
+    final Map<String, List<DataPermission>> permissions = {
+      "ORDERS": [
+        DataPermission(
+          name: "All Orders",
+          accessPath: "/orders",
+          icon: "orders",
+        ),
+        DataPermission(
+          name: "Pending Orders",
+          accessPath: "/pending-order",
+          icon: "orders_pending",
+        ),
+        DataPermission(
+          name: "Completed Orders",
+          accessPath: "/completed-orders",
+          icon: "orders_completed",
+        ),
+      ],
+      "PRODUCTS & STOCK": [
+        DataPermission(
+          name: "Products",
+          accessPath: "/products",
+          icon: "products",
+        ),
+        DataPermission(
+          name: "Categories",
+          accessPath: "/categories",
+          icon: "categories",
+        ),
+        DataPermission(
+          name: "Inventory",
+          accessPath: "/inventory",
+          icon: "inventory",
+        ),
+      ],
+      "FINANCE": [
+        DataPermission(
+          name: "Cash Flow",
+          accessPath: "/cash-flow",
+          icon: "cashflow",
+        ),
+        DataPermission(name: "Report", accessPath: "/report", icon: "report"),
+      ],
+      "CONTENT & MEDIA": [
+        DataPermission(name: "Menu", accessPath: "/menu", icon: "menu_food"),
+        DataPermission(
+          name: "Dish Types",
+          accessPath: "/dish-types",
+          icon: "dish_types",
+        ),
+        DataPermission(
+          name: "Gallery",
+          accessPath: "/gallery",
+          icon: "gallery",
+        ),
+      ],
+      "MANAGEMENT": [
+        DataPermission(
+          name: "Admin Users",
+          accessPath: "/user-admin",
+          icon: "user_admin",
+        ),
+        DataPermission(name: "Roles", accessPath: "/roles", icon: "roles"),
+        DataPermission(
+          name: "Accesses",
+          accessPath: "/accesses",
+          icon: "accesses",
+        ),
+      ],
+    };
 
-  int globalIndex = 0;
+    final exclude = {
+      1: [],
+      2: [12, 13, 14],
+      3: [7, 8, 12, 13, 14],
+    };
 
-  for (var entry in permissions.entries) {
-    final category = entry.key;
-    final perms = entry.value;
+    for (var entry in permissions.entries) {
+      for (var access in entry.value) {
+        final accessId = uuid.v4();
+        final sortIndex = ++globalIndex;
 
-    for (int i = 0; i < perms.length; i++, globalIndex++) {
-      final access = perms[i];
-      final accessId = uuid.v4();
+        await firestore
+            .collection(DBHelper.tableNames[Tables.access]!)
+            .doc(accessId)
+            .set({
+              'id': accessId,
+              'name': access.name,
+              'access_path': access.accessPath,
+              'category': entry.key,
+              'icon': access.icon,
+              'id_sort': sortIndex,
+              ...baseTimestamps(),
+            });
 
-      await db.insert(tableNames[Tables.access]!, {
-        'id': accessId,
-        'name': access.name,
-        'access_path': access.accessPath,
-        'category': category,
-        'icon': access.icon,
-        'id_sort': globalIndex + 1,
-      });
-
-      for (int role = 1; role <= 3; role++) {
-        if (!exclude[role]!.contains(globalIndex)) {
-          await db.insert(tableNames[Tables.roleAccess]!, {
-            'role_id': roleIds[role],
-            'access_id': accessId,
-          });
+        for (int role = 1; role <= 3; role++) {
+          if (!exclude[role]!.contains(sortIndex - 1)) {
+            final id = uuid.v4();
+            await firestore.collection('role_access').add({
+              'id': id,
+              'role_id': roleIds[role],
+              'access_id': accessId,
+              ...baseTimestamps(),
+            });
+          }
         }
       }
     }
+
+    // 3️⃣ MASTER ADMIN
+    await firestore.collection(DBHelper.tableNames[Tables.userAdmin]!).add({
+      'id': uuid.v4(),
+      'username': 'admin',
+      'password': hashPassword("Asdf1234!"),
+      'role_id': roleIds[1],
+      'fullname': 'Master',
+      ...baseTimestamps(),
+    });
+
+    // 4️⃣ LOCK
+    await metaRef.set({
+      'bootstrapped': true,
+      'created_at': FieldValue.serverTimestamp(),
+    });
+
+    print('✅ Bootstrap selesai (with timestamps)');
   }
-  await sync.syncAll();
 }
 
 class DataPermission {

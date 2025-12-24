@@ -45,6 +45,7 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
   }
 
   final currUser = await adminProvider.getUserById(userID);
+
   final Map<String, List<Access>> grouped = {};
 
   if (currUser.role?.access != null) {

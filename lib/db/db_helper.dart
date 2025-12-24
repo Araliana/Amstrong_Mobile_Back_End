@@ -1,4 +1,3 @@
-import 'package:flutter_application_1/db/seeds.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -118,7 +117,7 @@ class DBHelper {
         name VARCHAR,
         discount REAL,
         img VARCHAR,
-        description TEXT
+        description TEXT,
         profit_type VARCHAR,
         profit_amount REAL,
         ${DBHelper().renderTimestamp()}
@@ -128,6 +127,7 @@ class DBHelper {
     Tables.roleAccess:
         '''
       CREATE TABLE role_access(
+        id TEXT PRIMARY KEY,
         role_id TEXT,
         access_id TEXT,
         ${DBHelper().renderTimestamp()}
@@ -211,7 +211,7 @@ class DBHelper {
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
         }
-        await runSeeds(db: db, tableNames: tableNames);
+        // await runSeeds(db: db, tableNames: tableNames);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         for (int i = oldVersion + 1; i <= newVersion; i++) {

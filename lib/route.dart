@@ -37,7 +37,6 @@ class AppRoute {
     return GoRouter(
       redirect: (context, state) {
         if (!authProvider.isLoggedIn) return '/login';
-
         return null;
       },
       routes: [

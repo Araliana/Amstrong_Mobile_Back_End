@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/menu.dart';
 import 'package:uuid/uuid.dart';
@@ -14,6 +15,7 @@ class MenuProvider with ChangeNotifier {
   final Tables menuTables = Tables.menu;
   final Tables dishTypesTable = Tables.dishType;
   final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -24,6 +26,9 @@ class MenuProvider with ChangeNotifier {
 
   Future<void> loadMenu() async {
     _setLoading(true);
+    await sync.syncTable(menuTables);
+    await sync.syncTable(dishTypesTable);
+
     final res = await db.get(
       menuTables,
       joins: [
@@ -51,6 +56,8 @@ class MenuProvider with ChangeNotifier {
 
   Future<Menu?> getMenuById(String id) async {
     _setLoading(true);
+    await sync.syncTable(menuTables);
+    await sync.syncTable(dishTypesTable);
     final res = (await db.get(
       menuTables,
       joins: [
@@ -99,6 +106,7 @@ class MenuProvider with ChangeNotifier {
         ))[0],
       );
 
+      await sync.syncTable(menuTables);
       menus.add(
         Menu(
           id: id,
@@ -147,6 +155,7 @@ class MenuProvider with ChangeNotifier {
         'is_active': isActive ? 1 : 0,
       },
     );
+    await sync.syncTable(menuTables);
     final index = menus.indexWhere((item) => item.id == id);
     menus[index] = Menu(
       id: id,
@@ -174,6 +183,7 @@ class MenuProvider with ChangeNotifier {
   Future<void> deleteMenu(String id) async {
     _setLoading(true);
     await db.delete(menuTables, id: id);
+    await sync.syncTable(menuTables);
     menus.removeWhere((item) => item.id == id);
     _setLoading(false);
 

@@ -33,13 +33,13 @@ class SyncManager {
     for (var row in unsynced) {
       final id = row['id'];
 
-      // Convert null to actual null for firestore
-      final filtered = Map<String, dynamic>.from(row)..remove("is_synced");
+      final data = Map<String, dynamic>.from(row)..remove('is_synced');
 
-      // Upload to firestore
-      await col.doc(id as String?).set(filtered, SetOptions(merge: true));
+      await col.doc(id as String).set({
+        ...data,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-      // Mark local as synced
       await db.update(
         tableName,
         {"is_synced": 1},
@@ -60,32 +60,26 @@ class SyncManager {
       final data = doc.data();
       final id = doc.id;
 
-      // Cek apakah ada di lokal
       final local = await db.query(tableName, where: "id = ?", whereArgs: [id]);
 
       if (local.isEmpty) {
-        // Tidak ada → INSERT
         await dbHelper.insert(table, {...data, "is_synced": 1});
         continue;
       }
 
       final localRow = local.first;
 
-      final serverUpdated =
-          DateTime.tryParse(data["updated_at"] ?? "") ??
-          DateTime.fromMillisecondsSinceEpoch(0);
+      final serverUpdated = DateTime.tryParse(data['updated_at'] ?? '');
+      final localUpdated = DateTime.tryParse(
+        localRow['updated_at']?.toString() ?? '',
+      );
 
-      final localUpdatedRaw = localRow["updated_at"];
-      final localUpdated =
-          DateTime.tryParse(localUpdatedRaw?.toString() ?? "") ??
-          DateTime.fromMillisecondsSinceEpoch(0);
+      if (serverUpdated == null || localUpdated == null) {
+        continue;
+      }
 
       if (serverUpdated.isAfter(localUpdated)) {
-        // Server lebih baru → update lokal
         await dbHelper.update(table, id: id, data: {...data, "is_synced": 1});
-      } else {
-        // Lokal lebih baru → push ulang
-        await _pushLocalToFirestore(table);
       }
     }
   }
@@ -98,7 +92,7 @@ class StructuralBootstrapService {
   Map<String, FieldValue?> baseTimestamps() {
     return {
       'created_at': FieldValue.serverTimestamp(),
-      'updated_at': null,
+      'updated_at': FieldValue.serverTimestamp(),
       'deleted_at': null,
     };
   }

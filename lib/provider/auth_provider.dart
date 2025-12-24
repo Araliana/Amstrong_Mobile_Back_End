@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
   // Firebase
@@ -23,6 +27,7 @@ class AuthProvider with ChangeNotifier {
   bool isLoading = false;
 
   final sync = SyncManager();
+  final db = DBHelper();
 
   AuthProvider() {
     _listenAuthState();
@@ -34,7 +39,6 @@ class AuthProvider with ChangeNotifier {
         await _clearLocal();
       } else {
         currUserUid = user.uid;
-        await _loadUserProfile();
         await _checkPasswordFingerprint();
       }
       notifyListeners();
@@ -44,27 +48,19 @@ class AuthProvider with ChangeNotifier {
   Future<void> loadCurrentUser() async {
     _setLoading(true);
 
-    final firebaseUser = _auth.currentUser;
-
-    // ❌ Tidak ada session Firebase
-    if (firebaseUser == null) {
-      await _clearLocal();
-      _setLoading(false);
-      return;
-    }
-
-    // ✅ Firebase session masih hidup
-    currUserUid = firebaseUser.uid;
-
     try {
-      // Ambil profile user dari Firestore
-      await _loadUserProfile();
+      final firebaseUser = _auth.currentUser;
 
-      // Cek apakah password diganti oleh master
+      if (firebaseUser == null) {
+        await _clearLocal();
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      currUserUid = prefs.getString('curr_user_uid');
+      currUserId = prefs.getString('curr_user_id');
+
       await _checkPasswordFingerprint();
-
-      // Sinkronisasi data lokal ↔ server
-      await sync.syncAll();
 
       await analytics.logEvent(
         name: 'auto_login_success',
@@ -73,14 +69,13 @@ class AuthProvider with ChangeNotifier {
           if (currUserId != null) 'user_id': currUserId!,
         },
       );
-    } catch (e) {
-      // Kalau user Firestore hilang / data korup → logout paksa
-      print('⚠️ Auto login failed, force logout: $e');
+    } catch (e, s) {
+      print('loadCurrentUser error: $e\n$s');
       await logout();
+    } finally {
+      _setLoading(false);
+      notifyListeners();
     }
-
-    _setLoading(false);
-    notifyListeners();
   }
 
   Future<bool> login({
@@ -113,24 +108,14 @@ class AuthProvider with ChangeNotifier {
       try {
         userCred = await _auth.signInWithEmailAndPassword(
           email: email,
-          password: password,
+          password: userData['id'],
         );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
           userCred = await _auth.createUserWithEmailAndPassword(
             email: email,
-            password: password,
+            password: userData['id'],
           );
-        } else if (e.code == 'wrong-password') {
-          _setLoading(false);
-          await analytics.logEvent(
-            name: 'login_failed',
-            parameters: {
-              'reason': 'firebase_wrong_password',
-              'username': username,
-            },
-          );
-          return false;
         } else {
           _setLoading(false);
           await analytics.logEvent(
@@ -141,51 +126,30 @@ class AuthProvider with ChangeNotifier {
         }
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('curr_user_uid', userCred.user!.uid);
+      await prefs.setString('curr_user_id', userData['id']);
+
       currUserUid = userCred.user!.uid;
       currUserId = userData['id'];
 
-      // await _loadUserProfile();
-      // await analytics.logLogin(loginMethod: 'email_password');
-
       _setLoading(false);
       notifyListeners();
-      await sync.syncAll();
       return true;
     } on FirebaseAuthException catch (e) {
-      print('❌ Login error: ${e.message}');
+      print("FirebaseAuthException: $e");
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      print("Login error: $e");
       _setLoading(false);
       return false;
     }
   }
 
-  Future<void> _loadUserProfile() async {
-    try {
-      final doc = await firestore
-          .collection('user_admin')
-          .doc(currUserId)
-          .get();
-
-      if (!doc.exists) {
-        throw Exception('User profile missing in Firestore');
-      }
-
-      final data = doc.data()!;
-      currUserId = data['id'];
-
-      final fingerprint = data['password_fingerprint'];
-      if (fingerprint != null) {
-        await secureStorage.write(
-          key: 'password_fingerprint',
-          value: fingerprint,
-        );
-      }
-    } catch (e) {
-      print('❌ Load user profile error: $e');
-    }
-  }
-
   Future<void> logout() async {
     _setLoading(true);
+    await sync.syncAll();
     await _auth.signOut();
     await _clearLocal();
     _setLoading(false);
@@ -201,14 +165,6 @@ class AuthProvider with ChangeNotifier {
 
     try {
       _setLoading(true);
-
-      final cred = EmailAuthProvider.credential(
-        email: user.email!,
-        password: oldPassword,
-      );
-      await user.reauthenticateWithCredential(cred);
-
-      await user.updatePassword(newPassword);
 
       final fingerprint = _passwordFingerprint(newPassword);
 
@@ -245,7 +201,6 @@ class AuthProvider with ChangeNotifier {
     final server = doc.data()?['password_fingerprint'];
 
     if (local != null && server != null && local != server) {
-      print('⚠️ Password diganti master → logout');
       await analytics.logEvent(
         name: 'auto_logout_password_changed',
         parameters: {'user_id': currUserId ?? 'unknown'},
@@ -255,6 +210,10 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _clearLocal() async {
+    db.clearDB();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('curr_user_uid');
+    await prefs.remove('curr_user_id');
     currUserUid = null;
     currUserId = null;
     await secureStorage.delete(key: 'password_fingerprint');

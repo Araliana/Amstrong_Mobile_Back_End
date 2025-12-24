@@ -68,8 +68,15 @@ class DBHelper {
   static Database? _db;
   static const int _dbVersion = 1; // Increment version untuk migration
 
+  String renderTimestamp() => '''
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        deleted_at DATETIME,
+        ''';
+
   static final Map<Tables, String> tableSchemas = {
-    Tables.userAdmin: '''
+    Tables.userAdmin:
+        '''
       CREATE TABLE user_admin(
         id TEXT PRIMARY KEY,
         fullname VARCHAR,
@@ -78,23 +85,21 @@ class DBHelper {
         password VARCHAR,
         role_id TEXT,
         last_login DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.role: '''
+    Tables.role:
+        '''
       CREATE TABLE role(
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.access: '''
+    Tables.access:
+        '''
       CREATE TABLE access(
         id TEXT PRIMARY KEY,
         name VARCHAR,
@@ -102,13 +107,12 @@ class DBHelper {
         category VARCHAR,
         id_sort INTEGER,
         icon VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.product: '''
+    Tables.product:
+        '''
       CREATE TABLE product(
         id TEXT PRIMARY KEY,
         name VARCHAR,
@@ -117,23 +121,21 @@ class DBHelper {
         description TEXT
         profit_type VARCHAR,
         profit_amount REAL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.roleAccess: '''
+    Tables.roleAccess:
+        '''
       CREATE TABLE role_access(
         role_id TEXT,
         access_id TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.menu: '''
+    Tables.menu:
+        '''
       CREATE TABLE menu (
         id TEXT PRIMARY KEY,
         name VARCHAR,
@@ -142,13 +144,12 @@ class DBHelper {
         description VARCHAR,
         type_id INTEGER,
         is_active INTEGER DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
       ''',
-    Tables.gallery: '''
+    Tables.gallery:
+        '''
       CREATE TABLE gallery (
         id TEXT PRIMARY KEY,
         name VARCHAR,
@@ -156,29 +157,25 @@ class DBHelper {
         quote VARCHAR,
         img VARCHAR,
         is_active INTEGER DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
       ''',
-    Tables.productType: '''
+    Tables.productType:
+        '''
       CREATE TABLE product_type (
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
       ''',
-    Tables.dishType: '''
+    Tables.dishType:
+        '''
       CREATE TABLE dish_type (
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME,
+        ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
       ''',

@@ -28,7 +28,7 @@ void main() async {
     print("Database initialization error: $e");
   }
   final authProvider = AuthProvider();
-  await authProvider.loadCurrentUser();
+  authProvider.loadCurrentUser();
   runApp(
     MultiProvider(
       providers: [

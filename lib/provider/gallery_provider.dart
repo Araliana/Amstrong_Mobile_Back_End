@@ -1,6 +1,7 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:uuid/uuid.dart';
 
@@ -10,6 +11,7 @@ class GalleryProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables galleryTable = Tables.gallery;
   final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -20,6 +22,7 @@ class GalleryProvider with ChangeNotifier {
 
   Future<void> loadMemos() async {
     _setLoading(true);
+    await sync.syncTable(galleryTable);
     final res = await db.get(
       galleryTable,
       orderBy: "created_at",
@@ -39,6 +42,7 @@ class GalleryProvider with ChangeNotifier {
 
   Future<Memo?> getMemoById(String id) async {
     _setLoading(true);
+    await sync.syncTable(galleryTable);
     final res = (await db.get(
       galleryTable,
       where: "id = ?",
@@ -68,6 +72,7 @@ class GalleryProvider with ChangeNotifier {
       'img': img,
     });
 
+    await sync.syncTable(galleryTable);
     memos.add(
       Memo(
         id: id,
@@ -108,6 +113,7 @@ class GalleryProvider with ChangeNotifier {
         'is_active': isActive ? 1 : 0,
       },
     );
+    await sync.syncTable(galleryTable);
     final index = memos.indexWhere((item) => item.id == id);
     memos[index] = Memo(
       id: id,
@@ -129,6 +135,7 @@ class GalleryProvider with ChangeNotifier {
   Future<void> deleteMemo(String id) async {
     _setLoading(true);
     await db.delete(galleryTable, id: id);
+    await sync.syncTable(galleryTable);
 
     memos.removeWhere((c) => c.id == id);
 

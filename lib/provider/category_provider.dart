@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:uuid/uuid.dart';
@@ -12,6 +13,7 @@ class CategoryProvider with ChangeNotifier {
   final Tables productTypeTable = Tables.productType;
   final Tables dishTypeTable = Tables.dishType;
   final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -22,12 +24,10 @@ class CategoryProvider with ChangeNotifier {
 
   Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);
+    final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
+    await sync.syncTable(table);
 
-    final res = await db.get(
-      type == CategoryType.menu ? dishTypeTable : productTypeTable,
-      orderBy: "id",
-      orderType: OrderType.asc,
-    );
+    final res = await db.get(table, orderBy: "id", orderType: OrderType.asc);
 
     categories
       ..clear()
@@ -43,6 +43,8 @@ class CategoryProvider with ChangeNotifier {
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
 
     await db.insert(table, {'id': id, "name": name});
+
+    await sync.syncTable(table);
 
     categories.add(Category(id: id, name: name, createdAt: DateTime.now()));
 
@@ -69,6 +71,7 @@ class CategoryProvider with ChangeNotifier {
 
     await db.update(table, id: id, data: {"name": name ?? current.name});
 
+    await sync.syncTable(table);
     final index = categories.indexWhere((cat) => cat.id == id);
     if (index != -1) {
       categories[index] = Category(
@@ -88,6 +91,7 @@ class CategoryProvider with ChangeNotifier {
 
     await db.delete(table, id: id);
 
+    await sync.syncTable(table);
     categories.removeWhere((c) => c.id == id);
 
     _setLoading(false);
@@ -101,6 +105,7 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(true);
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
+    await sync.syncTable(table);
 
     final res = await db.get(
       table,

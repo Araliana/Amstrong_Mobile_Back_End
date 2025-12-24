@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/role.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/utils/index.dart';
@@ -19,6 +20,7 @@ class AdminProvider with ChangeNotifier {
   final Tables accessTable = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
   final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -29,6 +31,8 @@ class AdminProvider with ChangeNotifier {
 
   Future<void> loadUserAdmin() async {
     _setLoading(true);
+    await sync.syncTable(adminTables);
+    await sync.syncTable(roleTable);
     final res = await db.get(
       adminTables,
       joins: [
@@ -54,6 +58,12 @@ class AdminProvider with ChangeNotifier {
   }
 
   Future<UserAdmin> getUserById(String userId) async {
+    _setLoading(true);
+    await sync.syncTable(adminTables);
+    await sync.syncTable(roleTable);
+    await sync.syncTable(accessTable);
+    await sync.syncTable(roleAccessTable);
+
     final res = (await db.get(
       adminTables,
       joins: [
@@ -81,6 +91,8 @@ class AdminProvider with ChangeNotifier {
     ))[0];
 
     res["role"]["access"] = res["access"];
+
+    _setLoading(false);
 
     await analytics.logEvent(
       name: 'get_id_by_id',
@@ -110,6 +122,8 @@ class AdminProvider with ChangeNotifier {
     final role = Role.fromMap(
       (await db.get(roleTable, where: "id = ?", whereArgs: [roleId]))[0],
     );
+    await sync.syncTable(adminTables);
+    await sync.syncTable(roleTable);
 
     userAdmins.add(
       UserAdmin(
@@ -169,6 +183,8 @@ class AdminProvider with ChangeNotifier {
     if (userAdmins.indexWhere((item) => item.id == id) == -1) {
       await loadUserAdmin();
     }
+    await sync.syncTable(adminTables);
+    await sync.syncTable(roleTable);
     final index = userAdmins.indexWhere((item) => item.id == id);
 
     userAdmins[index] = UserAdmin(
@@ -217,6 +233,8 @@ class AdminProvider with ChangeNotifier {
 
     await editUserAdmin(id: id, password: hashPassword(newPassword));
 
+    await sync.syncTable(adminTables);
+
     _setLoading(false);
 
     await analytics.logEvent(name: 'change_password', parameters: {'id': id});
@@ -226,6 +244,7 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> checkUsername({required String username, String? id}) async {
     _setLoading(true);
+    await sync.syncTable(adminTables);
 
     final query = "username = LOWER(?) ${id != null ? "AND id != ?" : ""}";
     final args = id != null ? [username, id] : [username];
@@ -249,6 +268,7 @@ class AdminProvider with ChangeNotifier {
   Future<void> deleteUserAdmin(String id) async {
     _setLoading(true);
     await db.delete(adminTables, id: id);
+    await sync.syncTable(adminTables);
     userAdmins.removeWhere((item) => item.id == id);
     _setLoading(false);
 

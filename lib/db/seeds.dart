@@ -1,4 +1,5 @@
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
@@ -7,6 +8,7 @@ Future<void> runSeeds({
   required Database db,
   required Map<Tables, String> tableNames,
 }) async {
+  final sync = SyncManager();
   final uuid = const Uuid();
 
   final roleNames = ["Master", "Owner", "Staff"];
@@ -143,6 +145,7 @@ Future<void> runSeeds({
       }
     }
   }
+  await sync.syncAll();
 }
 
 class DataPermission {

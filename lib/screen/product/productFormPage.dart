@@ -354,7 +354,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
+            color: Colors.brown.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: Offset(0, 4),
           ),

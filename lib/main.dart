@@ -15,6 +15,9 @@ import 'package:flutter_application_1/route.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
+
 
 GoRouter? _appRouter;
 
@@ -41,6 +44,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => GalleryProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
       child: const MainApp(),
     ),
@@ -52,10 +57,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<AuthProvider, ThemeProvider>(
-      builder: (context, authProvider, themeProvider, child) {
+    return Consumer3<AuthProvider, ThemeProvider, LanguageProvider>(
+      builder: (context, authProvider, themeProvider, langProvider, child) {
         _appRouter ??= AppRoute.createRouter(authProvider);
         return MaterialApp.router(
+          locale: langProvider.appLocale,
+          supportedLocales: const [
+            Locale('id', 'ID'),
+            Locale('en', 'US'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate
+          ],
           themeMode: themeProvider.themeMode,
 
           // Light Theme

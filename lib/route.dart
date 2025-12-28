@@ -26,6 +26,7 @@ import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:flutter_application_1/screen/profile/index.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
@@ -247,6 +248,7 @@ class _AppShellState extends State<_AppShell> {
   Widget _buildDrawer(BuildContext context) {
     final currentPath = widget.state.uri.path;
     final adminProvider = Provider.of<AdminProvider>(context);
+    final langProvider = Provider.of<LanguageProvider>(context);
 
     return Drawer(
       child: Column(
@@ -652,6 +654,50 @@ class _AppShellState extends State<_AppShell> {
                   onTap: () {
                     showLogoutDialog(context);
                   },
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          langProvider.getText('change_language'),
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        DropdownButton<String>(
+                          value: langProvider.appLocale.languageCode,
+                          underline: SizedBox(),
+                          icon: Icon(Icons.language, size: 18),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'id',
+                              child: Text('🇮🇩 ID'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'en',
+                              child: Text('🇺🇸 EN'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              langProvider.changeLanguage(Locale(val));
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

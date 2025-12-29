@@ -194,7 +194,7 @@ class _AppShellState extends State<_AppShell> {
     super.initState();
     final adminProvider = Provider.of<AdminProvider>(context, listen: false);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    _loadFuture = adminProvider.getUserById(authProvider.currUserId!);
+    _loadFuture = adminProvider.getFullUserData(authProvider.currUserId!);
   }
 
   @override

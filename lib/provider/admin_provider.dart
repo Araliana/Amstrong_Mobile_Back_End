@@ -61,6 +61,32 @@ class AdminProvider with ChangeNotifier {
     _setLoading(true);
     await sync.syncTable(adminTables);
     await sync.syncTable(roleTable);
+    final res = (await db.get(
+      adminTables,
+      joins: [
+        Join(
+          joinTable: roleTable,
+          fromKey: "role_id",
+          toKey: "id",
+          isList: false,
+        ),
+      ],
+      where: "user_admin.id = ?",
+      whereArgs: [userId],
+    ))[0];
+
+    _setLoading(false);
+
+    await analytics.logEvent(
+      name: 'get_id_by_id',
+      parameters: {'id': res['id']},
+    );
+    return UserAdmin.fromMap(res);
+  }
+
+  Future<UserAdmin> getFullUserData(String userId) async {
+    await sync.syncTable(adminTables);
+    await sync.syncTable(roleTable);
     await sync.syncTable(accessTable);
     await sync.syncTable(roleAccessTable);
 
@@ -92,11 +118,9 @@ class AdminProvider with ChangeNotifier {
 
     res["role"]["access"] = res["access"];
 
-    _setLoading(false);
-
     await analytics.logEvent(
       name: 'get_id_by_id',
-      parameters: {'count': userAdmins.length},
+      parameters: {'id': res['id']},
     );
     _userController.add(UserAdmin.fromMap(res));
     return UserAdmin.fromMap(res);

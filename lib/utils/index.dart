@@ -44,7 +44,7 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
     return {};
   }
 
-  final currUser = await adminProvider.getUserById(userID);
+  final currUser = await adminProvider.getFullUserData(userID);
 
   final Map<String, List<Access>> grouped = {};
 

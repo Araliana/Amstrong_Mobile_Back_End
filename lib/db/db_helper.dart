@@ -66,7 +66,7 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 2; // Increment version untuk migration
+  static const int _dbVersion = 4; // Increment version untuk migration
 
   static final Map<Tables, String> tableSchemas = {
     Tables.userAdmin: '''
@@ -111,13 +111,12 @@ class DBHelper {
         name VARCHAR,
         slug VARCHAR,
         price REAL,
-        discount_price REAL,
-        stock INTEGER,
-        img VARCHAR,
-        description TEXT,
-        hpp REAL,
+        discount_type VARCHAR,
+        discount_value REAL,
         profit_type VARCHAR,
         profit_amount REAL,
+        img VARCHAR,
+        description TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME,
         deleted_at DATETIME
@@ -170,6 +169,62 @@ class DBHelper {
       'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
       'ALTER TABLE product ADD COLUMN profit_amount REAL',
     ],
+    3: [
+      // SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
+      '''CREATE TABLE product_new(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        slug VARCHAR,
+        price REAL,
+        discount_type VARCHAR,
+        discount_value REAL,
+        profit_type VARCHAR,
+        profit_amount REAL,
+        img VARCHAR,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
+      )''',
+      // Copy data from old table, keeping profit_type and profit_amount, converting discount_price to discount_value
+      '''INSERT INTO product_new (id, name, slug, price, discount_value, profit_type, profit_amount, img, description, created_at, updated_at, deleted_at) 
+         SELECT id, name, slug, price, 
+         CASE WHEN discount_price IS NOT NULL AND discount_price > 0 THEN discount_price ELSE NULL END as discount_value,
+         profit_type, profit_amount, img, description, created_at, updated_at, deleted_at 
+         FROM product''',
+      'DROP TABLE product',
+      'ALTER TABLE product_new RENAME TO product',
+    ],
+    4: [
+      // For safety, recreate table again if version 3 didn't work
+      '''CREATE TABLE IF NOT EXISTS product_backup AS SELECT * FROM product''',
+      'DROP TABLE IF EXISTS product',
+      '''CREATE TABLE product(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name VARCHAR,
+        slug VARCHAR,
+        price REAL,
+        discount_type VARCHAR,
+        discount_value REAL,
+        profit_type VARCHAR,
+        profit_amount REAL,
+        img VARCHAR,
+        description TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME,
+        deleted_at DATETIME
+      )''',
+      '''INSERT INTO product (id, name, slug, price, discount_value, profit_type, profit_amount, img, description, created_at, updated_at, deleted_at)
+         SELECT id, name, slug, price, 
+         CASE 
+           WHEN discount_price IS NOT NULL AND discount_price > 0 THEN discount_price 
+           WHEN discount_value IS NOT NULL THEN discount_value
+           ELSE NULL 
+         END as discount_value,
+         profit_type, profit_amount, img, description, created_at, updated_at, deleted_at 
+         FROM product_backup WHERE 1=1''',
+      'DROP TABLE IF EXISTS product_backup',
+    ],
   };
 
   static final Map<Tables, String> tableNames = {
@@ -191,7 +246,8 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
-    // await deleteDatabase(path);
+    // Uncomment line below to reset database (comment it back after first run)
+    await deleteDatabase(path);
     return await openDatabase(
       path,
       version: _dbVersion,
@@ -205,9 +261,30 @@ class DBHelper {
         for (int i = oldVersion + 1; i <= newVersion; i++) {
           if (tableMigrations.containsKey(i)) {
             for (var script in tableMigrations[i]!) {
-              await db.execute(script);
+              try {
+                await db.execute(script);
+              } catch (e) {
+                print('Migration error for version $i: $e');
+                print('Script: $script');
+                rethrow;
+              }
             }
           }
+        }
+
+        // Check if seed data exists, if not, run seeds
+        try {
+          final userCount = Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM user_admin WHERE deleted_at IS NULL',
+            ),
+          );
+          if (userCount == null || userCount == 0) {
+            print('Running seeds after migration...');
+            await runSeeds(db: db, tableNames: tableNames);
+          }
+        } catch (e) {
+          print('Error checking/running seeds: $e');
         }
       },
     );

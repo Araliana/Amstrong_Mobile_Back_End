@@ -37,17 +37,21 @@ class ProductProvider with ChangeNotifier {
   Future<void> addProduct({
     required String name,
     required double price,
-    required int stock,
     required String description,
     required String? img,
-    double? discountPrice,
+    String? discountType,
+    double? discountValue,
+    String? profitType,
+    double? profitAmount,
   }) async {
     _setLoading(true);
     await db.insert(productTables, {
       'name': name,
       'price': price,
-      'discount_price': discountPrice,
-      'stock': stock,
+      'discount_type': discountType,
+      'discount_value': discountValue,
+      'profit_type': profitType,
+      'profit_amount': profitAmount,
       'description': description,
       'img': img,
     });
@@ -57,23 +61,20 @@ class ProductProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'add_product',
-      parameters: {
-        'name': name,
-        'price': price,
-        'stock': stock,
-        'description': description,
-      },
+      parameters: {'name': name, 'price': price, 'description': description},
     );
   }
 
   Future<void> editProduct({
     required String name,
     required double price,
-    required int stock,
     required String description,
     required String? img,
     required int id,
-    double? discountPrice,
+    String? discountType,
+    double? discountValue,
+    String? profitType,
+    double? profitAmount,
   }) async {
     _setLoading(true);
     final product = Product.fromMap(
@@ -86,8 +87,10 @@ class ProductProvider with ChangeNotifier {
       data: {
         'name': name,
         'price': price,
-        'discount_price': discountPrice,
-        'stock': stock,
+        'discount_type': discountType,
+        'discount_value': discountValue,
+        'profit_type': profitType,
+        'profit_amount': profitAmount,
         'description': description,
         'img': img ?? product.img,
       },
@@ -98,12 +101,7 @@ class ProductProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'edit_product',
-      parameters: {
-        'name': name,
-        'price': price,
-        'stock': stock,
-        'description': description,
-      },
+      parameters: {'name': name, 'price': price, 'description': description},
     );
   }
 

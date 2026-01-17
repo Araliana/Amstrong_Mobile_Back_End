@@ -201,7 +201,6 @@ class _ProductPageState extends State<ProductPage> {
                             product: product,
                             isMobile: isMobile,
                             onEdit: () async {
-                              // Save provider reference before navigation
                               final prov = Provider.of<ProductProvider>(
                                 context,
                                 listen: false,
@@ -398,8 +397,8 @@ class _ProductPageState extends State<ProductPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (product.discountPrice != null &&
-                            product.discountPrice! > 0) ...[
+                        if (product.discountValue != null &&
+                            product.discountValue! > 0) ...[
                           // Harga asli yang dicoret
                           Text(
                             'IDR ${_formatPrice(product.price)}',
@@ -423,9 +422,7 @@ class _ProductPageState extends State<ProductPage> {
                                 ),
                               ),
                               Text(
-                                _formatPrice(
-                                  product.price - product.discountPrice!,
-                                ),
+                                _formatPrice(product.getFinalPrice()),
                                 style: TextStyle(
                                   color: Colors.brown[900],
                                   fontSize: isMobile ? 16 : 18,

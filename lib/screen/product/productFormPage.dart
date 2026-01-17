@@ -26,14 +26,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   // Controllers
   late TextEditingController _nameCtl;
-  late TextEditingController _profitAmountCtl;
   late TextEditingController _priceCtl;
-  late TextEditingController _discountPriceCtl;
-  late TextEditingController _stockCtl;
+  late TextEditingController _discountValueCtl;
+  late TextEditingController _profitAmountCtl;
   late TextEditingController _descCtl;
 
   File? _pickedFile;
   String? _currentImageUrl;
+  String _discountType = 'percent';
   String _profitType = 'percent';
   bool _isLoading = false;
 
@@ -44,16 +44,20 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     _nameCtl = TextEditingController(text: product?.name ?? '');
     _priceCtl = TextEditingController(text: product?.price.toString() ?? '');
-    _discountPriceCtl = TextEditingController(
-      text: product?.discountPrice?.toString() ?? '',
+    _discountValueCtl = TextEditingController(
+      text: product?.discountValue?.toString() ?? '',
     );
-    _stockCtl = TextEditingController(text: product?.stock.toString() ?? '0');
+    _profitAmountCtl = TextEditingController(
+      text: product?.profitAmount?.toString() ?? '',
+    );
     _descCtl = TextEditingController(text: product?.description ?? '');
 
+    _discountType = product?.discountType ?? 'percent';
+    _profitType = product?.profitType ?? 'percent';
     _currentImageUrl = product?.img;
 
     // Listen to discount and price changes to update preview
-    _discountPriceCtl.addListener(() => setState(() {}));
+    _discountValueCtl.addListener(() => setState(() {}));
     _priceCtl.addListener(() => setState(() {}));
   }
 
@@ -61,8 +65,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
   void dispose() {
     _nameCtl.dispose();
     _priceCtl.dispose();
-    _discountPriceCtl.dispose();
-    _stockCtl.dispose();
+    _discountValueCtl.dispose();
+    _profitAmountCtl.dispose();
     _descCtl.dispose();
     super.dispose();
   }
@@ -89,12 +93,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
         await provider.addProduct(
           name: _nameCtl.text.trim(),
           price: double.tryParse(_priceCtl.text.trim()) ?? 0.0,
-          stock: int.tryParse(_stockCtl.text.trim()) ?? 0,
           description: _descCtl.text.trim().isEmpty
               ? 'No description'
               : _descCtl.text.trim(),
           img: imageUrl,
-          discountPrice: double.tryParse(_discountPriceCtl.text.trim()),
+          discountType: _discountType,
+          discountValue: double.tryParse(_discountValueCtl.text.trim()),
+          profitType: _profitType,
+          profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
         );
       } else {
         final productId = widget.editProduct?.id;
@@ -103,12 +109,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
             id: productId,
             name: _nameCtl.text.trim(),
             price: double.tryParse(_priceCtl.text.trim()) ?? 0.0,
-            stock: int.tryParse(_stockCtl.text.trim()) ?? 0,
             description: _descCtl.text.trim().isEmpty
                 ? 'No description'
                 : _descCtl.text.trim(),
             img: imageUrl,
-            discountPrice: double.tryParse(_discountPriceCtl.text.trim()),
+            discountType: _discountType,
+            discountValue: double.tryParse(_discountValueCtl.text.trim()),
+            profitType: _profitType,
+            profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
           );
         } else {
           throw Exception('Product ID is required for editing');
@@ -244,23 +252,75 @@ class _ProductFormPageState extends State<ProductFormPage> {
                       ),
                       SizedBox(height: 16),
 
-                      _buildTextField(
-                        controller: _discountPriceCtl,
-                        label: 'Discount Amount (Optional)',
-                        icon: Icons.discount_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                      // Discount Section
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildTextField(
+                              controller: _discountValueCtl,
+                              label: 'Discount (Optional)',
+                              icon: Icons.discount_outlined,
+                              hint: '0',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.brown[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.brown[100]!),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _discountType,
+                                  isExpanded: true,
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.brown[600],
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.brown[700],
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'percent',
+                                      child: Text('Percent (%)'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'flat',
+                                      child: Text('Flat (IDR)'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() => _discountType = value);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      if (_discountPriceCtl.text.isNotEmpty &&
-                          double.tryParse(_discountPriceCtl.text) != null &&
-                          double.parse(_discountPriceCtl.text) > 0)
+                      if (_discountValueCtl.text.isNotEmpty &&
+                          double.tryParse(_discountValueCtl.text) != null &&
+                          double.parse(_discountValueCtl.text) > 0)
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Text(
-                            'Final price: IDR ${_formatPrice((double.tryParse(_priceCtl.text) ?? 0) - (double.tryParse(_discountPriceCtl.text) ?? 0))}',
+                            _calculateFinalPrice(),
                             style: TextStyle(
                               color: Colors.green[700],
                               fontSize: 13,
@@ -268,30 +328,69 @@ class _ProductFormPageState extends State<ProductFormPage> {
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
+                      SizedBox(height: 16),
 
-                  // Stock Card
-                  _buildCard(
-                    title: 'Inventory',
-                    icon: Icons.inventory_2_outlined,
-                    children: [
-                      _buildTextField(
-                        controller: _stockCtl,
-                        label: 'Stock Quantity',
-                        icon: Icons.inventory_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                      // Profit Section
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildTextField(
+                              controller: _profitAmountCtl,
+                              label: 'Profit (Optional)',
+                              icon: Icons.trending_up,
+                              hint: '0',
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.brown[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.brown[100]!),
+                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _profitType,
+                                  isExpanded: true,
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: Colors.brown[600],
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.brown[700],
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'percent',
+                                      child: Text('Percent (%)'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'flat',
+                                      child: Text('Flat (IDR)'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() => _profitType = value);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter stock quantity';
-                          }
-                          return null;
-                        },
                       ),
                     ],
                   ),
@@ -439,6 +538,30 @@ class _ProductFormPageState extends State<ProductFormPage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
+  }
+
+  String _calculateFinalPrice() {
+    final price = double.tryParse(_priceCtl.text) ?? 0;
+    final discountValue = double.tryParse(_discountValueCtl.text) ?? 0;
+
+    if (discountValue == 0) return '';
+
+    double finalPrice;
+    double discountAmount;
+
+    if (_discountType == 'percent') {
+      discountAmount = price * (discountValue / 100);
+      finalPrice = price - discountAmount;
+    } else {
+      discountAmount = discountValue;
+      finalPrice = price - discountValue;
+    }
+
+    if (finalPrice < 0) {
+      return '⚠️ Warning: Discount exceeds price!';
+    }
+
+    return 'Discount: IDR ${_formatPrice(discountAmount)} | Final price: IDR ${_formatPrice(finalPrice)}';
   }
 
   String _formatPrice(double price) {

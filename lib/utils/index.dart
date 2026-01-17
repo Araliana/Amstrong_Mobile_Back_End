@@ -76,6 +76,15 @@ String formatDate(DateTime dateTime) {
   return DateFormat('dd MMM yyyy').format(dateTime);
 }
 
+String formatCurrency(num value) {
+  final formatter = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp',
+    decimalDigits: 0,
+  );
+  return formatter.format(value);
+}
+
 Future<Map<String, List<Access>>> groupAccessesByCategory(
   BuildContext context,
 ) async {
@@ -87,7 +96,7 @@ Future<Map<String, List<Access>>> groupAccessesByCategory(
     return {}; // Return empty map if no username
   }
 
-  final currUser = await adminProvider.getCurrUser(userID);
+  final currUser = await adminProvider.getUserById(userID);
   final Map<String, List<Access>> grouped = {};
 
   // Check if user has role and access

@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 enum PickerMode { avatar, document }
 
 class ImageSelector extends StatefulWidget {
-  ImageSelector({
+  const ImageSelector({
     super.key,
     this.initValue,
     this.onChanged,
@@ -247,19 +247,24 @@ class _ImageSelectorState extends State<ImageSelector> {
   }
 
   Widget _buildDocumentMode(bool isSmall) {
+    const neutralPrimary = Color(0xFF555555);
+    const neutralMedium = Color(0xFF888888);
+    const neutralLight = Color(0xFFEFEFEF);
+    const neutralBorder = Color(0xFFCCCCCC);
+    const neutralDark = Color(0xFF444444);
+
     return Container(
       width: double.infinity,
       height: 270,
       decoration: BoxDecoration(
-        color: _selectedImage != null ? Colors.grey[200] : Colors.grey[50],
+        color: _selectedImage != null ? neutralLight : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _selectedImage != null
-              ? Colors.grey.withValues(alpha: 0.3)
-              : const Color(0xFF2C39B8).withValues(alpha: 0.3),
+              ? neutralMedium.withOpacity(0.4)
+              : neutralBorder.withOpacity(0.5),
           width: 2,
           strokeAlign: BorderSide.strokeAlignInside,
-          style: _selectedImage != null ? BorderStyle.solid : BorderStyle.solid,
         ),
       ),
       child: Stack(
@@ -289,34 +294,42 @@ class _ImageSelectorState extends State<ImageSelector> {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C39B8).withValues(alpha: 0.1),
+                      color: neutralPrimary.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.cloud_upload_outlined,
                       size: isSmall ? 48 : 64,
-                      color: const Color(0xFF2C39B8),
+                      color: neutralPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     "Tap the button to select source",
                     style: TextStyle(
-                      color: Colors.grey[800],
+                      color: neutralDark,
                       fontSize: isSmall ? 16 : 18,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Divider(indent: 50, endIndent: 50, height: 5, thickness: 2),
+                  Divider(
+                    indent: 50,
+                    endIndent: 50,
+                    height: 5,
+                    thickness: 2,
+                    color: neutralBorder,
+                  ),
                   const SizedBox(height: 12),
+
+                  // Tombol Select Image (Netral)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C39B8),
+                      color: neutralPrimary,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -328,17 +341,20 @@ class _ImageSelectorState extends State<ImageSelector> {
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 12),
                   Text(
                     "Supported: JPG, PNG, JPEG",
                     style: TextStyle(
-                      color: Colors.grey[500],
+                      color: neutralMedium,
                       fontSize: isSmall ? 12 : 13,
                     ),
                   ),
                 ],
               ),
             ),
+
+          // Tombol Edit (Netral Dark)
           if (_selectedImage != null && !(widget.isLoading ?? false))
             Positioned(
               bottom: 12,
@@ -347,7 +363,7 @@ class _ImageSelectorState extends State<ImageSelector> {
                 height: isSmall ? 36 : 45,
                 width: isSmall ? 36 : 45,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F1E5B),
+                  color: neutralDark,
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),

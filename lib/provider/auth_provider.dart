@@ -275,7 +275,7 @@ class AuthProvider with ChangeNotifier {
       final email = user.email ?? "${currUserId ?? 'unknown'}@kjm.admin.app";
       final cred = EmailAuthProvider.credential(
         email: email,
-        password: oldPassword,
+        password: hashPassword(oldPassword),
       );
       await user.reauthenticateWithCredential(cred);
 
@@ -284,7 +284,7 @@ class AuthProvider with ChangeNotifier {
       final doubleHash = _doubleHash(hashed);
 
       // 🔁 Ganti password di Firebase
-      await user.updatePassword(hashPassword(hashed));
+      await user.updatePassword(hashed);
 
       await secureStorage.write(key: 'curr_user_pass_hash', value: doubleHash);
 

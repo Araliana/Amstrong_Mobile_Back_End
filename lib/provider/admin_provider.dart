@@ -51,7 +51,7 @@ class AdminProvider with ChangeNotifier {
     );
   }
 
-  Future<UserAdmin> getCurrUser(String userId) async {
+  Future<UserAdmin> getUserById(String userId) async {
     final res = (await db.get(
       adminTables,
       joins: [
@@ -217,7 +217,7 @@ class AdminProvider with ChangeNotifier {
   Future<bool> checkUsername({required String username, int? id}) async {
     _setLoading(true);
 
-    final query = "username = ? ${id != null ? "AND id != ?" : ""}";
+    final query = "username = LOWER(?) ${id != null ? "AND id != ?" : ""}";
     final args = id != null ? [username, id] : [username];
 
     final userAdmin = await db.get(adminTables, where: query, whereArgs: args);

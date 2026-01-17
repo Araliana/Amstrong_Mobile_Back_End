@@ -34,7 +34,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   File? _pickedFile;
   String? _currentImageUrl;
   String _discountType = 'percent';
-  final String _profitType = 'percent';
+  String _profitType = 'percent';
   bool _isLoading = false;
 
   @override

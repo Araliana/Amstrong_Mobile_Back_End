@@ -20,15 +20,20 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _setLoading(true);
-    final res = await db.get(
-      productTables,
-      orderBy: "created_at",
-      orderType: OrderType.asc,
-    );
-    products
-      ..clear()
-      ..addAll(res.map((e) => Product.fromMap(e)).toList());
-    _setLoading(false);
+    try {
+      final res = await db.get(
+        productTables,
+        orderBy: "created_at",
+        orderType: OrderType.asc,
+      );
+      products
+        ..clear()
+        ..addAll(res.map((e) => Product.fromMap(e)).toList());
+    } catch (e) {
+      debugPrint("Error loading products: $e");
+    } finally {
+      _setLoading(false);
+    }
 
     await analytics.logEvent(
       name: 'load_product',
@@ -41,94 +46,134 @@ class ProductProvider with ChangeNotifier {
     required double price,
     required String description,
     required String? img,
-    String? discountType,
-    double? discountValue,
-    String? profitType,
-    double? profitAmount,
+    double? discountPrice, // Parameter ini sudah benar
+    int stock = 0, // Default stock 0 jika tidak diisi
   }) async {
     _setLoading(true);
-    final id = uuid.v4();
+    try {
+      final id = uuid.v4();
+      final now = DateTime.now(); // Simpan waktu pembuatan
 
-    await db.insert(productTables, {
-      'id': id,
-      'name': name,
-      'price': price,
-      'discount_type': discountType,
-      'discount_value': discountValue,
-      'profit_type': profitType,
-      'profit_amount': profitAmount,
-      'description': description,
-      'img': img,
-    });
+      // 1. Simpan ke Database Lokal
+      await db.insert(productTables, {
+        'id': id,
+        'name': name,
+        'price': price,
+        'discount_price': discountPrice,
+        'stock': stock,
+        'description': description,
+        'img': img,
+        'created_at': now.toIso8601String(),
+      });
 
-    products.add(
-      Product(
-        id: id,
-        name: name,
-        price: price,
-        description: description,
-        img: img,
-      ),
-    );
+      // 2. Update List di Memory (Agar UI langsung berubah)
+      products.add(
+        Product(
+          id: id,
+          name: name,
+          price: price,
+          discountPrice: discountPrice, // [FIX] Tambahkan ini
+          stock: stock, // [FIX] Tambahkan ini
+          description: description,
+          img: img,
+          createdAt: now, // [FIX] Tambahkan ini
+        ),
+      );
 
-    await analytics.logEvent(
-      name: 'add_product',
-      parameters: {'name': name, 'price': price, 'description': description},
-    );
+      await analytics.logEvent(
+        name: 'add_product',
+        parameters: {'name': name, 'price': price, 'description': description},
+      );
+    } catch (e) {
+      debugPrint("Error add product: $e");
+      rethrow;
+    } finally {
+      _setLoading(false); // Pastikan loading berhenti
+    }
   }
 
   Future<void> editProduct({
     required String name,
     required double price,
+    required int stock,
     required String description,
     required String? img,
-    required int id,
-    String? discountType,
-    double? discountValue,
-    String? profitType,
-    double? profitAmount,
+    required String id,
+    double? discountPrice,
   }) async {
     _setLoading(true);
-    final product = Product.fromMap(
-      (await db.get(productTables, where: "id = ?", whereArgs: [id]))[0],
-    );
+    try {
+      // Ambil data lama untuk jaga-jaga jika gambar/tanggal null
+      final oldDataList = await db.get(
+        productTables,
+        where: "id = ?",
+        whereArgs: [id],
+      );
+      Product? oldProduct;
+      if (oldDataList.isNotEmpty) {
+        oldProduct = Product.fromMap(oldDataList.first);
+      }
 
-    await db.update(
-      productTables,
-      id: id,
-      data: {
-        'name': name,
-        'price': price,
-        'discount_type': discountType,
-        'discount_value': discountValue,
-        'profit_type': profitType,
-        'profit_amount': profitAmount,
-        'description': description,
-        'img': img ?? product.img,
-      },
-    );
+      // 1. Update Database
+      await db.update(
+        productTables,
+        id: id,
+        data: {
+          'name': name,
+          'price': price,
+          'discount_price': discountPrice,
+          'stock': stock,
+          'description': description,
+          'img':
+              img ??
+              oldProduct?.img, // Pakai gambar lama jika tidak ada gambar baru
+        },
+      );
 
-    final index = products.indexWhere((item) => item.id == id);
-    products[index] = Product(
-      id: id,
-      name: name,
-      price: price,
-      description: description,
-      img: img,
-    );
+      // 2. Update List di Memory
+      final index = products.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        products[index] = Product(
+          id: id,
+          name: name,
+          price: price,
+          discountPrice: discountPrice, // [FIX] Tambahkan ini
+          stock: stock, // [FIX] Tambahkan ini
+          description: description,
+          img: img ?? oldProduct?.img, // [FIX] Pakai gambar lama jika null
+          createdAt:
+              oldProduct?.createdAt, // [FIX] Jangan hilangkan tanggal buat
+        );
+      }
 
-    await analytics.logEvent(
-      name: 'edit_product',
-      parameters: {'name': name, 'price': price, 'description': description},
-    );
+      await analytics.logEvent(
+        name: 'edit_product',
+        parameters: {
+          'name': name,
+          'price': price,
+          'stock': stock,
+          'description': description,
+        },
+      );
+    } catch (e) {
+      debugPrint("Error edit product: $e");
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
   }
 
   Future<void> deleteProduct(String id) async {
     _setLoading(true);
-    await db.delete(productTables, id: id);
+    try {
+      await db.delete(productTables, id: id);
+      products.removeWhere((item) => item.id == id);
 
-    products.removeWhere((item) => item.id == id);
-
-    await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
+      await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
+    } catch (e) {
+      debugPrint("Error delete product: $e");
+    } finally {
+      _setLoading(false);
+    }
   }
 }

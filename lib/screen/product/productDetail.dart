@@ -26,6 +26,7 @@ void showProductDetail(BuildContext context, Product product) {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // --- GAMBAR PRODUK ---
               if (product.img != null && product.img!.isNotEmpty)
                 Container(
                   width: double.infinity,
@@ -50,42 +51,48 @@ void showProductDetail(BuildContext context, Product product) {
                   ),
                 ),
               SizedBox(height: 16),
+
+              // --- NAMA PRODUK ---
               _buildDetailRow('Name', product.name),
-              if (product.discountValue != null &&
-                  product.discountValue! > 0) ...[
+
+              // --- LOGIKA HARGA & DISKON ---
+              // Jika ada discountPrice (nominal potongan), kita hitung harga akhir
+              if (product.discountPrice != null &&
+                  product.discountPrice! > 0) ...[
+                // 1. Harga Asli
                 _buildDetailRow(
                   'Original Price',
                   'IDR ${_formatPrice(product.price)}',
                 ),
+
+                // 2. Nominal Potongan (Diskon)
                 _buildDetailRow(
                   'Discount',
-                  product.discountType == 'percent'
-                      ? '${product.discountValue}% (IDR ${_formatPrice(product.getDiscountAmount())})'
-                      : 'IDR ${_formatPrice(product.discountValue!)}',
+                  '- IDR ${_formatPrice(product.discountPrice!)}',
+                  textColor: Colors.red,
                 ),
+
+                // 3. Harga Akhir (Harga Asli - Potongan)
                 _buildDetailRow(
                   'Final Price',
-                  'IDR ${_formatPrice(product.getFinalPrice())}',
+                  'IDR ${_formatPrice(product.price - product.discountPrice!)}',
                   highlight: true,
                 ),
               ] else ...[
+                // Jika tidak ada diskon, tampilkan harga normal saja
                 _buildDetailRow('Price', 'IDR ${_formatPrice(product.price)}'),
               ],
-              if (product.profitType != null &&
-                  product.profitAmount != null) ...[
-                _buildDetailRow(
-                  'Profit',
-                  product.profitType == 'percent'
-                      ? '${product.profitAmount}%'
-                      : 'IDR ${_formatPrice(product.profitAmount!)}',
-                ),
-              ],
+
+              // --- STOK ---
+              _buildDetailRow('Stock', '${product.stock} items'),
+
+              // --- DESKRIPSI ---
               if (product.description != null &&
                   product.description!.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 8),
+                    SizedBox(height: 12),
                     Text(
                       'Description',
                       style: TextStyle(
@@ -126,7 +133,12 @@ void showProductDetail(BuildContext context, Product product) {
   );
 }
 
-Widget _buildDetailRow(String label, String value, {bool highlight = false}) {
+Widget _buildDetailRow(
+  String label,
+  String value, {
+  bool highlight = false,
+  Color? textColor,
+}) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 8.0),
     child: Row(
@@ -147,7 +159,9 @@ Widget _buildDetailRow(String label, String value, {bool highlight = false}) {
           child: Text(
             value,
             style: TextStyle(
-              color: highlight ? Colors.green[700] : Colors.grey[700],
+              color:
+                  textColor ??
+                  (highlight ? Colors.green[700] : Colors.grey[700]),
               fontSize: 14,
               fontWeight: highlight ? FontWeight.w700 : FontWeight.normal,
             ),

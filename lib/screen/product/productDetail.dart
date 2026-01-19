@@ -51,25 +51,35 @@ void showProductDetail(BuildContext context, Product product) {
                 ),
               SizedBox(height: 16),
               _buildDetailRow('Name', product.name),
-              if (product.discountPrice != null &&
-                  product.discountPrice! > 0) ...[
+              if (product.discountValue != null &&
+                  product.discountValue! > 0) ...[
                 _buildDetailRow(
                   'Original Price',
                   'IDR ${_formatPrice(product.price)}',
                 ),
                 _buildDetailRow(
                   'Discount',
-                  'IDR ${_formatPrice(product.discountPrice!)}',
+                  product.discountType == 'percent'
+                      ? '${product.discountValue}% (IDR ${_formatPrice(product.getDiscountAmount())})'
+                      : 'IDR ${_formatPrice(product.discountValue!)}',
                 ),
                 _buildDetailRow(
                   'Final Price',
-                  'IDR ${_formatPrice(product.price - product.discountPrice!)}',
+                  'IDR ${_formatPrice(product.getFinalPrice())}',
                   highlight: true,
                 ),
               ] else ...[
                 _buildDetailRow('Price', 'IDR ${_formatPrice(product.price)}'),
               ],
-              _buildDetailRow('Stock', '${product.stock} items'),
+              if (product.profitType != null &&
+                  product.profitAmount != null) ...[
+                _buildDetailRow(
+                  'Profit',
+                  product.profitType == 'percent'
+                      ? '${product.profitAmount}%'
+                      : 'IDR ${_formatPrice(product.profitAmount!)}',
+                ),
+              ],
               if (product.description != null &&
                   product.description!.isNotEmpty)
                 Column(

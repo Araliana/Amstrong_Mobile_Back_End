@@ -41,7 +41,10 @@ class ProductProvider with ChangeNotifier {
     required double price,
     required String description,
     required String? img,
-    double? discountPrice,
+    String? discountType,
+    double? discountValue,
+    String? profitType,
+    double? profitAmount,
   }) async {
     _setLoading(true);
     final id = uuid.v4();
@@ -50,7 +53,10 @@ class ProductProvider with ChangeNotifier {
       'id': id,
       'name': name,
       'price': price,
-      'discount_price': discountPrice,
+      'discount_type': discountType,
+      'discount_value': discountValue,
+      'profit_type': profitType,
+      'profit_amount': profitAmount,
       'description': description,
       'img': img,
     });
@@ -74,11 +80,13 @@ class ProductProvider with ChangeNotifier {
   Future<void> editProduct({
     required String name,
     required double price,
-    required int stock,
     required String description,
     required String? img,
-    required String id,
-    double? discountPrice,
+    required int id,
+    String? discountType,
+    double? discountValue,
+    String? profitType,
+    double? profitAmount,
   }) async {
     _setLoading(true);
     final product = Product.fromMap(
@@ -91,8 +99,10 @@ class ProductProvider with ChangeNotifier {
       data: {
         'name': name,
         'price': price,
-        'discount_price': discountPrice,
-        'stock': stock,
+        'discount_type': discountType,
+        'discount_value': discountValue,
+        'profit_type': profitType,
+        'profit_amount': profitAmount,
         'description': description,
         'img': img ?? product.img,
       },
@@ -109,12 +119,7 @@ class ProductProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'edit_product',
-      parameters: {
-        'name': name,
-        'price': price,
-        'stock': stock,
-        'description': description,
-      },
+      parameters: {'name': name, 'price': price, 'description': description},
     );
   }
 

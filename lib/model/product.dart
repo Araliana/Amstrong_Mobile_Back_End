@@ -1,21 +1,25 @@
 class Product {
   final String id;
   final String name;
-  final double price;
-  final double? discountPrice;
-  final int stock;
-  final String? img;
-  final String? description;
+  final String description;
+  final String img;
+  final double currentPrice;
+  final String profitType;
+  final double profitAmount;
+  final String? discountType;
+  final double? discountValue;
   final DateTime? createdAt;
 
   Product({
     required this.id,
     required this.name,
-    required this.price,
-    this.discountPrice,
-    this.stock = 0,
-    this.img,
-    this.description,
+    required this.description,
+    required this.img,
+    required this.currentPrice,
+    required this.profitType,
+    required this.profitAmount,
+    this.discountType,
+    this.discountValue,
     this.createdAt,
   });
 
@@ -23,17 +27,21 @@ class Product {
     return Product(
       id: map['id'] as String,
       name: map['name'] as String? ?? '',
-      price: (map['price'] is int)
-          ? (map['price'] as int).toDouble()
-          : (map['price'] as double? ?? 0.0),
-      discountPrice: map['discount_price'] == null
+      description: map['description'] as String,
+      img: map['img'] as String,
+      currentPrice: map['current_price'] is int
+          ? (map['current_price'] as int).toDouble()
+          : (map['current_price'] as double),
+      profitType: map['profit_type'] as String,
+      profitAmount: (map['profit_amount'] is int)
+          ? (map['profit_amount'] as int).toDouble()
+          : (map['profit_amount'] as double),
+      discountType: map['discount_type'] as String?,
+      discountValue: map['discount_value'] == null
           ? null
-          : (map['discount_price'] is int)
-          ? (map['discount_price'] as int).toDouble()
-          : (map['discount_price'] as double?),
-      stock: (map['stock'] as int?) ?? 0,
-      img: map['img'] as String?,
-      description: map['description'] as String?,
+          : (map['discount_value'] is int)
+          ? (map['discount_value'] as int).toDouble()
+          : (map['discount_value'] as double?),
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
@@ -44,11 +52,13 @@ class Product {
     return {
       'id': id,
       'name': name,
-      'price': price,
-      'discount_price': discountPrice,
-      'stock': stock,
-      'img': img,
       'description': description,
+      'img': img,
+      'current_price': currentPrice,
+      'profit_type': profitType,
+      'profit_amount': profitAmount,
+      'discount_type': discountType,
+      'discount_value': discountValue,
       'created_at': createdAt?.toIso8601String(),
     };
   }

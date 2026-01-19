@@ -3,9 +3,11 @@ import 'package:sqflite/sqflite.dart';
 
 enum Tables {
   order,
+  orderDetail,
   menu,
   gallery,
   product,
+  stock,
   userAdmin,
   role,
   access,
@@ -114,11 +116,55 @@ class DBHelper {
       CREATE TABLE product(
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        discount REAL,
-        img VARCHAR,
         description TEXT,
+        img VARCHAR,
         profit_type VARCHAR,
         profit_amount REAL,
+        discount_type VARCHAR,
+        discount_value REAL,
+        quantity INTEGER DEFAULT 0,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
+      )
+    ''',
+    Tables.stock:
+        '''
+      CREATE TABLE stock(
+        id TEXT PRIMARY KEY,
+        product_id TEXT,
+        quantity INTEGER,
+        hpp REAL,
+        true_profit REAL,
+        final_Price REAL,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
+      )
+    ''',
+    Tables.order:
+        '''
+      CREATE TABLE order(
+        id TEXT PRIMARY KEY,
+        total_price REAL,
+        total_profit REAL,
+        total_hpp REAL,
+        status VARCHAR, // PENDING, COMPLETE, CANCEL
+        customer_name VARCHAR,
+        customer_address VARCHAR,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
+      )
+    ''',
+    Tables.orderDetail:
+        '''
+      CREATE TABLE order_detail(
+        id TEXT PRIMARY KEY,
+        order_id TEXT,
+        product_id TEXT,
+        stock_id TEXT,
+        quantity INTEGER,
+        total_price REAL,
+        total_profit REAL,
+        total_hpp REAL,
         ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
@@ -187,6 +233,9 @@ class DBHelper {
     Tables.role: "role",
     Tables.access: "access",
     Tables.product: "product",
+    Tables.stock: "stock",
+    Tables.order: "order",
+    Tables.orderDetail: "order_detail",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",
     Tables.menu: "menu",

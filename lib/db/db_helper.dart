@@ -65,7 +65,6 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 1; // Increment version untuk migration
 
   String renderTimestamp() => '''
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -203,27 +202,12 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
-    // await deleteDatabase(path);
     return await openDatabase(
       path,
-      version: _dbVersion,
+      version: 1,
       onCreate: (db, version) async {
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
-        }
-        // await runSeeds(db: db, tableNames: tableNames);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        for (int i = oldVersion + 1; i <= newVersion; i++) {
-          if (tableMigrations.containsKey(i)) {
-            for (var script in tableMigrations[i]!) {
-              try {
-                await db.execute(script);
-              } catch (e) {
-                print('Migration skipped for: $script. Error: $e');
-              }
-            }
-          }
         }
       },
     );

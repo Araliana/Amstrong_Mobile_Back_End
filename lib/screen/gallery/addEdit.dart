@@ -4,6 +4,7 @@ import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +39,8 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
       context,
       listen: false,
     );
+    // [INIT PROVIDER] (Perlu listen: false karena di dalam fungsi async/initState)
+    final lang = Provider.of<LanguageProvider>(context, listen: false);
 
     try {
       if (widget.memoId != null) {
@@ -59,7 +62,8 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading data: $e'),
+            // [TRANSLATE] Error Message
+            content: Text('${lang.getText('error_loading')}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -78,13 +82,16 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
   Widget build(BuildContext context) {
     final galleryProvider = Provider.of<GalleryProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
+    
     final dark = themeProvider.getTheme();
     MaterialColor color = widget.memoId != null ? Colors.indigo : Colors.purple;
     final isEdit = widget.memoId != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? "Edit Memo" : "Add Memo"),
+        // [TRANSLATE] AppBar Title
+        title: Text(isEdit ? lang.getText('edit_memo') : lang.getText('add_memo')),
         centerTitle: true,
       ),
       body: Form(
@@ -93,9 +100,10 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             // Image Selector Section
-            const Text(
-              "Memo Image",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            Text(
+              // [TRANSLATE] Label
+              lang.getText('memo_image'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             ImageSelector(
               mode: PickerMode.document,
@@ -112,22 +120,27 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
             // Name Field
             buildInput(
               controller: _nameController,
-              label: "Name",
+              // [TRANSLATE] Label Name
+              label: lang.getText('name'),
               icon: Icons.person_outline,
               validator: (val) =>
-                  val == null || val.isEmpty ? "Name is required" : null,
+                  val == null || val.isEmpty 
+                      ? '${lang.getText('name')} ${lang.getText('error_required')}' 
+                      : null,
             ),
             const SizedBox(height: 16),
 
             // Category Dropdown
             buildDropdownField(
-              label: 'Category',
+              // [TRANSLATE] Label Category
+              label: lang.getText('categories'),
               isLoading: false,
               value: _selectedCategory,
               items: [
-                DropdownItem(label: 'Customers', value: 'customers'),
-                DropdownItem(label: 'Employees', value: 'employees'),
-                DropdownItem(label: 'Bands', value: 'bands'),
+                // [TRANSLATE] Dropdown Items
+                DropdownItem(label: lang.getText('customers'), value: 'customers'),
+                DropdownItem(label: lang.getText('employees'), value: 'employees'),
+                DropdownItem(label: lang.getText('bands'), value: 'bands'),
               ],
               prefixIcon: Icons.category_outlined,
               onChanged: (value) {
@@ -148,11 +161,14 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
             // Quote Field
             buildInput(
               controller: _quoteController,
-              label: "Quote",
+              // [TRANSLATE] Label Quote
+              label: lang.getText('quote'),
               icon: Icons.format_quote,
               maxLines: 5,
               validator: (val) =>
-                  val == null || val.isEmpty ? "Quote is required" : null,
+                  val == null || val.isEmpty 
+                      ? '${lang.getText('quote')} ${lang.getText('error_required')}' 
+                      : null,
             ),
             const SizedBox(height: 24),
 
@@ -166,8 +182,9 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
                         if (_formKey.currentState!.validate()) {
                           if (!isEdit && _selectedImageFile == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Please select post image"),
+                              SnackBar(
+                                // [TRANSLATE] Error Select Image
+                                content: Text(lang.getText('select_image_error')),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -213,8 +230,11 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
                               Navigator.pop(context, true);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
+                                  // [TRANSLATE] Success Message
                                   content: Text(
-                                    isEdit ? 'Post updated' : 'Post added',
+                                    isEdit 
+                                        ? lang.getText('post_updated') 
+                                        : lang.getText('post_added'),
                                   ),
                                   backgroundColor: Colors.green,
                                 ),
@@ -250,8 +270,10 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
                     : const Icon(Icons.save, color: Colors.white),
                 label: Text(
                   _isLoading
-                      ? (isEdit ? "Updating" : "Adding")
-                      : (isEdit ? "Update Post" : "Add Post"),
+                      // [TRANSLATE] Loading Button Text
+                      ? (isEdit ? lang.getText('updating') : lang.getText('adding'))
+                      // [TRANSLATE] Idle Button Text
+                      : (isEdit ? lang.getText('update_post') : lang.getText('add_post')),
                   style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -270,7 +292,8 @@ class _GalleryAddEditScreenState extends State<GalleryAddEditScreen> {
               child: OutlinedButton.icon(
                 onPressed: _isLoading ? null : () => Navigator.pop(context),
                 icon: const Icon(Icons.close),
-                label: const Text("Cancel", style: TextStyle(fontSize: 16)),
+                // [TRANSLATE] Cancel Button
+                label: Text(lang.getText('cancel'), style: const TextStyle(fontSize: 16)),
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

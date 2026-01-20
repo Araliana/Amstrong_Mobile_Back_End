@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/category_provider.dart';
 
@@ -23,29 +24,34 @@ class _CategoryPageState extends State<DishTypePage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CategoryProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
 
     return Scaffold(
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return buildLoadingState("Fetching Dish Types...");
+            // [TRANSLATE] Loading state
+            return buildLoadingState(lang.getText('loading_data'));
           }
 
           final items = provider.categories;
 
           return items.isEmpty
-              ? buildEmptyState("Dish Types", Icons.fastfood_outlined)
+              // [TRANSLATE] Empty state title
+              ? buildEmptyState(lang.getText('dish_types'), Icons.fastfood_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
                   itemCount: items.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return buildHeader("Dish Types", Icons.category);
+                      // [TRANSLATE] Header title
+                      return buildHeader(lang.getText('dish_types'), Icons.category);
                     }
 
                     final category = items[index - 1];
 
+                    // Note: buildCategoryCard adalah widget external.
                     return buildCategoryCard(
                       context,
                       category,
@@ -59,6 +65,7 @@ class _CategoryPageState extends State<DishTypePage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.brown,
         onPressed: () =>
+            // Dialog ini mungkin perlu diedit terpisah jika teksnya ada di dalam file komponen
             showAddEditDialog(context, provider, CategoryType.menu),
         child: const Icon(Icons.add, color: Colors.white),
       ),

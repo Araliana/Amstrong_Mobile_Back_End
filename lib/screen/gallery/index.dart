@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -28,28 +29,33 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   Widget build(BuildContext context) {
     final galleryProvider = Provider.of<GalleryProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
 
     return Scaffold(
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return buildLoadingState("Fetching Gallery...");
+            // [TRANSLATE] Loading state
+            return buildLoadingState(lang.getText('loading_data'));
           }
 
           final memos = galleryProvider.memos;
 
           return memos.isEmpty
-              ? buildEmptyState("Gallery", Icons.photo_library_outlined)
+              // [TRANSLATE] Empty state title
+              ? buildEmptyState(lang.getText('gallery_title'), Icons.photo_library_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: memos.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return buildHeader("Gallery", Icons.collections_rounded);
+                      // [TRANSLATE] Header title
+                      return buildHeader(lang.getText('gallery_title'), Icons.collections_rounded);
                     }
                     final memo = memos[index - 1];
-                    return _buildPolaroidCard(memo);
+                    // [MODIFIED] Pass lang provider to helper function
+                    return _buildPolaroidCard(memo, lang);
                   },
                 );
         },
@@ -62,7 +68,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
     );
   }
 
-  Widget _buildPolaroidCard(Memo memo) {
+  // [MODIFIED] Menerima parameter LanguageProvider
+  Widget _buildPolaroidCard(Memo memo, LanguageProvider lang) {
     final galleryProvider = Provider.of<GalleryProvider>(context);
 
     // Tentukan icon dan color berdasarkan category
@@ -95,12 +102,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
             borderRadius: BorderRadius.circular(4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
+                color: Colors.black.withOpacity(0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -135,7 +142,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                       color: Colors.brown[400],
                                       value: progress.expectedTotalBytes != null
                                           ? progress.cumulativeBytesLoaded /
-                                                progress.expectedTotalBytes!
+                                              progress.expectedTotalBytes!
                                           : null,
                                     ),
                                   ),
@@ -182,14 +189,15 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withOpacity(0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
                         child: Text(
-                          memo.isActive ? 'ACTIVE' : 'INACTIVE',
+                          // [TRANSLATE] Status Badge
+                          memo.isActive ? lang.getText('active') : lang.getText('inactive'),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -206,11 +214,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       right: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: Colors.black.withOpacity(0.2),
                               blurRadius: 4,
                             ),
                           ],
@@ -224,13 +232,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'edit',
                               child: Row(
                                 children: [
-                                  Icon(Icons.edit_outlined, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Edit'),
+                                  const Icon(Icons.edit_outlined, size: 20),
+                                  const SizedBox(width: 8),
+                                  // [TRANSLATE] Menu Edit
+                                  Text(lang.getText('edit')),
                                 ],
                               ),
                             ),
@@ -247,7 +256,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    memo.isActive ? 'Deactivate' : 'Activate',
+                                    // [TRANSLATE] Menu Toggle
+                                    memo.isActive 
+                                        ? lang.getText('deactivate') 
+                                        : lang.getText('activate'),
                                     style: const TextStyle(
                                       color: Colors.orange,
                                     ),
@@ -255,19 +267,20 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 ],
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
                               child: Row(
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.delete_outline,
                                     size: 20,
                                     color: Colors.red,
                                   ),
-                                  SizedBox(width: 8),
+                                  const SizedBox(width: 8),
                                   Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
+                                    // [TRANSLATE] Menu Delete
+                                    lang.getText('delete'),
+                                    style: const TextStyle(color: Colors.red),
                                   ),
                                 ],
                               ),
@@ -288,7 +301,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             } else if (value == 'delete') {
                               showDeleteConfirmation(
                                 context,
-                                title: "Gallery Post",
+                                // [TRANSLATE] Dialog Delete
+                                title: lang.getText('post_title'),
                                 label: memo.name,
                                 isLoading: galleryProvider.isLoading,
                                 onDelete: () async {
@@ -327,7 +341,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           Icon(
                             Icons.format_quote,
                             size: 24,
-                            color: categoryColor.withValues(alpha: 0.5),
+                            color: categoryColor.withOpacity(0.5),
                           ),
                           const SizedBox(height: 8),
                           // Quote Text
@@ -348,7 +362,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             child: Icon(
                               Icons.format_quote,
                               size: 24,
-                              color: categoryColor.withValues(alpha: 0.5),
+                              color: categoryColor.withOpacity(0.5),
                             ),
                           ),
                         ],
@@ -363,7 +377,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         // Avatar
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor: categoryColor.withValues(alpha: 0.1),
+                          backgroundColor: categoryColor.withOpacity(0.1),
                           child: Icon(
                             categoryIcon,
                             size: 18,

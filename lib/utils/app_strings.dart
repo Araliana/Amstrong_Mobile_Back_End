@@ -78,7 +78,53 @@ class AppStrings {
       'req_lowercase': 'Mengandung huruf kecil',
       'req_special': 'Mengandung karakter spesial (!@#\$%^&*)',
       'req_title': 'Persyaratan Kata Sandi',
+
+      //dishtypes
+      'dish_types': 'Jenis Hidangan',
+
+      //editProfile
+      'edit_profile_title': 'Edit Profil',
+      'full_name': 'Nama Lengkap',
+      'enter_full_name': 'Masukkan nama lengkap Anda',
+      'save_changes': 'Simpan Perubahan',
+      'success_profile_edited': 'Profil berhasil diubah',
+      'error_fullname_required': 'Nama lengkap wajib diisi',
+      'error_fullname_length': 'Nama minimal 2 karakter',
+
+      //addEdit
+      'add_memo': 'Tambah Memo',
+      'edit_memo': 'Ubah Memo',
+      'memo_image': 'Gambar Memo',
+      'quote': 'Kutipan',
+      'customers': 'Pelanggan',
+      'employees': 'Karyawan',
+      'bands': 'Band',
+      'select_image_error': 'Mohon pilih gambar postingan',
+      'update_post': 'Perbarui Postingan',
+      'add_post': 'Tambah Postingan',
+      'updating': 'Memperbarui...',
+      'adding': 'Menambahkan...',
+      'post_updated': 'Postingan diperbarui',
+      'post_added': 'Postingan ditambahkan',
+      'error_loading': 'Gagal memuat data',
+
+      //gallery/index.dart
+      'gallery_title': 'Galeri',
+      'active': 'AKTIF',
+      'inactive': 'TIDAK AKTIF',
+      'activate': 'Aktifkan',
+      'deactivate': 'Nonaktifkan',
+      'confirm_delete_post': 'Apakah Anda yakin ingin menghapus postingan ini?',
+      'post_title': 'Postingan',
     },
+
+
+
+
+
+
+
+
     'en': {
       // --- Menu / Sidebar ---
       'dashboard': 'Dashboard',
@@ -157,6 +203,44 @@ class AppStrings {
       'req_lowercase': 'Contains lowercase letter',
       'req_special': 'Contains special character (!@#\$%^&*)',
       'req_title': 'Password Requirements',
+
+      //dishtypes
+      'dish_types': 'Dish Types',
+
+      //editProfile
+      'edit_profile_title': 'Edit Profile',
+      'full_name': 'Full Name',
+      'enter_full_name': 'Enter your full name',
+      'save_changes': 'Save Changes',
+      'success_profile_edited': 'Profile edited successfully',
+      'error_fullname_required': 'Full name is required',
+      'error_fullname_length': 'Name must be at least 2 characters',
+
+      //addEdit
+      'add_memo': 'Add Memo',
+      'edit_memo': 'Edit Memo',
+      'memo_image': 'Memo Image',
+      'quote': 'Quote',
+      'customers': 'Customers',
+      'employees': 'Employees',
+      'bands': 'Bands',
+      'select_image_error': 'Please select post image',
+      'update_post': 'Update Post',
+      'add_post': 'Add Post',
+      'updating': 'Updating...',
+      'adding': 'Adding...',
+      'post_updated': 'Post updated',
+      'post_added': 'Post added',
+      'error_loading': 'Error loading data',
+
+      //gallery/index.dart
+      'gallery_title': 'Gallery',
+      'active': 'ACTIVE',
+      'inactive': 'INACTIVE',
+      'activate': 'Activate',
+      'deactivate': 'Deactivate',
+      'confirm_delete_post': 'Are you sure you want to delete this post?',
+      'post_title': 'Post',
     },
   };
 }

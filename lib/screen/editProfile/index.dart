@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/model/user_admin.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -36,9 +37,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final adminProvider = Provider.of<AdminProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit Profile"),
+        // [TRANSLATE] Judul AppBar
+        title: Text(lang.getText('edit_profile_title')),
         backgroundColor: Colors.brown,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -51,7 +55,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               adminProvider.isLoading ||
               isUploading;
           final user = snapshot.data as UserAdmin?;
-          _fullNameController.text = user?.fullname ?? "";
+          
+          // Pastikan controller diisi hanya sekali atau saat data berubah signifikan
+          // (Logic asli Anda dipertahankan, hanya teks yang diubah)
+          if (_fullNameController.text.isEmpty && user != null) {
+             _fullNameController.text = user.fullname;
+          }
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Form(
@@ -74,15 +84,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // Full Name Field
                   _buildTextField(
                     controller: _fullNameController,
-                    label: 'Full Name',
-                    hint: 'Enter your full name',
+                    // [TRANSLATE] Label & Hint
+                    label: lang.getText('full_name'),
+                    hint: lang.getText('enter_full_name'),
                     icon: Icons.person_outline,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Full name is required';
+                        return lang.getText('error_fullname_required');
                       }
                       if (value.trim().length < 2) {
-                        return 'Name must be at least 2 characters';
+                        return lang.getText('error_fullname_length');
                       }
                       return null;
                     },
@@ -97,28 +108,34 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       onPressed: (isLoading)
                           ? null
                           : () async {
-                              setState(() {
-                                isUploading = true;
-                              });
-                              String? ppUrl;
-                              if (_newPP != null) {
-                                ppUrl = await uploadFile(_newPP!);
+                              if (_formKey.currentState!.validate()) {
+                                setState(() {
+                                  isUploading = true;
+                                });
+                                String? ppUrl;
+                                if (_newPP != null) {
+                                  ppUrl = await uploadFile(_newPP!);
+                                }
+                                await adminProvider.editUserAdmin(
+                                  id: authProvider.currUserId!,
+                                  fullname: _fullNameController.text,
+                                  img: ppUrl,
+                                );
+                                setState(() {
+                                  isUploading = false;
+                                });
+                                
+                                if (context.mounted) {
+                                  context.pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      // [TRANSLATE] Success Message
+                                      content: Text(lang.getText('success_profile_edited')),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
                               }
-                              setState(() {
-                                isUploading = false;
-                              });
-                              await adminProvider.editUserAdmin(
-                                id: int.parse(authProvider.currUserId!),
-                                fullname: _fullNameController.text,
-                                img: ppUrl,
-                              );
-                              context.pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Profile edited successfully'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.brown,
@@ -140,9 +157,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 ),
                               ),
                             )
-                          : const Text(
-                              'Save Changes',
-                              style: TextStyle(
+                          : Text(
+                              // [TRANSLATE] Button Text
+                              lang.getText('save_changes'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/menu.dart';
+import 'package:uuid/uuid.dart';
 
 class MenuProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -12,6 +14,8 @@ class MenuProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables menuTables = Tables.menu;
   final Tables dishTypesTable = Tables.dishType;
+  final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -22,19 +26,23 @@ class MenuProvider with ChangeNotifier {
 
   Future<void> loadMenu() async {
     _setLoading(true);
+    await sync.syncTable(menuTables);
+    await sync.syncTable(dishTypesTable);
+
     final res = await db.get(
       menuTables,
       joins: [
         Join(
           joinTable: dishTypesTable,
-          fromKey: "category",
+          fromKey: "type_id",
           toKey: "id",
           isList: false,
         ),
       ],
-      orderBy: "user_admin.id",
-      orderType: OrderType.asc,
+      orderBy: "menu.created_at",
+      orderType: OrderType.desc,
     );
+
     menus
       ..clear()
       ..addAll(res.map((e) => Menu.fromMap(e)).toList());
@@ -46,14 +54,16 @@ class MenuProvider with ChangeNotifier {
     );
   }
 
-  Future<Menu?> getMenuById(int id) async {
+  Future<Menu?> getMenuById(String id) async {
     _setLoading(true);
+    await sync.syncTable(menuTables);
+    await sync.syncTable(dishTypesTable);
     final res = (await db.get(
       menuTables,
       joins: [
         Join(
           joinTable: dishTypesTable,
-          fromKey: "category",
+          fromKey: "type_id",
           toKey: "id",
           isList: false,
         ),
@@ -74,38 +84,50 @@ class MenuProvider with ChangeNotifier {
     required String img,
     required double price,
     required String description,
-    required int category,
+    required String category,
   }) async {
     _setLoading(true);
-    final res = await db.insert(menuTables, {
-      'name': name,
-      'img': img,
-      'price': price,
-      'description': description,
-      'category': category,
-    });
-    final type = Category.fromMap(
-      (await db.get(dishTypesTable, where: "id = ?", whereArgs: [category]))[0],
-    );
+    try {
+      final id = uuid.v4();
+      await db.insert(menuTables, {
+        'id': id,
+        'name': name,
+        'img': img,
+        'price': price,
+        'description': description,
+        'type_id': category,
+      });
 
-    menus.add(
-      Menu(
-        id: res,
-        name: name,
-        img: img,
-        price: price,
-        description: description,
-        typeId: category,
-        category: type,
-        isActive: true,
-      ),
-    );
-    _setLoading(false);
+      final type = Category.fromMap(
+        (await db.get(
+          dishTypesTable,
+          where: "id = ?",
+          whereArgs: [category],
+        ))[0],
+      );
 
-    await analytics.logEvent(
-      name: 'add_menu',
-      parameters: {'name': name, 'price': price, 'description': description},
-    );
+      await sync.syncTable(menuTables);
+      menus.add(
+        Menu(
+          id: id,
+          name: name,
+          img: img,
+          price: price,
+          description: description,
+          typeId: category,
+          category: type,
+          isActive: true,
+        ),
+      );
+      _setLoading(false);
+
+      await analytics.logEvent(
+        name: 'add_menu',
+        parameters: {'name': name, 'price': price, 'description': description},
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future<void> editMenu({
@@ -113,9 +135,9 @@ class MenuProvider with ChangeNotifier {
     required String img,
     required double price,
     required String description,
-    required int category,
+    required String category,
     required bool isActive,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
     final type = Category.fromMap(
@@ -129,16 +151,12 @@ class MenuProvider with ChangeNotifier {
         'img': img,
         'price': price,
         'description': description,
-        'category': category,
-        'is_active': isActive,
+        'type_id': category,
+        'is_active': isActive ? 1 : 0,
       },
     );
-    if (menus.indexWhere((item) => item.id == id) == -1) {
-      await loadMenu();
-    }
-    final index = (menus.indexWhere((item) => item.id == id)) == -1
-        ? id
-        : menus.indexWhere((item) => item.id == id);
+    await sync.syncTable(menuTables);
+    final index = menus.indexWhere((item) => item.id == id);
     menus[index] = Menu(
       id: id,
       name: name,
@@ -162,9 +180,10 @@ class MenuProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteMenu(int id) async {
+  Future<void> deleteMenu(String id) async {
     _setLoading(true);
     await db.delete(menuTables, id: id);
+    await sync.syncTable(menuTables);
     menus.removeWhere((item) => item.id == id);
     _setLoading(false);
 

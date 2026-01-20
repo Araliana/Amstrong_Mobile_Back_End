@@ -1,7 +1,7 @@
 import 'package:flutter_application_1/model/access.dart';
 
 class Role {
-  final int id;
+  final String id;
   final String name;
   final List<Access>? access;
 

@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:uuid/uuid.dart';
 
 enum CategoryType { menu, product }
 
@@ -10,24 +12,22 @@ class CategoryProvider with ChangeNotifier {
 
   final Tables productTypeTable = Tables.productType;
   final Tables dishTypeTable = Tables.dishType;
+  final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
-  // PRIVATE SET LOADING STATE
   void _setLoading(bool value) {
     isLoading = value;
     notifyListeners();
   }
 
-  // LOAD CATEGORY
   Future<void> loadCategories(CategoryType type) async {
     _setLoading(true);
+    final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
+    await sync.syncTable(table);
 
-    final res = await db.get(
-      type == CategoryType.menu ? dishTypeTable : productTypeTable,
-      orderBy: "id",
-      orderType: OrderType.asc,
-    );
+    final res = await db.get(table, orderBy: "id", orderType: OrderType.asc);
 
     categories
       ..clear()
@@ -36,23 +36,24 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  // ADD CATEGORY
   Future<void> addCategory(CategoryType type, String name) async {
     _setLoading(true);
+    final id = uuid.v4();
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
 
-    final id = await db.insert(table, {"name": name});
+    await db.insert(table, {'id': id, "name": name});
+
+    await sync.syncTable(table);
 
     categories.add(Category(id: id, name: name, createdAt: DateTime.now()));
 
     _setLoading(false);
   }
 
-  // EDIT CATEGORY
   Future<void> editCategory(
     CategoryType type, {
-    required int id,
+    required String id,
     String? name,
   }) async {
     _setLoading(true);
@@ -70,6 +71,7 @@ class CategoryProvider with ChangeNotifier {
 
     await db.update(table, id: id, data: {"name": name ?? current.name});
 
+    await sync.syncTable(table);
     final index = categories.indexWhere((cat) => cat.id == id);
     if (index != -1) {
       categories[index] = Category(
@@ -82,20 +84,19 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  // DELETE CATEGORY
-  Future<void> deleteCategory(CategoryType type, int id) async {
+  Future<void> deleteCategory(CategoryType type, String id) async {
     _setLoading(true);
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
 
     await db.delete(table, id: id);
 
+    await sync.syncTable(table);
     categories.removeWhere((c) => c.id == id);
 
     _setLoading(false);
   }
 
-  // CHECK DUPLICATE NAME
   Future<Category?> checkCategoryName(
     CategoryType type,
     String name, {
@@ -104,6 +105,7 @@ class CategoryProvider with ChangeNotifier {
     _setLoading(true);
 
     final table = type == CategoryType.menu ? dishTypeTable : productTypeTable;
+    await sync.syncTable(table);
 
     final res = await db.get(
       table,

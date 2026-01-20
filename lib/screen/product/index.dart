@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/product.dart';
+import 'package:flutter_application_1/provider/product_provider.dart';
+import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/screen/product/productDetail.dart';
 import 'package:flutter_application_1/screen/product/productFormPage.dart';
 import 'package:flutter_application_1/screen/product/productDelete.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../provider/product_provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -15,224 +17,59 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
+  late Future<void> _loadFuture;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final prov = Provider.of<ProductProvider>(context, listen: false);
-      prov.loadProducts();
-    });
+    final provider = Provider.of<ProductProvider>(context, listen: false);
+    _loadFuture = provider.loadProducts();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isMobile = screenWidth < 600;
-    final bool isTablet = screenWidth >= 600 && screenWidth < 1024;
-    final bool isDesktop = screenWidth >= 1024;
+    final provider = Provider.of<ProductProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context);
 
-    double horizontalPadding = isMobile
-        ? 20.0
-        : (isTablet ? screenWidth * 0.08 : screenWidth * 0.15);
-    double verticalPadding = isMobile ? 20.0 : (isTablet ? 32.0 : 40.0);
-    double titleFontSize = isMobile ? 28.0 : (isTablet ? 36.0 : 44.0);
-    double bodyFontSize = isMobile ? 14.0 : (isTablet ? 16.0 : 18.0);
-    double spacing = isMobile ? 20.0 : (isTablet ? 28.0 : 36.0);
+    return Scaffold(
+      body: FutureBuilder<void>(
+        future: _loadFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return buildLoadingState("Fetching Products...");
+          }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.brown[50]!, Colors.white],
-        ),
-      ),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: verticalPadding,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Product',
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.brown[900],
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      SizedBox(width: 12.0),
-                      Text(
-                        'Kami',
-                        style: TextStyle(
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.brown[600],
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    width: 60,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.brown[600]!, Colors.brown[300]!],
-                      ),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 24),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isDesktop ? 700 : double.infinity,
-                ),
-                child: Text(
-                  "Selain menjual bisa membeli kopi siap minum di kedai kopi kami. Kalian juga dapat membeli biji kopi berkualitas dan produk kopi lainnya dari website ini.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: bodyFontSize,
-                    height: 1.7,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-              SizedBox(height: spacing * 1.5),
-              Container(
-                width: double.infinity,
-                constraints: BoxConstraints(
-                  maxWidth: isDesktop ? 1200 : double.infinity,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        // Save provider reference before navigation
-                        final prov = Provider.of<ProductProvider>(
-                          context,
-                          listen: false,
-                        );
+          final items = provider.products;
 
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProductFormPage(),
-                          ),
-                        );
+          return items.isEmpty
+              ? buildEmptyState("Products", Icons.coffee_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(8),
+                  itemCount: items.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return buildHeader("Products", Icons.storefront);
+                    }
 
-                        if (result == true) {
-                          prov.loadProducts();
-                        }
-                      },
-                      icon: const Icon(Icons.add_rounded, size: 20),
-                      label: Text(
-                        isMobile ? 'Add' : 'Add Product',
-                        style: TextStyle(
-                          fontSize: isMobile ? 14 : 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown[700],
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 16 : 24,
-                          vertical: isMobile ? 12 : 16,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 24),
-              if (Provider.of<ProductProvider>(context).isLoading)
-                Padding(
-                  padding: const EdgeInsets.all(40.0),
-                  child: CircularProgressIndicator(
-                    color: Colors.brown[700],
-                    strokeWidth: 3,
-                  ),
-                ),
-              if (!Provider.of<ProductProvider>(context).isLoading)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    int crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
-                    double spacing = isMobile ? 16 : 20;
-                    return Container(
-                      constraints: BoxConstraints(
-                        maxWidth: isDesktop ? 1200 : double.infinity,
-                      ),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: spacing,
-                          mainAxisSpacing: spacing,
-                          childAspectRatio: isMobile ? 0.72 : 0.75,
-                        ),
-                        itemCount: Provider.of<ProductProvider>(
-                          context,
-                        ).products.length,
-                        itemBuilder: (context, index) {
-                          final product = Provider.of<ProductProvider>(
-                            context,
-                          ).products[index];
-                          return _buildProductCard(
-                            product: product,
-                            isMobile: isMobile,
-                            onEdit: () async {
-                              final prov = Provider.of<ProductProvider>(
-                                context,
-                                listen: false,
-                              );
+                    final product = items[index - 1];
 
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProductFormPage(editProduct: product),
-                                ),
-                              );
-
-                              if (result == true) {
-                                prov.loadProducts();
-                              }
-                            },
-                            onDelete: () {
-                              if (product.id != null) {
-                                confirmDeleteProduct(context, product.id!);
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    );
+                    return _buildProductCard(context, product, provider);
                   },
-                ),
-              SizedBox(height: 40),
-            ],
-          ),
-        ),
+                );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.brown,
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ProductFormPage()),
+          );
+          if (result == true) {
+            provider.loadProducts();
+          }
+        },
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -454,23 +291,14 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required Color color,
-    VoidCallback? onPressed,
-  }) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(icon, size: 18, color: color),
-      ),
-    );
-  }
-
-  String _formatPrice(double price) {
+  String _priceLabel(Product product) {
     final formatter = NumberFormat('#,###', 'id_ID');
-    return formatter.format(price.toInt());
+
+    if (product.discountPrice != null && product.discountPrice! > 0) {
+      final discounted = product.price - product.discountPrice!;
+      return 'IDR ${formatter.format(discounted.toInt())} (Disc)';
+    }
+
+    return 'IDR ${formatter.format(product.price.toInt())}';
   }
 }

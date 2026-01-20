@@ -9,7 +9,7 @@ class Product {
   DateTime? createdAt;
 
   Product({
-    this.id,
+    required this.id,
     required this.name,
     this.profitType, // pilih dulu: flat atau percent
     this.profitValue,
@@ -21,7 +21,7 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      id: map['id'] as int,
+      id: map['id'] as String,
       name: map['name'] as String? ?? '',
       profitType: map['profit_type'] as String?,
       profitValue: map['profit_value'] == null
@@ -40,7 +40,7 @@ class Product {
 
   Map<String, dynamic> toMap() {
     return {
-      if (id != null) 'id': id,
+      'id': id,
       'name': name,
       'profit_type': profitType,
       'profit_value': profitValue,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
@@ -27,13 +28,16 @@ class _AccessScreenState extends State<AccessScreen> {
   Widget build(BuildContext context) {
     final accessProvider = Provider.of<AccessProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
     final isDark = themeProvider.getTheme();
+
     return Scaffold(
       body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return buildLoadingState("Fetching Access Data...");
+            // [TRANSLATE] Loading text
+            return buildLoadingState(lang.getText('loading_data'));
           }
           final accesses = accessProvider.accesses;
           accesses.sort((a, b) {
@@ -55,13 +59,15 @@ class _AccessScreenState extends State<AccessScreen> {
           });
 
           return accesses.isEmpty
-              ? buildEmptyState("Access", Icons.lock_outlined)
+              // [TRANSLATE] Empty State Title
+              ? buildEmptyState(lang.getText('access_title'), Icons.lock_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: accesses.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      return buildHeader("Access", Icons.lock);
+                      // [TRANSLATE] Header Title
+                      return buildHeader(lang.getText('access_title'), Icons.lock);
                     }
 
                     final access = accesses[index - 1];
@@ -79,11 +85,10 @@ class _AccessScreenState extends State<AccessScreen> {
                         contentPadding: const EdgeInsets.all(16),
                         title: Row(
                           children: [
-                            // Icon dengan warna category
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: categoryColor.withValues(alpha: 0.15),
+                                color: categoryColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -100,8 +105,6 @@ class _AccessScreenState extends State<AccessScreen> {
                                 fontSize: 16,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            idRenderer(access.id),
                           ],
                         ),
                         subtitle: Column(
@@ -128,7 +131,6 @@ class _AccessScreenState extends State<AccessScreen> {
                               ],
                             ),
                             const SizedBox(height: 4),
-                            // Category badge dengan warna
                             Row(
                               children: [
                                 Container(
@@ -137,9 +139,7 @@ class _AccessScreenState extends State<AccessScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: categoryColor.withValues(
-                                      alpha: 0.15,
-                                    ),
+                                    color: categoryColor.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
@@ -194,7 +194,8 @@ class _AccessScreenState extends State<AccessScreen> {
                               onPressed: () async {
                                 showDeleteConfirmation(
                                   context,
-                                  title: "Access",
+                                  // [TRANSLATE] Dialog Delete Title
+                                  title: lang.getText('access_title'),
                                   label: access.name,
                                   isLoading: accessProvider.isLoading,
                                   onDelete: () async {
@@ -224,6 +225,9 @@ class _AccessScreenState extends State<AccessScreen> {
   void _showAddEditDialog(BuildContext context, [Access? access]) {
     final accessProvider = Provider.of<AccessProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    // [INIT PROVIDER] (Diambil lagi disini karena context dialog bisa berbeda)
+    final lang = Provider.of<LanguageProvider>(context, listen: false); 
+    
     final dark = themeProvider.getTheme();
     final isEdit = access != null;
     final nameController = TextEditingController(text: access?.name ?? '');
@@ -241,7 +245,10 @@ class _AccessScreenState extends State<AccessScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEdit ? 'Edit Permission' : 'Add Permission'),
+          // [TRANSLATE] Dialog Title
+          title: Text(isEdit 
+              ? lang.getText('permission_edit') 
+              : lang.getText('permission_add')),
           content: SingleChildScrollView(
             child: Form(
               key: formKey,
@@ -250,11 +257,12 @@ class _AccessScreenState extends State<AccessScreen> {
                 children: [
                   buildInput(
                     controller: nameController,
-                    label: 'Name',
+                    // [TRANSLATE] Label Name
+                    label: lang.getText('name'),
                     icon: Icons.label,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Name is required';
+                        return '${lang.getText('name')} ${lang.getText('error_required')}';
                       }
                       if (value.length < 3) {
                         return 'Name must be at least 3 characters';
@@ -266,12 +274,13 @@ class _AccessScreenState extends State<AccessScreen> {
                   const SizedBox(height: 16),
                   buildInput(
                     controller: pathController,
-                    label: 'Access Path',
+                    // [TRANSLATE] Label Path
+                    label: lang.getText('path'),
                     icon: Icons.link,
                     prefixText: '/',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Access path is required';
+                        return '${lang.getText('path')} ${lang.getText('error_required')}';
                       }
                       return null;
                     },
@@ -279,7 +288,8 @@ class _AccessScreenState extends State<AccessScreen> {
                   ),
                   const SizedBox(height: 16),
                   buildDropdownField(
-                    label: 'Category',
+                    // [TRANSLATE] Label Category
+                    label: lang.getText('categories'),
                     value: selectedCategory,
                     simpleItems: accessCategory,
                     prefixIcon: Icons.category,
@@ -298,7 +308,8 @@ class _AccessScreenState extends State<AccessScreen> {
                   ),
                   const SizedBox(height: 16),
                   buildDropdownField(
-                    label: 'Icon',
+                    // [TRANSLATE] Label Icon
+                    label: lang.getText('icon'),
                     value: selectedIcon,
                     items: appIcons
                         .map(
@@ -332,7 +343,8 @@ class _AccessScreenState extends State<AccessScreen> {
                   const SizedBox(height: 16),
                   buildInput(
                     controller: sortController,
-                    label: 'ID Sort',
+                    // [TRANSLATE] Label Sort
+                    label: lang.getText('sort_order'),
                     icon: Icons.sort_by_alpha_outlined,
                     mode: InputMode.number,
                     validator: (value) {
@@ -349,7 +361,8 @@ class _AccessScreenState extends State<AccessScreen> {
           ),
           actions: buildDialogActions(
             context: context,
-            confirmText: isEdit ? "Edit" : "Create",
+            // [TRANSLATE] Button Labels (Create -> Add)
+            confirmText: isEdit ? lang.getText('edit') : lang.getText('add'),
             confirmColor: isEdit ? Colors.indigoAccent : Colors.purple,
             isLoading: accessProvider.isLoading,
             onConfirm: () async {
@@ -375,8 +388,11 @@ class _AccessScreenState extends State<AccessScreen> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
+                    // [TRANSLATE] Success Messages
                     content: Text(
-                      isEdit ? 'Permission updated' : 'Permission added',
+                      isEdit 
+                          ? lang.getText('success_update') 
+                          : lang.getText('success_add'),
                     ),
                     backgroundColor: Colors.green,
                   ),

@@ -18,6 +18,8 @@ Widget buildInput({
   String? Function(String?)? validator,
   InputMode mode = InputMode.mixed,
   bool isDark = false,
+  int maxLines = 1,
+  int? minLines,
 }) {
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
@@ -40,7 +42,9 @@ Widget buildInput({
       break;
 
     case InputMode.mixed:
-      keyboardType = TextInputType.text;
+      keyboardType = maxLines > 1
+          ? TextInputType.multiline
+          : TextInputType.text;
       break;
   }
 
@@ -50,16 +54,24 @@ Widget buildInput({
     validator: validator,
     keyboardType: keyboardType,
     inputFormatters: formatters,
+    maxLines: obscure ? 1 : maxLines,
+    minLines: obscure ? 1 : minLines,
     style: TextStyle(color: textColor),
     decoration: InputDecoration(
       labelText: label,
       labelStyle: TextStyle(color: labelColor),
-      prefixIcon: Icon(icon, color: iconColor),
+      prefixIcon: maxLines > 1
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 60),
+              child: Icon(icon, color: iconColor),
+            )
+          : Icon(icon, color: iconColor),
       suffixIcon: suffix,
       prefixText: prefixText,
       prefixStyle: TextStyle(color: labelColor),
       filled: true,
       fillColor: fillColor,
+      alignLabelWithHint: maxLines > 1,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -68,7 +80,10 @@ Widget buildInput({
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: maxLines > 1 ? 16 : 14,
+      ),
     ),
   );
 }
@@ -77,8 +92,14 @@ class DropdownItem {
   final String label;
   final String value;
   final IconData? icon;
+  final String? photo; // URL atau path foto
 
-  DropdownItem({required this.label, required this.value, this.icon});
+  DropdownItem({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.photo,
+  });
 }
 
 Widget buildDropdownField({
@@ -92,20 +113,32 @@ Widget buildDropdownField({
   bool isLoading = false,
   bool isDark = false,
 }) {
-  //final isDark = ThemeProvider().isDarkMode;
-
   // Dark mode colors
   final textColor = isDark ? Colors.white : Colors.black;
   final labelColor = isDark ? Colors.white70 : Colors.black87;
   final fillColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
-  final dropdownBgColor = isDark ? Colors.grey.shade900 : Colors.white;
+  final dialogBgColor = isDark ? Colors.grey.shade900 : Colors.white;
   final borderColor = isDark ? Colors.blueAccent : Colors.blue;
   final iconColor = isDark ? Colors.white70 : Colors.black54;
   final loadingTextColor = isDark ? Colors.white54 : Colors.black54;
+  final dividerColor = isDark ? Colors.grey.shade700 : Colors.grey.shade300;
 
   assert(
     items != null || simpleItems != null,
     'Either items or simpleItems must be provided',
+  );
+
+  // Convert simpleItems to DropdownItem if needed
+  final List<DropdownItem> dropdownItems = simpleItems != null
+      ? simpleItems
+            .map((item) => DropdownItem(label: item, value: item))
+            .toList()
+      : items!;
+
+  // Find selected item
+  final selectedItem = dropdownItems.firstWhere(
+    (item) => item.value == value,
+    orElse: () => DropdownItem(label: '', value: ''),
   );
 
   if (isLoading) {
@@ -141,65 +174,353 @@ Widget buildDropdownField({
     );
   }
 
-  List<DropdownMenuItem<String>> dropdownItems;
-  if (simpleItems != null) {
-    dropdownItems = simpleItems
-        .map(
-          (item) => DropdownMenuItem(
-            value: item,
-            child: Text(item, style: TextStyle(color: textColor)),
+  return FormField<String>(
+    initialValue: value,
+    validator: validator,
+    builder: (FormFieldState<String> field) {
+      return InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: labelColor),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: iconColor)
+              : null,
+          filled: true,
+          fillColor: fillColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
           ),
-        )
-        .toList();
-  } else {
-    dropdownItems = items!
-        .map(
-          (item) => DropdownMenuItem(
-            value: item.value,
-            child: Row(
-              children: [
-                if (item.icon != null) ...[
-                  Icon(item.icon, size: 20, color: iconColor),
-                  const SizedBox(width: 6),
-                ],
-                Text(item.label, style: TextStyle(color: textColor)),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: borderColor, width: 1.5),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.red, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          errorText: field.errorText,
+          errorMaxLines: 2,
+        ),
+        child: InkWell(
+          onTap: () async {
+            final selected = await Navigator.of(field.context).push<String>(
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (context) => _FullScreenDropdownDialog(
+                  label: label,
+                  items: dropdownItems,
+                  selectedValue: value,
+                  isDark: isDark,
+                  textColor: textColor,
+                  labelColor: labelColor,
+                  fillColor: fillColor,
+                  dialogBgColor: dialogBgColor,
+                  borderColor: borderColor,
+                  iconColor: iconColor,
+                  dividerColor: dividerColor,
+                ),
+              ),
+            );
+
+            if (selected != null) {
+              field.didChange(selected);
+              onChanged(selected);
+            }
+          },
+          child: Row(
+            children: [
+              if (selectedItem.icon != null) ...[
+                Icon(selectedItem.icon, size: 20, color: iconColor),
+                const SizedBox(width: 8),
               ],
-            ),
+              Expanded(
+                child: Text(
+                  value != null && selectedItem.label.isNotEmpty
+                      ? selectedItem.label
+                      : 'Select $label',
+                  style: TextStyle(
+                    color: value != null && selectedItem.label.isNotEmpty
+                        ? textColor
+                        : loadingTextColor,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Icon(Icons.arrow_drop_down, color: iconColor),
+            ],
           ),
-        )
-        .toList();
+        ),
+      );
+    },
+  );
+}
+
+class _FullScreenDropdownDialog extends StatefulWidget {
+  final String label;
+  final List<DropdownItem> items;
+  final String? selectedValue;
+  final bool isDark;
+  final Color textColor;
+  final Color labelColor;
+  final Color fillColor;
+  final Color dialogBgColor;
+  final Color borderColor;
+  final Color iconColor;
+  final Color dividerColor;
+
+  const _FullScreenDropdownDialog({
+    required this.label,
+    required this.items,
+    required this.selectedValue,
+    required this.isDark,
+    required this.textColor,
+    required this.labelColor,
+    required this.fillColor,
+    required this.dialogBgColor,
+    required this.borderColor,
+    required this.iconColor,
+    required this.dividerColor,
+  });
+
+  @override
+  State<_FullScreenDropdownDialog> createState() =>
+      __FullScreenDropdownDialogState();
+}
+
+class __FullScreenDropdownDialogState extends State<_FullScreenDropdownDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  List<DropdownItem> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+    _searchController.addListener(_filterItems);
   }
 
-  final isValueValid = dropdownItems.any((e) => e.value == value);
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-  return DropdownButtonFormField<String>(
-    initialValue: isValueValid ? value : null,
-    dropdownColor: dropdownBgColor,
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: labelColor),
-      prefixIcon: prefixIcon != null
-          ? Icon(prefixIcon, color: iconColor)
-          : null,
-      filled: true,
-      fillColor: fillColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+  void _filterItems() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        _filteredItems = widget.items
+            .where((item) => item.label.toLowerCase().contains(query))
+            .toList();
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: widget.dialogBgColor,
+      appBar: AppBar(
+        backgroundColor: widget.dialogBgColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.close, color: widget.iconColor),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.label,
+          style: TextStyle(
+            color: widget.textColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(72),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: TextStyle(color: widget.textColor),
+              decoration: InputDecoration(
+                hintText: 'Search ${widget.label}...',
+                hintStyle: TextStyle(color: widget.iconColor),
+                prefixIcon: Icon(Icons.search, color: widget.iconColor),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear, color: widget.iconColor),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                filled: true,
+                fillColor: widget.fillColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: widget.borderColor, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: borderColor, width: 1.5),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      errorMaxLines: 2,
-    ),
-    items: dropdownItems,
-    onChanged: onChanged,
-    validator: validator,
-    style: TextStyle(color: textColor),
-    icon: Icon(Icons.arrow_drop_down, color: iconColor),
-  );
+      body: _filteredItems.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: widget.iconColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No results found',
+                    style: TextStyle(fontSize: 16, color: widget.iconColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try a different search term',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: widget.iconColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: _filteredItems.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1,
+                color: widget.dividerColor,
+                indent: 16,
+                endIndent: 16,
+              ),
+              itemBuilder: (context, index) {
+                final item = _filteredItems[index];
+                final isSelected = item.value == widget.selectedValue;
+
+                return InkWell(
+                  onTap: () => Navigator.pop(context, item.value),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Photo (if exists)
+                        if (item.photo != null) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              item.photo!,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 180,
+                                  color: widget.fillColor,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: widget.iconColor,
+                                    size: 48,
+                                  ),
+                                );
+                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      height: 180,
+                                      color: widget.fillColor,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                widget.borderColor,
+                                              ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Label and Icon
+                        Row(
+                          children: [
+                            if (item.icon != null) ...[
+                              Icon(
+                                item.icon,
+                                size: 24,
+                                color: isSelected
+                                    ? widget.borderColor
+                                    : widget.iconColor,
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            Expanded(
+                              child: Text(
+                                item.label,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isSelected
+                                      ? widget.borderColor
+                                      : widget.textColor,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(
+                                Icons.check_circle,
+                                color: widget.borderColor,
+                                size: 24,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
 }
 
 List<Widget> buildDialogActions({
@@ -324,25 +645,6 @@ Widget buildHeader(String title, IconData icon) {
         ),
         const Expanded(child: Divider(thickness: 1, indent: 10)),
       ],
-    ),
-  );
-}
-
-Widget idRenderer(int id) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.green.shade50,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.green.shade200),
-    ),
-    child: Text(
-      'ID: $id',
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.green.shade700,
-        fontWeight: FontWeight.w500,
-      ),
     ),
   );
 }

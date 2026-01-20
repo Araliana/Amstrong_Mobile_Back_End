@@ -1,8 +1,10 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/model/role.dart';
+import 'package:uuid/uuid.dart';
 
 class RoleProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -11,6 +13,8 @@ class RoleProvider with ChangeNotifier {
   final Tables roleTable = Tables.role;
   final Tables accessTable = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
+  final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -21,6 +25,10 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> loadRole() async {
     _setLoading(true);
+    await sync.syncTable(roleTable);
+    await sync.syncTable(accessTable);
+    await sync.syncTable(roleAccessTable);
+
     final res = await db.get(
       roleTable,
       joins: [
@@ -47,8 +55,11 @@ class RoleProvider with ChangeNotifier {
     );
   }
 
-  Future<Role?> getRoleById(int id) async {
+  Future<Role?> getRoleById(String id) async {
     _setLoading(true);
+    await sync.syncTable(roleTable);
+    await sync.syncTable(accessTable);
+    await sync.syncTable(roleAccessTable);
     final res = (await db.get(
       roleTable,
       joins: [
@@ -73,27 +84,32 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> addRole({
     required String name,
-    required Set<int> accesses,
+    required Set<String> accesses,
   }) async {
     _setLoading(true);
-    final res = await db.insert(roleTable, {'name': name});
+    final id = uuid.v4();
+    await db.insert(roleTable, {'id': id, 'name': name});
     final List<Access> newAcc = [];
-    for (int access in accesses) {
+    for (String access in accesses) {
       newAcc.add(
         Access.fromMap(
           (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
         ),
       );
-      await db.insert(roleAccessTable, {'role_id': res, "access_id": access});
+      await db.insert(roleAccessTable, {'role_id': id, "access_id": access});
     }
 
-    roles.add(Role(id: res, name: name, access: newAcc));
+    await sync.syncTable(roleTable);
+    await sync.syncTable(accessTable);
+    await sync.syncTable(roleAccessTable);
+
+    roles.add(Role(id: id, name: name, access: newAcc));
     _setLoading(false);
 
     await analytics.logEvent(
       name: 'add_role',
       parameters: {
-        'role_id': res,
+        'role_id': id,
         'name': name,
         'access_count': accesses.length,
       },
@@ -102,13 +118,13 @@ class RoleProvider with ChangeNotifier {
 
   Future<void> editRole({
     required String name,
-    required Set<int> accesses,
-    required int id,
+    required Set<String> accesses,
+    required String id,
   }) async {
     _setLoading(true);
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
     final List<Access> newAcc = [];
-    for (int access in accesses) {
+    for (String access in accesses) {
       newAcc.add(
         Access.fromMap(
           (await db.get(accessTable, where: "id = ?", whereArgs: [access]))[0],
@@ -117,6 +133,9 @@ class RoleProvider with ChangeNotifier {
       await db.insert(roleAccessTable, {'role_id': id, "access_id": access});
     }
     await db.update(roleTable, id: id, data: {'name': name});
+    await sync.syncTable(roleTable);
+    await sync.syncTable(accessTable);
+    await sync.syncTable(roleAccessTable);
 
     final index = roles.indexWhere((item) => item.id == id);
     roles[index] = Role(id: id, name: name, access: newAcc);
@@ -132,10 +151,12 @@ class RoleProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteRole(int id) async {
+  Future<void> deleteRole(String id) async {
     _setLoading(true);
     await db.delete(roleTable, id: id);
     await db.delete(roleAccessTable, where: "role_id = ?", whereArgs: [id]);
+    await sync.syncTable(roleTable);
+    await sync.syncTable(roleAccessTable);
     roles.removeWhere((item) => item.id == id);
     _setLoading(false);
 

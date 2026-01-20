@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/ad_banner.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String selectedPeriod;
@@ -73,6 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final lang = Provider.of<LanguageProvider>(context);
     final isDark = themeProvider.getTheme();
     return Scaffold(
       body: Stack(
@@ -95,28 +97,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       childAspectRatio: 1.5,
                       children: [
                         _buildSummaryCard(
-                          'Total Omset',
+                          lang.getText('total_revenue'),
                           'Rp ${_formatNumber(salesData['totalOmset'])}',
                           Icons.attach_money,
                           Colors.green,
                           isDark,
                         ),
                         _buildSummaryCard(
-                          'Transaksi',
+                          lang.getText('transactions'),
                           '${salesData['totalTransaksi']}',
                           Icons.shopping_cart,
                           Colors.blue,
                           isDark,
                         ),
                         _buildSummaryCard(
-                          'Produk Terjual',
+                          lang.getText('products_sold'),
                           '${salesData['totalProdukTerjual']}',
                           Icons.inventory,
                           Colors.orange,
                           isDark,
                         ),
                         _buildSummaryCard(
-                          'Rata-rata',
+                          lang.getText('average'),
                           'Rp ${_formatNumber(salesData['avgTransaksi'])}',
                           Icons.trending_up,
                           Colors.purple,
@@ -126,17 +128,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Produk Terlaris', isDark),
+                    _buildSectionTitle(lang.getText('top_products'), isDark),
                     const SizedBox(height: 12),
                     _buildTopProductsList(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Penjualan per Kategori', isDark),
+                    _buildSectionTitle(
+                      lang.getText('sales_by_category'),
+                      isDark,
+                    ),
                     const SizedBox(height: 12),
                     _buildCategoryChart(isDark),
                     const SizedBox(height: 24),
 
-                    _buildSectionTitle('Transaksi Terbaru', isDark),
+                    _buildSectionTitle(
+                      lang.getText('recent_transactions'),
+                      isDark,
+                    ),
                     const SizedBox(height: 12),
                     _buildRecentTransactions(isDark),
                   ],

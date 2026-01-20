@@ -1,7 +1,9 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/access.dart';
+import 'package:uuid/uuid.dart';
 
 class AccessProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
@@ -9,6 +11,8 @@ class AccessProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables accessTables = Tables.access;
   final Tables roleAccessTable = Tables.roleAccess;
+  final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -19,6 +23,8 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> loadAccess() async {
     _setLoading(true);
+    await sync.syncTable(accessTables);
+    await sync.syncTable(roleAccessTable);
     final res = await db.get(accessTables);
 
     accesses
@@ -40,16 +46,23 @@ class AccessProvider with ChangeNotifier {
     required String icon,
   }) async {
     _setLoading(true);
-    final res = await db.insert(accessTables, {
+
+    final id = uuid.v4();
+
+    await db.insert(accessTables, {
+      "id": id,
       'name': name,
       'access_path': accessPath,
       'category': category,
       'id_sort': idSort,
     });
 
+    await sync.syncTable(accessTables);
+    await sync.syncTable(roleAccessTable);
+
     accesses.add(
       Access(
-        id: res,
+        id: id,
         name: name,
         accessPath: accessPath,
         category: category,
@@ -73,7 +86,7 @@ class AccessProvider with ChangeNotifier {
     required String category,
     required int idSort,
     required String icon,
-    required int id,
+    required String id,
   }) async {
     _setLoading(true);
     final access = Access.fromMap(
@@ -91,6 +104,8 @@ class AccessProvider with ChangeNotifier {
         'icon': icon,
       },
     );
+    await sync.syncTable(accessTables);
+    await sync.syncTable(roleAccessTable);
 
     final index = accesses.indexWhere((item) => item.id == id);
     accesses[index] = Access(
@@ -111,10 +126,14 @@ class AccessProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteAccess(int id) async {
+  Future<void> deleteAccess(String id) async {
     _setLoading(true);
     await db.delete(accessTables, id: id);
     await db.delete(roleAccessTable, where: "access_id", whereArgs: [id]);
+
+    await sync.syncTable(accessTables);
+    await sync.syncTable(roleAccessTable);
+
     accesses.removeWhere((item) => item.id == id);
     _setLoading(false);
 

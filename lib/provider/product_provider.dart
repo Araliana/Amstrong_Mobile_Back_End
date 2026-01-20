@@ -2,12 +2,14 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/model/product.dart';
+import 'package:uuid/uuid.dart';
 
 class ProductProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<Product> products = [];
   final DBHelper db = DBHelper();
   final Tables productTables = Tables.product;
+  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -18,15 +20,20 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _setLoading(true);
-    final res = await db.get(
-      productTables,
-      orderBy: "created_at",
-      orderType: OrderType.asc,
-    );
-    products
-      ..clear()
-      ..addAll(res.map((e) => Product.fromMap(e)).toList());
-    _setLoading(false);
+    try {
+      final res = await db.get(
+        productTables,
+        orderBy: "created_at",
+        orderType: OrderType.asc,
+      );
+      products
+        ..clear()
+        ..addAll(res.map((e) => Product.fromMap(e)).toList());
+    } catch (e) {
+      debugPrint("Error loading products: $e");
+    } finally {
+      _setLoading(false);
+    }
 
     await analytics.logEvent(
       name: 'load_product',
@@ -96,13 +103,17 @@ class ProductProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteProduct(int id) async {
+  Future<void> deleteProduct(String id) async {
     _setLoading(true);
-    await db.delete(productTables, id: id);
+    try {
+      await db.delete(productTables, id: id);
+      products.removeWhere((item) => item.id == id);
 
-    // Reload products dari database untuk memastikan sinkronisasi
-    await loadProducts();
-
-    await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
+      await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
+    } catch (e) {
+      debugPrint("Error delete product: $e");
+    } finally {
+      _setLoading(false);
+    }
   }
 }

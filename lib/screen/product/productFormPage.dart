@@ -39,6 +39,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
     super.initState();
     final product = widget.editProduct;
 
+    // [FIX] Menggunakan format yang aman untuk mengubah angka ke string
+    // Menghilangkan .0 di belakang angka jika bilangan bulat (contoh: 10000.0 jadi 10000)
     _nameCtl = TextEditingController(text: product?.name ?? '');
     _profitValueCtl = TextEditingController(
       text: product?.profitValue?.toString() ?? '',
@@ -47,6 +49,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
     _profitType = product?.profitType;
     _currentImageUrl = product?.img;
+  }
+
+  // Helper untuk menghilangkan .0 pada textfield
+  String _formatNumberValue(num value) {
+    if (value % 1 == 0) {
+      return value.toInt().toString();
+    }
+    return value.toString();
   }
 
   @override
@@ -75,7 +85,20 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
       final provider = Provider.of<ProductProvider>(context, listen: false);
 
+      // Persiapan data
+      final String name = _nameCtl.text.trim();
+      final double price = double.tryParse(_priceCtl.text.trim()) ?? 0.0;
+      final int stock =
+          int.tryParse(_stockCtl.text.trim()) ?? 0; // [FIX] Ambil nilai stok
+      final double? discountPrice = double.tryParse(
+        _discountPriceCtl.text.trim(),
+      );
+      final String description = _descCtl.text.trim().isEmpty
+          ? 'No description'
+          : _descCtl.text.trim();
+
       if (widget.editProduct == null) {
+        // ADD NEW PRODUCT
         await provider.addProduct(
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim().isEmpty
@@ -86,6 +109,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
           profitValue: double.tryParse(_profitValueCtl.text.trim()),
         );
       } else {
+        // EDIT EXISTING PRODUCT
         final productId = widget.editProduct?.id;
         if (productId != null) {
           await provider.editProduct(

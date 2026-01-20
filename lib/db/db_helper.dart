@@ -1,12 +1,13 @@
-import 'package:flutter_application_1/db/seeds.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 enum Tables {
   order,
+  orderDetail,
   menu,
   gallery,
   product,
+  stock,
   userAdmin,
   role,
   access,
@@ -66,48 +67,53 @@ class Join {
 
 class DBHelper {
   static Database? _db;
-  static const int _dbVersion = 4; // Increment version untuk migration
+
+  String renderTimestamp() => '''
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        deleted_at DATETIME,
+        ''';
 
   static final Map<Tables, String> tableSchemas = {
-    Tables.userAdmin: '''
+    Tables.userAdmin:
+        '''
       CREATE TABLE user_admin(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         fullname VARCHAR,
         username VARCHAR,
         img VARCHAR,
         password VARCHAR,
-        role_id INTEGER,
+        role_id TEXT,
         last_login DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.role: '''
+    Tables.role:
+        '''
       CREATE TABLE role(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.access: '''
+    Tables.access:
+        '''
       CREATE TABLE access(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         access_path VARCHAR,
         category VARCHAR,
         id_sort INTEGER,
         icon VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
     ''',
     Tables.product: '''
       CREATE TABLE product(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         slug VARCHAR,
         profit_type VARCHAR,
@@ -120,118 +126,76 @@ class DBHelper {
         deleted_at DATETIME
       )
     ''',
-    Tables.roleAccess: '''
+    Tables.roleAccess:
+        '''
       CREATE TABLE role_access(
-        role_id INTEGER,
-        access_id INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        id TEXT PRIMARY KEY,
+        role_id TEXT,
+        access_id TEXT,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
     ''',
-    Tables.gallery: '''
+    Tables.menu:
+        '''
+      CREATE TABLE menu (
+        id TEXT PRIMARY KEY,
+        name VARCHAR,
+        img VARCHAR,
+        price REAL,
+        description VARCHAR,
+        type_id INTEGER,
+        is_active INTEGER DEFAULT 1,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
+      )
+      ''',
+    Tables.gallery:
+        '''
       CREATE TABLE gallery (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
         category VARCHAR,
         quote VARCHAR,
         img VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        is_active INTEGER DEFAULT 1,
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
       ''',
-    Tables.productType: '''
+    Tables.productType:
+        '''
       CREATE TABLE product_type (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
       ''',
-    Tables.dishType: '''
+    Tables.dishType:
+        '''
       CREATE TABLE dish_type (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name VARCHAR,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
+        ${DBHelper().renderTimestamp()}
+        is_synced INTEGER DEFAULT 0
       )
       ''',
   };
 
-  static final Map<int, List<String>> tableMigrations = {
-    2: [
-      'ALTER TABLE product ADD COLUMN hpp REAL',
-      'ALTER TABLE product ADD COLUMN profit_type VARCHAR',
-      'ALTER TABLE product ADD COLUMN profit_amount REAL',
-    ],
-    3: [
-      // SQLite doesn't support DROP COLUMN directly, so we need to recreate the table
-      '''CREATE TABLE product_new(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR,
-        slug VARCHAR,
-        price REAL,
-        discount_type VARCHAR,
-        discount_value REAL,
-        profit_type VARCHAR,
-        profit_amount REAL,
-        img VARCHAR,
-        description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
-      )''',
-      // Copy data from old table, keeping profit_type and profit_amount, converting discount_price to discount_value
-      '''INSERT INTO product_new (id, name, slug, price, discount_value, profit_type, profit_amount, img, description, created_at, updated_at, deleted_at) 
-         SELECT id, name, slug, price, 
-         CASE WHEN discount_price IS NOT NULL AND discount_price > 0 THEN discount_price ELSE NULL END as discount_value,
-         profit_type, profit_amount, img, description, created_at, updated_at, deleted_at 
-         FROM product''',
-      'DROP TABLE product',
-      'ALTER TABLE product_new RENAME TO product',
-    ],
-    4: [
-      // For safety, recreate table again if version 3 didn't work
-      '''CREATE TABLE IF NOT EXISTS product_backup AS SELECT * FROM product''',
-      'DROP TABLE IF EXISTS product',
-      '''CREATE TABLE product(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR,
-        slug VARCHAR,
-        price REAL,
-        discount_type VARCHAR,
-        discount_value REAL,
-        profit_type VARCHAR,
-        profit_amount REAL,
-        img VARCHAR,
-        description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME,
-        deleted_at DATETIME
-      )''',
-      '''INSERT INTO product (id, name, slug, price, discount_value, profit_type, profit_amount, img, description, created_at, updated_at, deleted_at)
-         SELECT id, name, slug, price, 
-         CASE 
-           WHEN discount_price IS NOT NULL AND discount_price > 0 THEN discount_price 
-           WHEN discount_value IS NOT NULL THEN discount_value
-           ELSE NULL 
-         END as discount_value,
-         profit_type, profit_amount, img, description, created_at, updated_at, deleted_at 
-         FROM product_backup WHERE 1=1''',
-      'DROP TABLE IF EXISTS product_backup',
-    ],
-  };
+  static final Map<int, List<String>> tableMigrations = {};
 
   static final Map<Tables, String> tableNames = {
     Tables.userAdmin: "user_admin",
     Tables.role: "role",
     Tables.access: "access",
     Tables.product: "product",
+    Tables.stock: "stock",
+    Tables.order: "order",
+    Tables.orderDetail: "order_detail",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",
+    Tables.menu: "menu",
     Tables.productType: "product_type",
     Tables.dishType: "dish_type",
   };
@@ -244,45 +208,12 @@ class DBHelper {
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), "app.db");
-    // Uncomment line below to reset database (comment it back after first run)
-    await deleteDatabase(path);
     return await openDatabase(
       path,
-      version: _dbVersion,
+      version: 1,
       onCreate: (db, version) async {
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
-        }
-        await runSeeds(db: db, tableNames: tableNames);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        for (int i = oldVersion + 1; i <= newVersion; i++) {
-          if (tableMigrations.containsKey(i)) {
-            for (var script in tableMigrations[i]!) {
-              try {
-                await db.execute(script);
-              } catch (e) {
-                print('Migration error for version $i: $e');
-                print('Script: $script');
-                rethrow;
-              }
-            }
-          }
-        }
-
-        // Check if seed data exists, if not, run seeds
-        try {
-          final userCount = Sqflite.firstIntValue(
-            await db.rawQuery(
-              'SELECT COUNT(*) FROM user_admin WHERE deleted_at IS NULL',
-            ),
-          );
-          if (userCount == null || userCount == 0) {
-            print('Running seeds after migration...');
-            await runSeeds(db: db, tableNames: tableNames);
-          }
-        } catch (e) {
-          print('Error checking/running seeds: $e');
         }
       },
     );
@@ -304,7 +235,7 @@ class DBHelper {
 
   Future<int> update(
     Tables table, {
-    int? id,
+    String? id,
     String? where,
     List<Object?>? whereArgs,
     required Map<String, dynamic> data,
@@ -338,7 +269,7 @@ class DBHelper {
 
   Future<int> delete(
     Tables table, {
-    int? id,
+    String? id,
     String? where,
     List<Object?>? whereArgs,
   }) async {
@@ -418,7 +349,6 @@ class DBHelper {
       }
     }
 
-    // Add filter for soft delete - exclude deleted items
     final whereClause = StringBuffer();
     final whereArgsList = <Object?>[];
 

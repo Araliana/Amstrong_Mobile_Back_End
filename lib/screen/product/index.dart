@@ -7,6 +7,7 @@ import 'package:flutter_application_1/screen/product/productFormPage.dart';
 import 'package:flutter_application_1/screen/product/productDelete.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -28,6 +29,7 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProductProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context);
 
     return Scaffold(
       body: FutureBuilder<void>(

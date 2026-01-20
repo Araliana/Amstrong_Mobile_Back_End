@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';
 import 'package:flutter_application_1/provider/auth_provider.dart';
+import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -73,10 +74,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final adminProvider = Provider.of<AdminProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context); // [INIT PROVIDER]
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Change Password"),
+        // [TRANSLATE] Judul AppBar
+        title: Text(lang.getText('change_password_title')),
         backgroundColor: Colors.brown,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -91,13 +94,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               const SizedBox(height: 10),
 
               // Title and Description
-              const Text(
-                'Update Your Password',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              Text(
+                // [TRANSLATE] Heading
+                lang.getText('update_password_heading'),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                'Please enter your current password and choose a new password',
+                // [TRANSLATE] Deskripsi
+                lang.getText('update_password_desc'),
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 32),
@@ -105,13 +110,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // Old Password Field
               _buildPasswordField(
                 controller: _oldPasswordController,
-                label: 'Current Password',
-                hint: 'Enter your current password',
+                // [TRANSLATE] Label & Hint
+                label: lang.getText('current_password'),
+                hint: lang.getText('enter_current_password'),
                 obscure: _obscureOld,
                 onToggle: () => setState(() => _obscureOld = !_obscureOld),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Current password is required';
+                    // [TRANSLATE] Error message
+                    return '${lang.getText('current_password')} ${lang.getText('error_required')}';
                   }
                   return null;
                 },
@@ -121,16 +128,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               // New Password Field
               _buildPasswordField(
                 controller: _newPasswordController,
-                label: 'New Password',
-                hint: 'Enter your new password',
+                // [TRANSLATE] Label & Hint
+                label: lang.getText('new_password'),
+                hint: lang.getText('enter_new_password'),
                 obscure: _obscureNew,
                 onToggle: () => setState(() => _obscureNew = !_obscureNew),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'New password is required';
+                    return '${lang.getText('new_password')} ${lang.getText('error_required')}';
                   }
                   if (!_isPasswordValid()) {
-                    return 'Password does not meet all requirements';
+                    // [TRANSLATE] Error Criteria
+                    return lang.getText('error_password_criteria');
                   }
                   return null;
                 },
@@ -138,24 +147,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Password Requirements
-              _buildPasswordRequirements(),
+              // Password Requirements Section
+              // Kita perlu passing 'lang' ke fungsi ini
+              _buildPasswordRequirements(lang), 
               const SizedBox(height: 20),
 
               // Confirm Password Field
               _buildPasswordField(
                 controller: _confirmPasswordController,
-                label: 'Confirm New Password',
-                hint: 'Re-enter your new password',
+                // [TRANSLATE] Label & Hint
+                label: lang.getText('confirm_password'),
+                hint: lang.getText('enter_confirm_password'),
                 obscure: _obscureConfirm,
                 onToggle: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return lang.getText('error_confirm_password_required');
                   }
                   if (value != _newPasswordController.text) {
-                    return 'Passwords do not match';
+                    return lang.getText('error_password_mismatch');
                   }
                   return null;
                 },
@@ -181,6 +192,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             );
 
                             if (result) {
+                              if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   backgroundColor: Colors.green,
@@ -188,17 +200,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  content: const Row(
+                                  content: Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.check_circle,
                                         color: Colors.white,
                                       ),
-                                      SizedBox(width: 12),
+                                      const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          'Password changed successfully!',
-                                          style: TextStyle(
+                                          // [TRANSLATE] Success msg
+                                          lang.getText('success_password_changed'),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -211,8 +224,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                 oldPassword: oldPassword,
                                 newPassword: newPassword,
                               );
-                              context.pop();
+                              if (context.mounted) context.pop();
                             } else {
+                              if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   backgroundColor: Colors.red,
@@ -220,17 +234,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  content: const Row(
+                                  content: Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.error_outline,
                                         color: Colors.white,
                                       ),
-                                      SizedBox(width: 12),
+                                      const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          'Old password is not matched!',
-                                          style: TextStyle(
+                                          // [TRANSLATE] Error msg
+                                          lang.getText('error_old_password_mismatch'),
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -261,9 +276,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                             ),
                           ),
                         )
-                      : const Text(
-                          'Update Password',
-                          style: TextStyle(
+                      : Text(
+                          // [TRANSLATE] Button text
+                          lang.getText('update_password_btn'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -347,7 +363,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     );
   }
 
-  Widget _buildPasswordRequirements() {
+  // [MODIFIED] Menerima parameter LanguageProvider
+  Widget _buildPasswordRequirements(LanguageProvider lang) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -365,7 +382,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Icon(Icons.security, size: 18, color: Colors.grey[700]),
               const SizedBox(width: 8),
               Text(
-                'Password Requirements',
+                // [TRANSLATE]
+                lang.getText('req_title'),
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -375,20 +393,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildRequirement('At least 6 characters', _hasMinLength),
+          // [TRANSLATE] List Requirements
+          _buildRequirement(lang.getText('req_min_length'), _hasMinLength),
           const SizedBox(height: 6),
-          _buildRequirement('Different from current password', _isDifferent),
+          _buildRequirement(lang.getText('req_different'), _isDifferent),
           const SizedBox(height: 6),
-          _buildRequirement('Contains at least one number', _hasNumber),
+          _buildRequirement(lang.getText('req_number'), _hasNumber),
           const SizedBox(height: 6),
-          _buildRequirement('Contains uppercase letter', _hasUppercase),
+          _buildRequirement(lang.getText('req_uppercase'), _hasUppercase),
           const SizedBox(height: 6),
-          _buildRequirement('Contains lowercase letter', _hasLowercase),
+          _buildRequirement(lang.getText('req_lowercase'), _hasLowercase),
           const SizedBox(height: 6),
-          _buildRequirement(
-            'Contains special character (!@#\$%^&*)',
-            _hasSpecialChar,
-          ),
+          _buildRequirement(lang.getText('req_special'), _hasSpecialChar),
         ],
       ),
     );

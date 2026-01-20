@@ -208,7 +208,7 @@ class _AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<_AppShell> {
-  String selectedPeriod = 'Hari Ini';
+  String? selectedPeriod; // Ubah jadi nullable
   late Future<void> _loadFuture;
 
   @override
@@ -228,6 +228,11 @@ class _AppShellState extends State<_AppShell> {
     // Kita butuh listen ke LanguageProvider agar saat ganti bahasa, UI ter-refresh
     final langProvider = Provider.of<LanguageProvider>(context);
 
+    // Set default value jika masih null
+    if (selectedPeriod == null) {
+      selectedPeriod = langProvider.getText('today');
+    }
+
     List<Widget> actions = [];
     // AppBar dinamis
     switch (widget.state.uri.path) {
@@ -236,14 +241,13 @@ class _AppShellState extends State<_AppShell> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: DropdownButton<String>(
-              value: selectedPeriod,
+              value: selectedPeriod!,
               dropdownColor: Colors.brown[700],
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               underline: Container(),
               style: const TextStyle(color: Colors.white, fontSize: 14),
               items:
                   [
-                        // [UBAH] Gunakan Translate untuk pilihan waktu
                         langProvider.getText('today'),
                         langProvider.getText('week'),
                         langProvider.getText('month'),

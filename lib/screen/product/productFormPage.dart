@@ -7,7 +7,6 @@ import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../provider/product_provider.dart';
 import '../../utils/index.dart';
 
@@ -51,14 +50,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _currentImageUrl = product?.img;
   }
 
-  // Helper untuk menghilangkan .0 pada textfield
-  String _formatNumberValue(num value) {
-    if (value % 1 == 0) {
-      return value.toInt().toString();
-    }
-    return value.toString();
-  }
-
   @override
   void dispose() {
     _nameCtl.dispose();
@@ -84,18 +75,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
       }
 
       final provider = Provider.of<ProductProvider>(context, listen: false);
-
-      // Persiapan data
-      final String name = _nameCtl.text.trim();
-      final double price = double.tryParse(_priceCtl.text.trim()) ?? 0.0;
-      final int stock =
-          int.tryParse(_stockCtl.text.trim()) ?? 0; // [FIX] Ambil nilai stok
-      final double? discountPrice = double.tryParse(
-        _discountPriceCtl.text.trim(),
-      );
-      final String description = _descCtl.text.trim().isEmpty
-          ? 'No description'
-          : _descCtl.text.trim();
 
       if (widget.editProduct == null) {
         // ADD NEW PRODUCT
@@ -472,10 +451,5 @@ class _ProductFormPageState extends State<ProductFormPage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
-  }
-
-  String _formatPrice(double price) {
-    final formatter = NumberFormat('#,###', 'id_ID');
-    return formatter.format(price.toInt());
   }
 }

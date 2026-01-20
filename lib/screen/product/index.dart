@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
-import 'package:flutter_application_1/screen/product/productDetail.dart';
+import 'package:flutter_application_1/screen/product/productDetail.dart'
+    as detail;
 import 'package:flutter_application_1/screen/product/productFormPage.dart';
-import 'package:flutter_application_1/screen/product/productDelete.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_application_1/provider/language_provider.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -29,7 +28,6 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProductProvider>(context);
-    final lang = Provider.of<LanguageProvider>(context);
 
     return Scaffold(
       body: FutureBuilder<void>(
@@ -52,8 +50,52 @@ class _ProductPageState extends State<ProductPage> {
                     }
 
                     final product = items[index - 1];
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final isMobile = screenWidth < 600;
 
-                    return _buildProductCard(context, product, provider);
+                    return _buildProductCard(
+                      product: product,
+                      isMobile: isMobile,
+                      onEdit: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProductFormPage(editProduct: product),
+                          ),
+                        );
+                        if (result == true) {
+                          provider.loadProducts();
+                        }
+                      },
+                      onDelete: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text('Delete Product'),
+                            content: Text(
+                              'Are you sure you want to delete "${product.name}"?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                child: Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && product.id != null) {
+                          await provider.deleteProduct(product.id!);
+                        }
+                      },
+                    );
                   },
                 );
         },
@@ -291,14 +333,27 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  String _priceLabel(Product product) {
+  Widget _buildIconButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(icon, size: 20),
+      color: color,
+      onPressed: onPressed,
+      padding: EdgeInsets.all(8),
+      constraints: BoxConstraints(),
+      splashRadius: 20,
+    );
+  }
+
+  void showProductDetail(BuildContext context, Product product) {
+    detail.showProductDetail(context, product);
+  }
+
+  String _formatPrice(double price) {
     final formatter = NumberFormat('#,###', 'id_ID');
-
-    if (product.discountPrice != null && product.discountPrice! > 0) {
-      final discounted = product.price - product.discountPrice!;
-      return 'IDR ${formatter.format(discounted.toInt())} (Disc)';
-    }
-
-    return 'IDR ${formatter.format(product.price.toInt())}';
+    return formatter.format(price.toInt());
   }
 }

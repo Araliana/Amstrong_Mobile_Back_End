@@ -21,7 +21,7 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      id: map['id'] as String,
+      id: map['id'] as int?,
       name: map['name'] as String? ?? '',
       profitType: map['profit_type'] as String?,
       profitValue: map['profit_value'] == null

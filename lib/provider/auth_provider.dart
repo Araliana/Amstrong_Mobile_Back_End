@@ -104,7 +104,7 @@ class AuthProvider with ChangeNotifier {
         return false;
       }
 
-      UserCredential userCred;
+      UserCredential? userCred;
       try {
         userCred = await _auth.signInWithEmailAndPassword(
           email: email,
@@ -125,6 +125,7 @@ class AuthProvider with ChangeNotifier {
               'username': username,
             },
           );
+          return false;
         } else {
           _setLoading(false);
           await analytics.logEvent(
@@ -133,6 +134,11 @@ class AuthProvider with ChangeNotifier {
           );
           return false;
         }
+      }
+
+      if (userCred.user == null) {
+        _setLoading(false);
+        return false;
       }
 
       final prefs = await SharedPreferences.getInstance();
@@ -170,17 +176,28 @@ class AuthProvider with ChangeNotifier {
     required String newPassword,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) return false;
+    if (user == null || currUserId == null) return false;
 
     try {
       _setLoading(true);
 
       final fingerprint = _passwordFingerprint(newPassword);
 
-      await firestore.collection('users').doc(user.uid).update({
-        'password_fingerprint': fingerprint,
-        'updated_at': FieldValue.serverTimestamp(),
-      });
+      // Update di Firestore dengan collection yang benar
+      await firestore
+          .collection('user_admin')
+          .where('id', isEqualTo: currUserId)
+          .limit(1)
+          .get()
+          .then((snapshot) async {
+            if (snapshot.docs.isNotEmpty) {
+              await snapshot.docs.first.reference.update({
+                'password_fingerprint': fingerprint,
+                'updated_at': FieldValue.serverTimestamp(),
+              });
+            }
+          })
+          .timeout(Duration(seconds: 10));
 
       await secureStorage.write(
         key: 'password_fingerprint',
@@ -193,6 +210,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      print('changePassword error: $e');
       _setLoading(false);
       return false;
     }
@@ -201,20 +219,31 @@ class AuthProvider with ChangeNotifier {
   Future<void> _checkPasswordFingerprint() async {
     if (currUserUid == null) return;
 
-    final local = await secureStorage.read(key: 'password_fingerprint');
+    try {
+      final local = await secureStorage.read(key: 'password_fingerprint');
 
-    final doc = await firestore.collection('users').doc(currUserUid).get();
+      // Gunakan collection yang sama dengan login: 'user_admin'
+      final doc = await firestore
+          .collection('user_admin')
+          .where('id', isEqualTo: currUserId)
+          .limit(1)
+          .get()
+          .timeout(Duration(seconds: 10));
 
-    if (!doc.exists) return;
+      if (doc.docs.isEmpty) return;
 
-    final server = doc.data()?['password_fingerprint'];
+      final server = doc.docs.first.data()['password_fingerprint'];
 
-    if (local != null && server != null && local != server) {
-      await analytics.logEvent(
-        name: 'auto_logout_password_changed',
-        parameters: {'user_id': currUserId ?? 'unknown'},
-      );
-      await logout();
+      if (local != null && server != null && local != server) {
+        await analytics.logEvent(
+          name: 'auto_logout_password_changed',
+          parameters: {'user_id': currUserId ?? 'unknown'},
+        );
+        await logout();
+      }
+    } catch (e) {
+      print('_checkPasswordFingerprint error: $e');
+      // Jangan logout jika error koneksi, biarkan user tetap login
     }
   }
 

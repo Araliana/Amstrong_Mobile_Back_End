@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/product_provider.dart';
 
-Future<void> confirmDeleteProduct(BuildContext context, String id) async {
+Future<void> confirmDeleteProduct(BuildContext context, int id) async {
   // Save ScaffoldMessenger and Provider before showing dialog
   final messenger = ScaffoldMessenger.of(context);
   final provider = Provider.of<ProductProvider>(context, listen: false);

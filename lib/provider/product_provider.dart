@@ -15,7 +15,10 @@ class ProductProvider with ChangeNotifier {
 
   void _setLoading(bool value) {
     isLoading = value;
-    notifyListeners();
+    // Delay notifyListeners sampai frame berikutnya untuk avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   Future<void> loadProducts() async {
@@ -83,7 +86,7 @@ class ProductProvider with ChangeNotifier {
 
     await db.update(
       productTables,
-      id: id,
+      id: id.toString(),
       data: {
         'name': name,
         'profit_type': profitType,
@@ -103,17 +106,13 @@ class ProductProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteProduct(String id) async {
+  Future<void> deleteProduct(int id) async {
     _setLoading(true);
-    try {
-      await db.delete(productTables, id: id);
-      products.removeWhere((item) => item.id == id);
+    await db.delete(productTables, id: id.toString());
 
-      await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
-    } catch (e) {
-      debugPrint("Error delete product: $e");
-    } finally {
-      _setLoading(false);
-    }
+    // Reload products dari database untuk memastikan sinkronisasi
+    await loadProducts();
+
+    await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
   }
 }

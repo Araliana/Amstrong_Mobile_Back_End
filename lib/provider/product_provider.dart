@@ -36,22 +36,17 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> addProduct({
     required String name,
-    required double price,
     required String description,
     required String? img,
-    String? discountType,
-    double? discountValue,
     String? profitType,
-    double? profitAmount,
+    double? profitValue,
   }) async {
     _setLoading(true);
     await db.insert(productTables, {
       'name': name,
-      'price': price,
-      'discount_type': discountType,
-      'discount_value': discountValue,
       'profit_type': profitType,
-      'profit_amount': profitAmount,
+      'profit_value': profitValue,
+      'quantity': 0, // default 0, tidak diisi di awal
       'description': description,
       'img': img,
     });
@@ -61,20 +56,18 @@ class ProductProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'add_product',
-      parameters: {'name': name, 'price': price, 'description': description},
+      parameters: {'name': name, 'description': description},
     );
   }
 
   Future<void> editProduct({
     required String name,
-    required double price,
     required String description,
     required String? img,
     required int id,
-    String? discountType,
-    double? discountValue,
     String? profitType,
-    double? profitAmount,
+    double? profitValue,
+    int? quantity,
   }) async {
     _setLoading(true);
     final product = Product.fromMap(
@@ -86,11 +79,9 @@ class ProductProvider with ChangeNotifier {
       id: id,
       data: {
         'name': name,
-        'price': price,
-        'discount_type': discountType,
-        'discount_value': discountValue,
         'profit_type': profitType,
-        'profit_amount': profitAmount,
+        'profit_value': profitValue,
+        'quantity': quantity ?? product.quantity,
         'description': description,
         'img': img ?? product.img,
       },
@@ -101,7 +92,7 @@ class ProductProvider with ChangeNotifier {
 
     await analytics.logEvent(
       name: 'edit_product',
-      parameters: {'name': name, 'price': price, 'description': description},
+      parameters: {'name': name, 'description': description},
     );
   }
 

@@ -26,15 +26,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   // Controllers
   late TextEditingController _nameCtl;
-  late TextEditingController _priceCtl;
-  late TextEditingController _discountValueCtl;
-  late TextEditingController _profitAmountCtl;
+  late TextEditingController _profitValueCtl;
   late TextEditingController _descCtl;
 
   File? _pickedFile;
   String? _currentImageUrl;
-  String _discountType = 'percent';
-  String _profitType = 'percent';
+  String? _profitType;
   bool _isLoading = false;
 
   @override
@@ -43,30 +40,19 @@ class _ProductFormPageState extends State<ProductFormPage> {
     final product = widget.editProduct;
 
     _nameCtl = TextEditingController(text: product?.name ?? '');
-    _priceCtl = TextEditingController(text: product?.price.toString() ?? '');
-    _discountValueCtl = TextEditingController(
-      text: product?.discountValue?.toString() ?? '',
-    );
-    _profitAmountCtl = TextEditingController(
-      text: product?.profitAmount?.toString() ?? '',
+    _profitValueCtl = TextEditingController(
+      text: product?.profitValue?.toString() ?? '',
     );
     _descCtl = TextEditingController(text: product?.description ?? '');
 
-    _discountType = product?.discountType ?? 'percent';
-    _profitType = product?.profitType ?? 'percent';
+    _profitType = product?.profitType;
     _currentImageUrl = product?.img;
-
-    // Listen to discount and price changes to update preview
-    _discountValueCtl.addListener(() => setState(() {}));
-    _priceCtl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _nameCtl.dispose();
-    _priceCtl.dispose();
-    _discountValueCtl.dispose();
-    _profitAmountCtl.dispose();
+    _profitValueCtl.dispose();
     _descCtl.dispose();
     super.dispose();
   }
@@ -92,15 +78,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
       if (widget.editProduct == null) {
         await provider.addProduct(
           name: _nameCtl.text.trim(),
-          price: double.tryParse(_priceCtl.text.trim()) ?? 0.0,
           description: _descCtl.text.trim().isEmpty
               ? 'No description'
               : _descCtl.text.trim(),
           img: imageUrl,
-          discountType: _discountType,
-          discountValue: double.tryParse(_discountValueCtl.text.trim()),
           profitType: _profitType,
-          profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
+          profitValue: double.tryParse(_profitValueCtl.text.trim()),
         );
       } else {
         final productId = widget.editProduct?.id;
@@ -108,15 +91,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
           await provider.editProduct(
             id: productId,
             name: _nameCtl.text.trim(),
-            price: double.tryParse(_priceCtl.text.trim()) ?? 0.0,
             description: _descCtl.text.trim().isEmpty
                 ? 'No description'
                 : _descCtl.text.trim(),
             img: imageUrl,
-            discountType: _discountType,
-            discountValue: double.tryParse(_discountValueCtl.text.trim()),
             profitType: _profitType,
-            profitAmount: double.tryParse(_profitAmountCtl.text.trim()),
+            profitValue: double.tryParse(_profitValueCtl.text.trim()),
           );
         } else {
           throw Exception('Product ID is required for editing');
@@ -225,173 +205,103 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   SizedBox(height: 16),
 
-                  // Pricing Card
+                  // Profit Card
                   _buildCard(
-                    title: 'Pricing',
-                    icon: Icons.attach_money_rounded,
+                    title: 'Profit Settings',
+                    icon: Icons.trending_up,
                     children: [
-                      _buildTextField(
-                        controller: _priceCtl,
-                        label: 'Selling Price',
-                        icon: Icons.local_offer_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Price is required';
-                          }
-                          if (double.tryParse(value) == null ||
-                              double.parse(value) <= 0) {
-                            return 'Invalid price';
-                          }
-                          return null;
-                        },
+                      Text(
+                        'Select profit type first, then enter the profit value',
+                        style: TextStyle(
+                          color: Colors.brown[600],
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 12),
 
-                      // Discount Section
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: _buildTextField(
-                              controller: _discountValueCtl,
-                              label: 'Discount (Optional)',
-                              icon: Icons.discount_outlined,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d+\.?\d{0,2}'),
-                                ),
-                              ],
+                      // Profit Type Dropdown
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.brown[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.brown[200]!),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _profitType,
+                            isExpanded: true,
+                            hint: Text('Select Profit Type'),
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.brown[600],
                             ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.brown[50],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.brown[100]!),
-                              ),
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _discountType,
-                                  isExpanded: true,
-                                  icon: Icon(
-                                    Icons.arrow_drop_down,
-                                    color: Colors.brown[600],
-                                  ),
-                                  style: TextStyle(
-                                    color: Colors.brown[700],
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: 'percent',
-                                      child: Text('Percent (%)'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'flat',
-                                      child: Text('Flat (IDR)'),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() => _discountType = value);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_discountValueCtl.text.isNotEmpty &&
-                          double.tryParse(_discountValueCtl.text) != null &&
-                          double.parse(_discountValueCtl.text) > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            _calculateFinalPrice(),
                             style: TextStyle(
-                              color: Colors.green[700],
-                              fontSize: 13,
+                              color: Colors.brown[700],
                               fontWeight: FontWeight.w600,
+                              fontSize: 15,
                             ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 'flat',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.attach_money,
+                                      size: 18,
+                                      color: Colors.green[700],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Flat (IDR)'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'percent',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.percent,
+                                      size: 18,
+                                      color: Colors.blue[700],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Percent (%)'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() => _profitType = value);
+                            },
                           ),
                         ),
-                      SizedBox(height: 16),
-
-                      // Profit Section
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: _buildTextField(
-                              controller: _profitAmountCtl,
-                              label: 'Profit (Optional)',
-                              icon: Icons.trending_up,
-                              hint: '0',
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d+\.?\d{0,2}'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.brown[50],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.brown[100]!),
-                              ),
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _profitType,
-                                  isExpanded: true,
-                                  icon: Icon(
-                                    Icons.arrow_drop_down,
-                                    color: Colors.brown[600],
-                                  ),
-                                  style: TextStyle(
-                                    color: Colors.brown[700],
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: 'percent',
-                                      child: Text('Percent (%)'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'flat',
-                                      child: Text('Flat (IDR)'),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() => _profitType = value);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
+
+                      // Profit Value - hanya muncul jika profit type sudah dipilih
+                      if (_profitType != null) ...[
+                        SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _profitValueCtl,
+                          label: _profitType == 'percent'
+                              ? 'Profit Percentage'
+                              : 'Profit Amount (IDR)',
+                          icon: _profitType == 'percent'
+                              ? Icons.percent
+                              : Icons.attach_money,
+                          hint: '0',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d{0,2}'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                   SizedBox(height: 32),
@@ -538,30 +448,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
-  }
-
-  String _calculateFinalPrice() {
-    final price = double.tryParse(_priceCtl.text) ?? 0;
-    final discountValue = double.tryParse(_discountValueCtl.text) ?? 0;
-
-    if (discountValue == 0) return '';
-
-    double finalPrice;
-    double discountAmount;
-
-    if (_discountType == 'percent') {
-      discountAmount = price * (discountValue / 100);
-      finalPrice = price - discountAmount;
-    } else {
-      discountAmount = discountValue;
-      finalPrice = price - discountValue;
-    }
-
-    if (finalPrice < 0) {
-      return '⚠️ Warning: Discount exceeds price!';
-    }
-
-    return 'Discount: IDR ${_formatPrice(discountAmount)} | Final price: IDR ${_formatPrice(finalPrice)}';
   }
 
   String _formatPrice(double price) {

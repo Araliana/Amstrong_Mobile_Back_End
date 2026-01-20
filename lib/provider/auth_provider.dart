@@ -109,14 +109,14 @@ class AuthProvider with ChangeNotifier {
       try {
         userCred = await _auth.signInWithEmailAndPassword(
           email: email,
-          password: user.password,
+          password: password,
         );
       } on FirebaseAuthException catch (e) {
         // Jika user belum ada → buat baru
         if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
           userCred = await _auth.createUserWithEmailAndPassword(
             email: email,
-            password: user.password,
+            password: password, // Gunakan password asli, bukan hash!
           );
         } else if (e.code == 'wrong-password') {
           _setLoading(false);

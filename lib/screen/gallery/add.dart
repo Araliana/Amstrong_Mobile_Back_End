@@ -6,7 +6,7 @@ import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class GalleryAddScreen extends StatefulWidget {
-  const GalleryAddScreen({Key? key}) : super(key: key);
+  const GalleryAddScreen({super.key});
 
   @override
   State<GalleryAddScreen> createState() => _GalleryAddScreenState();
@@ -122,7 +122,7 @@ class _GalleryAddScreenState extends State<GalleryAddScreen> {
 
             // Pilihan Uploader (Admin/User)
             DropdownButtonFormField<String>(
-              value: _uploaderType,
+              initialValue: _uploaderType,
               decoration: InputDecoration(
                 labelText: 'Post Sebagai',
                 border: OutlineInputBorder(

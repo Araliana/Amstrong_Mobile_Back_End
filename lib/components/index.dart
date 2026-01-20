@@ -173,7 +173,7 @@ Widget buildDropdownField({
   final isValueValid = dropdownItems.any((e) => e.value == value);
 
   return DropdownButtonFormField<String>(
-    value: isValueValid ? value : null,
+    initialValue: isValueValid ? value : null,
     dropdownColor: dropdownBgColor,
     decoration: InputDecoration(
       labelText: label,

@@ -397,65 +397,51 @@ class _ProductPageState extends State<ProductPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (product.discountValue != null &&
-                            product.discountValue! > 0) ...[
-                          // Harga asli yang dicoret
-                          Text(
-                            'IDR ${_formatPrice(product.price)}',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: isMobile ? 11 : 12,
-                              decoration: TextDecoration.lineThrough,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          // Harga setelah diskon
+                        // Tampilkan profit info
+                        if (product.profitType != null &&
+                            product.profitValue != null) ...[
                           Row(
                             children: [
                               Text(
-                                'IDR ',
+                                'Profit: ',
                                 style: TextStyle(
                                   color: Colors.brown[700],
-                                  fontSize: isMobile ? 12 : 13,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: isMobile ? 11 : 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               Text(
-                                _formatPrice(product.getFinalPrice()),
+                                product.profitType == 'percent'
+                                    ? '${product.profitValue}%'
+                                    : 'IDR ${_formatPrice(product.profitValue!)}',
                                 style: TextStyle(
-                                  color: Colors.brown[900],
-                                  fontSize: isMobile ? 16 : 18,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
+                                  color: Colors.green[700],
+                                  fontSize: isMobile ? 12 : 13,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
                           ),
                         ] else ...[
-                          // Harga normal tanpa diskon
-                          Row(
-                            children: [
-                              Text(
-                                'IDR ',
-                                style: TextStyle(
-                                  color: Colors.brown[700],
-                                  fontSize: isMobile ? 12 : 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                _formatPrice(product.price),
-                                style: TextStyle(
-                                  color: Colors.brown[900],
-                                  fontSize: isMobile ? 16 : 18,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'No profit set',
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: isMobile ? 11 : 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ],
+                        SizedBox(height: 4),
+                        // Tampilkan quantity
+                        Text(
+                          'Qty: ${product.quantity}',
+                          style: TextStyle(
+                            color: Colors.brown[600],
+                            fontSize: isMobile ? 11 : 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ],

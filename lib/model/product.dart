@@ -1,4 +1,5 @@
 class Product {
+<<<<<<< HEAD
   final int id;
   final String name;
   final double basePrice;
@@ -9,6 +10,16 @@ class Product {
   final String? img;
   final String? description;
   final DateTime? createdAt;
+=======
+  String? id; // Changed from int? to String? untuk UUID
+  String name;
+  String? profitType; // 'percent' or 'flat'
+  double? profitValue;
+  int quantity; // default 0, tidak diisi di awal
+  String? img;
+  String? description;
+  DateTime? createdAt;
+>>>>>>> 8dfd70f4d769de21feeec897811d1e976ff67727
 
   Product({
     required this.id,
@@ -25,11 +36,17 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
+<<<<<<< HEAD
       id: map['id'],
       name: map['name'],
       basePrice: (map['base_price'] as num).toDouble(),
       sellingPrice: (map['selling_price'] as num).toDouble(),
       profitType: map['profit_type'],
+=======
+      id: map['id'] as String?, // Changed from int? to String?
+      name: map['name'] as String? ?? '',
+      profitType: map['profit_type'] as String?,
+>>>>>>> 8dfd70f4d769de21feeec897811d1e976ff67727
       profitValue: map['profit_value'] == null
           ? null
           : (map['profit_value'] as num).toDouble(),

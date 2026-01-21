@@ -19,7 +19,9 @@ class CategoryProvider with ChangeNotifier {
 
   void _setLoading(bool value) {
     isLoading = value;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   Future<void> loadCategories(CategoryType type) async {

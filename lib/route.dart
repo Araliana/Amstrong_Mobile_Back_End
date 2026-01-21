@@ -205,6 +205,11 @@ class _AppShellState extends State<_AppShell> {
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
 
+    // Set default value jika masih null
+    if (selectedPeriod == null) {
+      selectedPeriod = langProvider.getText('today');
+    }
+
     List<Widget> actions = [];
     switch (widget.state.uri.path) {
       case '/':
@@ -212,7 +217,7 @@ class _AppShellState extends State<_AppShell> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: DropdownButton<String>(
-              value: selectedPeriod,
+              value: selectedPeriod!,
               dropdownColor: Colors.brown[700],
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               underline: Container(),

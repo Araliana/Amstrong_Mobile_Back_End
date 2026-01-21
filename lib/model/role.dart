@@ -9,7 +9,7 @@ class Role {
 
   factory Role.fromMap(Map<String, dynamic> map) {
     return Role(
-      id: map['id'],
+      id: map['id'].toString(),
       name: map['name'],
       access: map['access'] == null
           ? null

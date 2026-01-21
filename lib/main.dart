@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/db/seeds.dart';
 import 'package:flutter_application_1/firebase_options.dart';
 import 'package:flutter_application_1/provider/access_provider.dart';
 import 'package:flutter_application_1/provider/admin_provider.dart';

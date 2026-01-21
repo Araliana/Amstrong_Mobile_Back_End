@@ -1,51 +1,67 @@
-import 'package:flutter_application_1/model/product.dart';
-
 class Stock {
-  String? id;
-  String productId;
+  String? id; // Changed from int? to String? untuk UUID
+  String productId; // Changed from int to String untuk UUID
+  String? productName; // untuk display, dari join
   int quantity;
-  double hpp;
-  double? trueProfit;
-  double finalPrice;
+  double hpp; // Harga Pokok Penjualan
+  double trueProfit; // Profit yang dikalkulasi
+  double sellingPrice; // Harga jual hasil kalkulasi
+  double discount; // Diskon (jika ada adjustment)
+  double finalPrice; // Harga akhir setelah adjustment
   DateTime? createdAt;
   DateTime? updatedAt;
-  int isSynced;
-  Product? product;
 
   Stock({
     this.id,
     required this.productId,
-    this.product,
-    this.quantity = 0,
+    this.productName,
+    required this.quantity,
     required this.hpp,
-    this.trueProfit,
+    required this.trueProfit,
+    required this.sellingPrice,
+    this.discount = 0,
     required this.finalPrice,
     this.createdAt,
     this.updatedAt,
-    this.isSynced = 0,
   });
 
-  factory Stock.fromMap(
-    Map<String, dynamic> map, {
-    Product? product,
-  }) {
+  factory Stock.fromMap(Map<String, dynamic> map) {
     return Stock(
-      id: map['id'] as String?,
-      productId: map['product_id'] as String? ?? '',
-      product: product,
+      id: map['id'] as String?, // Changed from int? to String?
+      productId: map['product_id'] as String, // Changed from int to String
+      productName: map['product_name'] as String?,
       quantity: map['quantity'] as int? ?? 0,
-      hpp: _toDouble(map['hpp']),
-      trueProfit: map['true_profit'] != null
-          ? _toDouble(map['true_profit'])
-          : null,
-      finalPrice: _toDouble(map['final_Price']),
+      hpp: map['hpp'] == null
+          ? 0.0
+          : (map['hpp'] is int)
+          ? (map['hpp'] as int).toDouble()
+          : (map['hpp'] as double),
+      trueProfit: map['true_profit'] == null
+          ? 0.0
+          : (map['true_profit'] is int)
+          ? (map['true_profit'] as int).toDouble()
+          : (map['true_profit'] as double),
+      sellingPrice: map['selling_price'] == null
+          ? 0.0
+          : (map['selling_price'] is int)
+          ? (map['selling_price'] as int).toDouble()
+          : (map['selling_price'] as double),
+      discount: map['discount'] == null
+          ? 0.0
+          : (map['discount'] is int)
+          ? (map['discount'] as int).toDouble()
+          : (map['discount'] as double),
+      finalPrice: map['final_price'] == null
+          ? 0.0
+          : (map['final_price'] is int)
+          ? (map['final_price'] as int).toDouble()
+          : (map['final_price'] as double),
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'])
           : null,
-      isSynced: map['is_synced'] ?? 0,
     );
   }
 
@@ -56,18 +72,17 @@ class Stock {
       'quantity': quantity,
       'hpp': hpp,
       'true_profit': trueProfit,
-      'final_Price': finalPrice,
+      'selling_price': sellingPrice,
+      'discount': discount,
+      'final_price': finalPrice,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      'is_synced': isSynced,
     };
   }
 
-  String get productName => product?.name ?? '-';
-
-  static double _toDouble(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value.toDouble();
-    return value as double;
+  // Helper untuk kalkulasi discount percentage
+  double get discountPercentage {
+    if (sellingPrice == 0) return 0;
+    return (discount / sellingPrice) * 100;
   }
 }

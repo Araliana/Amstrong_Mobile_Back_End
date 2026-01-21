@@ -21,7 +21,10 @@ class MenuProvider with ChangeNotifier {
 
   void _setLoading(bool value) {
     isLoading = value;
-    notifyListeners();
+    // Delay notifyListeners sampai frame berikutnya untuk avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
   }
 
   Future<void> loadMenu() async {

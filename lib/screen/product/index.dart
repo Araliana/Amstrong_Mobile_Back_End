@@ -52,32 +52,38 @@ class _ProductPageState extends State<ProductPage> {
                     final screenWidth = MediaQuery.of(context).size.width;
                     final isMobile = screenWidth < 600;
 
-                    return _buildProductCard(
-                      product: product,
-                      isMobile: isMobile,
-                      onEdit: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                AddEditProductScreen(editProduct: product),
-                          ),
-                        );
-                        if (result == true) {
-                          provider.loadProducts();
-                        }
-                      },
-                      onDelete: () async {
-                        showDeleteConfirmation(
-                          context,
-                          title: "Product",
-                          label: product.name,
-                          isLoading: provider.isLoading,
-                          onDelete: () async {
-                            await provider.deleteProduct(product.id!);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: SizedBox(
+                        height: isMobile ? 280 : 320,
+                        child: _buildProductCard(
+                          product: product,
+                          isMobile: isMobile,
+                          onEdit: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    AddEditProductScreen(editProduct: product),
+                              ),
+                            );
+                            if (result == true) {
+                              provider.loadProducts();
+                            }
                           },
-                        );
-                      },
+                          onDelete: () async {
+                            showDeleteConfirmation(
+                              context,
+                              title: "Product",
+                              label: product.name,
+                              isLoading: provider.isLoading,
+                              onDelete: () async {
+                                await provider.deleteProduct(product.id!);
+                              },
+                            );
+                          },
+                        ),
+                      ),
                     );
                   },
                 );

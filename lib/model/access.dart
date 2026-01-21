@@ -27,7 +27,7 @@ class Access {
     return Access(
       id: map['id'].toString(),
       name: map['name'],
-      nameId: map['name_id'],
+      nameId: map['name_id'] ?? '',
       accessPath: map['access_path'],
       category: map['category'],
       idSort: map['id_sort'],

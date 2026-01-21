@@ -13,6 +13,7 @@ import 'package:flutter_application_1/screen/dishTypes/index.dart';
 import 'package:flutter_application_1/screen/editProfile/index.dart';
 import 'package:flutter_application_1/screen/gallery/addEdit.dart';
 import 'package:flutter_application_1/screen/gallery/index.dart';
+import 'package:flutter_application_1/screen/inventory/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/menu/addEdit.dart';
 import 'package:flutter_application_1/screen/product/index.dart';
@@ -94,7 +95,11 @@ class AppRoute {
               path: '/categories',
               builder: (context, state) => const CategoryPage(),
             ),
- 
+            GoRoute(
+              path: '/inventory',
+              builder: (context, state) => const InventoryPage(),
+            ),
+
             //FINANCE
             //CONTENT & MEDIA
             GoRoute(
@@ -642,8 +647,8 @@ class _AppShellState extends State<_AppShell> {
                                   icon: access.icon,
                                   title:
                                       langProvider.appLocale.languageCode ==
-                                          "id"
-                                      ? access.nameId
+                                              "id"
+                                      ? (access.nameId.isNotEmpty ? access.nameId : access.name)
                                       : access.name,
                                   path: access.accessPath,
                                   isSelected: currentPath == access.accessPath,

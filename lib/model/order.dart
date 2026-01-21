@@ -1,38 +1,33 @@
-import 'product.dart';
 class Order {
-  int? id;
-  String name;
-  String? profitType; // 'percent' or 'flat'
-  double? profitValue;
-  int quantity; // default 0, tidak diisi di awal
-  String? img;
-  String? description;
-  DateTime? createdAt;
+  final int id;
+  final double totalPrice;
+  final double totalProfit;
+  final double totalHpp;
+  final String status;
+  final String? customerName;
+  final String? customerAddress;
+  final DateTime? createdAt;
 
   Order({
     required this.id,
-    required this.name,
-    this.profitType, // pilih dulu: flat atau percent
-    this.profitValue,
-    this.quantity = 0, // default 0
-    this.img,
-    this.description,
+    required this.totalPrice,
+    required this.totalProfit,
+    required this.totalHpp,
+    required this.status,
+    this.customerName,
+    this.customerAddress,
     this.createdAt,
   });
 
   factory Order.fromMap(Map<String, dynamic> map) {
     return Order(
-      id: map['id'] as int?,
-      name: map['name'] as String? ?? '',
-      profitType: map['profit_type'] as String?,
-      profitValue: map['profit_value'] == null
-          ? null
-          : (map['profit_value'] is int)
-          ? (map['profit_value'] as int).toDouble()
-          : (map['profit_value'] as double?),
-      quantity: map['quantity'] as int? ?? 0,
-      img: map['img'] as String?,
-      description: map['description'] as String?,
+      id: map['id'],
+      totalPrice: _toDouble(map['total_price']),
+      totalProfit: _toDouble(map['total_profit']),
+      totalHpp: _toDouble(map['total_hpp']),
+      status: map['status'] ?? '',
+      customerName: map['customer_name'],
+      customerAddress: map['customer_address'],
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : null,
@@ -42,13 +37,19 @@ class Order {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': name,
-      'profit_type': profitType,
-      'profit_value': profitValue,
-      'quantity': quantity,
-      'img': img,
-      'description': description,
+      'total_price': totalPrice,
+      'total_profit': totalProfit,
+      'total_hpp': totalHpp,
+      'status': status,
+      'customer_name': customerName,
+      'customer_address': customerAddress,
       'created_at': createdAt?.toIso8601String(),
     };
+  }
+
+  static double _toDouble(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v.toDouble();
+    return v as double;
   }
 }

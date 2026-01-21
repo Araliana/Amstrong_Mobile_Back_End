@@ -1,8 +1,8 @@
 import 'package:flutter_application_1/model/product.dart';
 
 class Stock {
-  String? id;
-  String productId;
+  int? id;
+  int productId;
   int quantity;
   double hpp;
   double? trueProfit;
@@ -30,8 +30,8 @@ class Stock {
     Product? product,
   }) {
     return Stock(
-      id: map['id'] as String?,
-      productId: map['product_id'] as String? ?? '',
+      id: map['id'] as int?,
+      productId: map['product_id'] as int? ?? 0,
       product: product,
       quantity: map['quantity'] as int? ?? 0,
       hpp: _toDouble(map['hpp']),

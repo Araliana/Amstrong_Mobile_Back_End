@@ -20,12 +20,14 @@ import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/setting/index.dart';
+import 'package:flutter_application_1/screen/stock/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application_1/screen/menu/index.dart';
 import 'package:flutter_application_1/screen/dashboard/index.dart';
 import 'package:flutter_application_1/screen/profile/index.dart';
+import 'package:flutter_application_1/screen/order/index.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/language_provider.dart';
 
@@ -76,10 +78,18 @@ class AppRoute {
               },
             ),
             //ORDERS
+            GoRoute(
+              path: '/orders',
+              builder: (context, state) => const OrderPage(),
+            ),
             //PRODUCTS & STOCK
             GoRoute(
               path: '/products',
               builder: (context, state) => const ProductPage(),
+            ),
+            GoRoute(
+              path: '/stocks',
+              builder: (context, state) => const StockPage(),
             ),
             GoRoute(
               path: '/categories',

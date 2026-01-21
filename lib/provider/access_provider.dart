@@ -40,6 +40,7 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> addAccess({
     required String name,
+    required String nameId,
     required String accessPath,
     required String category,
     required int idSort,
@@ -52,6 +53,7 @@ class AccessProvider with ChangeNotifier {
     await db.insert(accessTables, {
       "id": id,
       'name': name,
+      'name_id': nameId,
       'access_path': accessPath,
       'category': category,
       'id_sort': idSort,
@@ -64,6 +66,7 @@ class AccessProvider with ChangeNotifier {
       Access(
         id: id,
         name: name,
+        nameId: nameId,
         accessPath: accessPath,
         category: category,
         idSort: idSort,
@@ -82,6 +85,7 @@ class AccessProvider with ChangeNotifier {
 
   Future<void> editAccess({
     required String name,
+    required String nameId,
     required String accessPath,
     required String category,
     required int idSort,
@@ -98,6 +102,7 @@ class AccessProvider with ChangeNotifier {
       id: id,
       data: {
         'name': name,
+        'name_id': nameId,
         'access_path': accessPath,
         'category': category,
         'id_sort': idSort,
@@ -111,6 +116,7 @@ class AccessProvider with ChangeNotifier {
     accesses[index] = Access(
       id: id,
       name: name,
+      nameId: nameId,
       accessPath: accessPath,
       category: category,
       idSort: idSort,

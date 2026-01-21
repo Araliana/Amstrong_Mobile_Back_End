@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/role.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
@@ -73,6 +74,7 @@ class _RoleCardState extends State<RoleCard> {
   @override
   Widget build(BuildContext context) {
     final roleProvider = Provider.of<RoleProvider>(context);
+    final lang = Provider.of<LanguageProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final dark = themeProvider.getTheme();
     final accessCount = widget.role.access?.length ?? 0;
@@ -304,7 +306,9 @@ class _RoleCardState extends State<RoleCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    access.name,
+                                    lang.appLocale.languageCode == 'en'
+                                        ? access.name
+                                        : access.nameId,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,

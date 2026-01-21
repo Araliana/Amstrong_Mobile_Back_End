@@ -18,7 +18,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_application_1/provider/language_provider.dart';
 
-
 GoRouter? _appRouter;
 
 void main() async {
@@ -62,14 +61,11 @@ class MainApp extends StatelessWidget {
         _appRouter ??= AppRoute.createRouter(authProvider);
         return MaterialApp.router(
           locale: langProvider.appLocale,
-          supportedLocales: const [
-            Locale('id', 'ID'),
-            Locale('en', 'US'),
-          ],
+          supportedLocales: const [Locale('id', 'ID'), Locale('en', 'US')],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate
+            GlobalCupertinoLocalizations.delegate,
           ],
           themeMode: themeProvider.themeMode,
 

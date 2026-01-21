@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
-import 'package:flutter_application_1/screen/product/productDetail.dart';
-import 'package:flutter_application_1/screen/product/productFormPage.dart';
-import 'package:flutter_application_1/screen/product/productDelete.dart';
+import 'package:flutter_application_1/screen/product/detail.dart';
+import 'package:flutter_application_1/screen/product/addEdit.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/language_provider.dart';
@@ -42,7 +41,7 @@ class _ProductPageState extends State<ProductPage> {
           final items = provider.products;
 
           return items.isEmpty
-              ? buildEmptyState("Products", Icons.coffee_outlined)
+              ? buildEmptyState("Products", Icons.coffee_maker_rounded)
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
                   itemCount: items.length + 1,
@@ -79,6 +78,7 @@ class _ProductPageState extends State<ProductPage> {
     Product product,
     ProductProvider provider,
   ) {
+    final lang = Provider.of<LanguageProvider>(context);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -127,7 +127,15 @@ class _ProductPageState extends State<ProductPage> {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => confirmDeleteProduct(context, product.id!),
+              onPressed: () => showDeleteConfirmation(
+                context,
+                title: 'Product',
+                label: product.name,
+                isLoading: provider.isLoading,
+                onDelete: () async {
+                  await provider.deleteProduct(product.id);
+                },
+              ),
             ),
           ],
         ),

@@ -175,28 +175,6 @@ class AppRoute {
   }
 }
 
-// Helper untuk menerjemahkan nama menu dari Database
-String _getTranslatedMenuName(String dbName, LanguageProvider lang) {
-  final key = dbName.toLowerCase().trim();
-  if (key.contains('dashboard')) return lang.getText('dashboard');
-  if (key.contains('product') || key.contains('produk'))
-    return lang.getText('products');
-  if (key.contains('categor') || key.contains('kategori'))
-    return lang.getText('categories');
-  if (key.contains('menu')) return lang.getText('menu');
-  if (key.contains('role') || key.contains('peran'))
-    return lang.getText('roles');
-  if (key.contains('user') || key.contains('pengguna'))
-    return lang.getText('users');
-  if (key.contains('gallery') || key.contains('galeri'))
-    return lang.getText('gallery');
-  if (key.contains('setting') || key.contains('pengaturan'))
-    return lang.getText('settings');
-  if (key.contains('report') || key.contains('laporan'))
-    return lang.getText('reports');
-  return dbName; // Kembalikan nama asli jika tidak ada di kamus
-}
-
 class _AppShell extends StatefulWidget {
   final Widget child;
   final GoRouterState state;
@@ -208,7 +186,7 @@ class _AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<_AppShell> {
-  String selectedPeriod = 'Hari Ini';
+  String selectedPeriod = 'today';
   late Future<void> _loadFuture;
 
   @override
@@ -225,11 +203,9 @@ class _AppShellState extends State<_AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Kita butuh listen ke LanguageProvider agar saat ganti bahasa, UI ter-refresh
     final langProvider = Provider.of<LanguageProvider>(context);
 
     List<Widget> actions = [];
-    // AppBar dinamis
     switch (widget.state.uri.path) {
       case '/':
         actions = [
@@ -241,19 +217,14 @@ class _AppShellState extends State<_AppShell> {
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               underline: Container(),
               style: const TextStyle(color: Colors.white, fontSize: 14),
-              items:
-                  [
-                        // [UBAH] Gunakan Translate untuk pilihan waktu
-                        langProvider.getText('today'),
-                        langProvider.getText('week'),
-                        langProvider.getText('month'),
-                        langProvider.getText('year'),
-                      ]
-                      .map(
-                        (String value) =>
-                            DropdownMenuItem(value: value, child: Text(value)),
-                      )
-                      .toList(),
+              items: ['today', 'week', 'month', 'year']
+                  .map(
+                    (String value) => DropdownMenuItem(
+                      value: value,
+                      child: Text(langProvider.getText(value)),
+                    ),
+                  )
+                  .toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   setState(() {
@@ -308,7 +279,7 @@ class _AppShellState extends State<_AppShell> {
                     padding: const EdgeInsets.only(
                       left: 20,
                       right: 20,
-                      top: 50,
+                      top: 50, // Fixed top padding
                     ),
                     child: Column(
                       children: [
@@ -319,23 +290,22 @@ class _AppShellState extends State<_AppShell> {
                             Align(
                               alignment: Alignment.center,
                               child: Container(
-                                width: 80,
-                                height: 80,
+                                width: 100,
+                                height: 100,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Image.asset("assets/logo.png"),
-                                ),
+                                child: Image.asset("assets/logo.png"),
                               ),
                             ),
                             Positioned(
@@ -348,8 +318,12 @@ class _AppShellState extends State<_AppShell> {
                                     Navigator.pop(context);
                                     context.push('/setting');
                                   },
-                                  splashColor: Colors.white.withOpacity(0.3),
-                                  highlightColor: Colors.white.withOpacity(0.1),
+                                  splashColor: Colors.white.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  highlightColor: Colors.white.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   icon: const Icon(
                                     Icons.settings,
                                     color: Colors.white,
@@ -361,6 +335,7 @@ class _AppShellState extends State<_AppShell> {
                           ],
                         ),
                         const SizedBox(height: 16),
+                        // Nama Cafe
                         const Text(
                           'KJM Cafe',
                           style: TextStyle(
@@ -374,7 +349,7 @@ class _AppShellState extends State<_AppShell> {
                         Text(
                           'Admin Dashboard',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 13,
                             letterSpacing: 0.5,
                           ),
@@ -396,8 +371,8 @@ class _AppShellState extends State<_AppShell> {
                           context.push('/profile');
                         },
                         borderRadius: BorderRadius.circular(8),
-                        splashColor: Colors.white.withOpacity(0.2),
-                        highlightColor: Colors.white.withOpacity(0.1),
+                        splashColor: Colors.white.withValues(alpha: 0.2),
+                        highlightColor: Colors.white.withValues(alpha: 0.1),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                             vertical: 12,
@@ -419,7 +394,7 @@ class _AppShellState extends State<_AppShell> {
                                         CircleAvatar(
                                           radius: 28,
                                           backgroundColor: Colors.white
-                                              .withOpacity(0.3),
+                                              .withValues(alpha: 0.3),
                                           child: const Icon(
                                             Icons.person_outline,
                                             size: 36,
@@ -437,7 +412,7 @@ class _AppShellState extends State<_AppShell> {
                                                 width: 120,
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.3),
+                                                      .withValues(alpha: 0.3),
                                                   borderRadius:
                                                       BorderRadius.circular(4),
                                                 ),
@@ -448,7 +423,7 @@ class _AppShellState extends State<_AppShell> {
                                                 width: 80,
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.2),
+                                                      .withValues(alpha: 0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(4),
                                                 ),
@@ -458,7 +433,9 @@ class _AppShellState extends State<_AppShell> {
                                         ),
                                         Icon(
                                           Icons.arrow_forward_ios,
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.3,
+                                          ),
                                           size: 18,
                                         ),
                                       ],
@@ -505,8 +482,8 @@ class _AppShellState extends State<_AppShell> {
                                             Text(
                                               "@${user.username}",
                                               style: TextStyle(
-                                                color: Colors.white.withOpacity(
-                                                  0.8,
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.8,
                                                 ),
                                                 fontSize: 15,
                                               ),
@@ -648,11 +625,11 @@ class _AppShellState extends State<_AppShell> {
                                 (access) => _buildDrawerItem(
                                   context: context,
                                   icon: access.icon,
-                                  // [UBAH] Bagian Terpenting: Panggil Helper Function disini!
-                                  title: _getTranslatedMenuName(
-                                    access.name,
-                                    langProvider,
-                                  ),
+                                  title:
+                                      langProvider.appLocale.languageCode ==
+                                          "id"
+                                      ? access.nameId
+                                      : access.name,
                                   path: access.accessPath,
                                   isSelected: currentPath == access.accessPath,
                                   onTap: () {
@@ -694,7 +671,7 @@ class _AppShellState extends State<_AppShell> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
+                      color: Colors.grey.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(

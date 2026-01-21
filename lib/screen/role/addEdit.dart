@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/model/access.dart';
 import 'package:flutter_application_1/model/role.dart';
+import 'package:flutter_application_1/provider/language_provider.dart';
 import 'package:flutter_application_1/provider/role_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
@@ -80,6 +81,7 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
   Widget build(BuildContext context) {
     final roleProvider = Provider.of<RoleProvider>(context, listen: false);
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final lang = Provider.of<LanguageProvider>(context);
     final dark = themeProvider.getTheme();
     final isEdit = widget.roleId != null;
     MaterialColor color = widget.roleId != null ? Colors.indigo : Colors.purple;
@@ -486,7 +488,12 @@ class _AddEditRoleScreenState extends State<AddEditRoleScreen> {
                                                 const SizedBox(width: 10),
                                                 Expanded(
                                                   child: Text(
-                                                    access.name,
+                                                    lang
+                                                                .appLocale
+                                                                .languageCode ==
+                                                            'en'
+                                                        ? access.name
+                                                        : access.nameId,
                                                     style: TextStyle(
                                                       fontWeight: isSelected
                                                           ? FontWeight.w600

@@ -15,7 +15,6 @@ class ProductProvider with ChangeNotifier {
 
   void _setLoading(bool value) {
     isLoading = value;
-    // Delay notifyListeners sampai frame berikutnya untuk avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
     });
@@ -29,9 +28,22 @@ class ProductProvider with ChangeNotifier {
         orderBy: "created_at",
         orderType: OrderType.asc,
       );
+
+      print('=== FETCH PRODUCTS ===');
+      print('Raw data from DB: $res');
+      print('Total rows: ${res.length}');
+
       products
         ..clear()
         ..addAll(res.map((e) => Product.fromMap(e)).toList());
+
+      print('Products list after mapping: ${products.length} items');
+      for (var product in products) {
+        print('Product: ${product.name} (ID: ${product.id})');
+      }
+      print('======================');
+
+      notifyListeners();
     } catch (e) {
       debugPrint("Error loading products: $e");
     } finally {
@@ -52,29 +64,35 @@ class ProductProvider with ChangeNotifier {
     double? profitValue,
   }) async {
     _setLoading(true);
-    await db.insert(productTables, {
-      'name': name,
-      'profit_type': profitType,
-      'profit_value': profitValue,
-      'quantity': 0, // default 0, tidak diisi di awal
-      'description': description,
-      'img': img,
-    });
+    try {
+      const uuid = Uuid();
+      await db.insert(productTables, {
+        'id': uuid.v4(),
+        'name': name,
+        'profit_type': profitType,
+        'profit_value': profitValue,
+        'quantity': 0,
+        'description': description,
+        'img': img,
+      });
 
-    // Reload products dari database untuk memastikan sinkronisasi
-    await loadProducts();
+      // Reload products dari database untuk memastikan sinkronisasi
+      await loadProducts();
 
-    await analytics.logEvent(
-      name: 'add_product',
-      parameters: {'name': name, 'description': description},
-    );
+      await analytics.logEvent(
+        name: 'add_product',
+        parameters: {'name': name, 'description': description},
+      );
+    } finally {
+      _setLoading(false);
+    }
   }
 
   Future<void> editProduct({
     required String name,
     required String description,
     required String? img,
-    required int id,
+    required String id, // Changed from int to String for UUID
     String? profitType,
     double? profitValue,
     int? quantity,
@@ -86,7 +104,7 @@ class ProductProvider with ChangeNotifier {
 
     await db.update(
       productTables,
-      id: id.toString(),
+      id: id, // Already a String, no need for toString()
       data: {
         'name': name,
         'profit_type': profitType,
@@ -106,9 +124,13 @@ class ProductProvider with ChangeNotifier {
     );
   }
 
-  Future<void> deleteProduct(int id) async {
+  Future<void> deleteProduct(String id) async {
+    // Changed from int to String for UUID
     _setLoading(true);
-    await db.delete(productTables, id: id.toString());
+    await db.delete(
+      productTables,
+      id: id,
+    ); // Already a String, no need for toString()
 
     // Reload products dari database untuk memastikan sinkronisasi
     await loadProducts();

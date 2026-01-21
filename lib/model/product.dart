@@ -1,5 +1,5 @@
 class Product {
-  int? id;
+  String? id; // Changed from int? to String? untuk UUID
   String name;
   String? profitType; // 'percent' or 'flat'
   double? profitValue;
@@ -21,7 +21,7 @@ class Product {
 
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
-      id: map['id'] as int?,
+      id: map['id'] as String?, // Changed from int? to String?
       name: map['name'] as String? ?? '',
       profitType: map['profit_type'] as String?,
       profitValue: map['profit_value'] == null

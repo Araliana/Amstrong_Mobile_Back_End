@@ -121,6 +121,8 @@ class DBHelper {
         profit_type VARCHAR,
         profit_value REAL,
         quantity INTEGER DEFAULT 0,
+        description VARCHAR,
+        img VARCHAR,
         ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
@@ -133,7 +135,9 @@ class DBHelper {
         quantity INTEGER,
         hpp REAL,
         true_profit REAL,
-        final_Price REAL,
+        selling_price REAL,
+        discount REAL DEFAULT 0,
+        final_price REAL,
         ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0
       )
@@ -251,8 +255,38 @@ class DBHelper {
     final path = join(await getDatabasesPath(), "app.db");
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment version untuk trigger migration
       onCreate: (db, version) async {
+        for (var schema in tableSchemas.values) {
+          await db.execute(schema);
+        }
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        // Drop semua tables yang ada
+        final tables = [
+          'product',
+          'stock',
+          'orders',
+          'order_detail',
+          'menu',
+          'gallery',
+          'user_admin',
+          'role',
+          'access',
+          'role_access',
+          'product_type',
+          'dish_type',
+        ];
+
+        for (var table in tables) {
+          try {
+            await db.execute('DROP TABLE IF EXISTS $table');
+          } catch (e) {
+            print('Error dropping table $table: $e');
+          }
+        }
+
+        // Recreate semua tables dengan schema baru
         for (var schema in tableSchemas.values) {
           await db.execute(schema);
         }

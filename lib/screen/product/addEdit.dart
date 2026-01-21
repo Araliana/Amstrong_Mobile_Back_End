@@ -1,13 +1,12 @@
-// ignore_for_file: unused_field
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/components/image_picker.dart';
-import 'package:flutter_application_1/model/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
+import '../../model/product.dart';
 import '../../provider/product_provider.dart';
+import '../../components/image_picker.dart';
 import '../../utils/index.dart';
 
 class AddEditProductScreen extends StatefulWidget {
@@ -23,7 +22,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
-  // Controllers
   late TextEditingController _nameCtl;
   late TextEditingController _profitValueCtl;
   late TextEditingController _descCtl;
@@ -36,18 +34,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   @override
   void initState() {
     super.initState();
-    final product = widget.editProduct;
+    final p = widget.editProduct;
 
-    // [FIX] Menggunakan format yang aman untuk mengubah angka ke string
-    // Menghilangkan .0 di belakang angka jika bilangan bulat (contoh: 10000.0 jadi 10000)
-    _nameCtl = TextEditingController(text: product?.name ?? '');
-    _profitValueCtl = TextEditingController(
-      text: product?.profitValue?.toString() ?? '',
-    );
-    _descCtl = TextEditingController(text: product?.description ?? '');
+    _nameCtl = TextEditingController(text: p?.name ?? '');
+    _profitValueCtl =
+        TextEditingController(text: p?.profitValue?.toString() ?? '');
+    _descCtl = TextEditingController(text: p?.description ?? '');
 
-    _profitType = product?.profitType;
-    _currentImageUrl = product?.img;
+    _profitType = p?.profitType;
+    _currentImageUrl = p?.img;
   }
 
   @override
@@ -59,396 +54,119 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Future<void> _saveProduct() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final messenger = ScaffoldMessenger.of(context);
+      final provider = context.read<ProductProvider>();
 
       String? imageUrl = _currentImageUrl;
       if (_pickedFile != null) {
-        final uploaded = await uploadFile(_pickedFile!);
-        imageUrl = uploaded;
+        imageUrl = await uploadFile(_pickedFile!);
       }
-
-      final provider = Provider.of<ProductProvider>(context, listen: false);
 
       if (widget.editProduct == null) {
-        // ADD NEW PRODUCT
         await provider.addProduct(
           name: _nameCtl.text.trim(),
-          description: _descCtl.text.trim().isEmpty
-              ? 'No description'
-              : _descCtl.text.trim(),
+          description: _descCtl.text.trim(),
           img: imageUrl,
           profitType: _profitType,
-          profitValue: double.tryParse(_profitValueCtl.text.trim()),
+          profitValue: double.tryParse(_profitValueCtl.text),
         );
       } else {
-        // EDIT EXISTING PRODUCT
-        final productId = widget.editProduct?.id;
-        if (productId != null) {
-          await provider.editProduct(
-            id: productId,
-            name: _nameCtl.text.trim(),
-            description: _descCtl.text.trim().isEmpty
-                ? 'No description'
-                : _descCtl.text.trim(),
-            img: imageUrl,
-            profitType: _profitType,
-            profitValue: double.tryParse(_profitValueCtl.text.trim()),
-          );
-        } else {
-          throw Exception('Product ID is required for editing');
-        }
-      }
-
-      if (mounted) {
-        Navigator.pop(context, true);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.editProduct == null
-                  ? 'Product added successfully!'
-                  : 'Product updated successfully!',
-            ),
-            backgroundColor: Colors.green[700],
-            behavior: SnackBarBehavior.floating,
-          ),
+        await provider.editProduct(
+          id: widget.editProduct!.id,
+          name: _nameCtl.text.trim(),
+          description: _descCtl.text.trim(),
+          img: imageUrl,
+          profitType: _profitType,
+          profitValue: double.tryParse(_profitValueCtl.text),
         );
       }
+
+      if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red[700],
-          ),
+          SnackBar(content: Text(e.toString())),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return Scaffold(
-      backgroundColor: Colors.brown[50],
       appBar: AppBar(
-        backgroundColor: Colors.brown[700],
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          widget.editProduct == null ? 'Add Product' : 'Edit Product',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
+        title:
+            Text(widget.editProduct == null ? 'Add Product' : 'Edit Product'),
         actions: [
-          if (!_isLoading)
-            IconButton(
-              icon: Icon(Icons.check_rounded),
-              onPressed: _saveProduct,
-              tooltip: 'Save',
-            ),
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: _isLoading ? null : _saveProduct,
+          ),
         ],
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 800),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Image Section
-                  ImageSelector(
-                    initValue: widget.editProduct?.img,
-                    onChanged: (val) => setState(() {
-                      _pickedFile = val;
-                    }),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Basic Info Card
-                  _buildCard(
-                    title: 'Basic Information',
-                    icon: Icons.info_outline_rounded,
-                    children: [
-                      _buildTextField(
-                        controller: _nameCtl,
-                        label: 'Product Name',
-                        icon: Icons.shopping_bag_outlined,
-                        hint: 'e.g., Arabica Coffee Beans',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter product name';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
-                      _buildTextField(
-                        controller: _descCtl,
-                        label: 'Description',
-                        icon: Icons.description_outlined,
-                        hint: 'Product description',
-                        maxLines: 3,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-
-                  // Profit Card
-                  _buildCard(
-                    title: 'Profit Settings',
-                    icon: Icons.trending_up,
-                    children: [
-                      Text(
-                        'Select profit type first, then enter the profit value',
-                        style: TextStyle(
-                          color: Colors.brown[600],
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-
-                      // Profit Type Dropdown
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.brown[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.brown[200]!),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _profitType,
-                            isExpanded: true,
-                            hint: Text('Select Profit Type'),
-                            icon: Icon(
-                              Icons.arrow_drop_down,
-                              color: Colors.brown[600],
-                            ),
-                            style: TextStyle(
-                              color: Colors.brown[700],
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'flat',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.attach_money,
-                                      size: 18,
-                                      color: Colors.green[700],
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Flat (IDR)'),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'percent',
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.percent,
-                                      size: 18,
-                                      color: Colors.blue[700],
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Percent (%)'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              setState(() => _profitType = value);
-                            },
-                          ),
-                        ),
-                      ),
-
-                      // Profit Value - hanya muncul jika profit type sudah dipilih
-                      if (_profitType != null) ...[
-                        SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _profitValueCtl,
-                          label: _profitType == 'percent'
-                              ? 'Profit Percentage'
-                              : 'Profit Amount (IDR)',
-                          icon: _profitType == 'percent'
-                              ? Icons.percent
-                              : Icons.attach_money,
-                          hint: '0',
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d{0,2}'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                  SizedBox(height: 32),
-
-                  // Save Button
-                  SizedBox(
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _saveProduct,
-                      icon: _isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Icon(Icons.save_rounded),
-                      label: Text(
-                        _isLoading
-                            ? 'Saving...'
-                            : (widget.editProduct == null
-                                  ? 'Add Product'
-                                  : 'Update Product'),
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown[700],
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.brown.withOpacity(0.1),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              Icon(icon, color: Colors.brown[700], size: 24),
-              SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.brown[900],
+              ImageSelector(
+                initValue: _currentImageUrl,
+                onChanged: (file) => setState(() => _pickedFile = file),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _nameCtl,
+                decoration:
+                    const InputDecoration(labelText: 'Product Name'),
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _profitType,
+                decoration:
+                    const InputDecoration(labelText: 'Profit Type'),
+                items: const [
+                  DropdownMenuItem(value: 'flat', child: Text('Flat')),
+                  DropdownMenuItem(value: 'percent', child: Text('Percent')),
+                ],
+                onChanged: (v) => setState(() => _profitType = v),
+              ),
+              if (_profitType != null) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _profitValueCtl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                  ],
+                  decoration:
+                      const InputDecoration(labelText: 'Profit Value'),
                 ),
+              ],
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _descCtl,
+                maxLines: 3,
+                decoration:
+                    const InputDecoration(labelText: 'Description'),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _saveProduct,
+                child: Text(
+                    _isLoading ? 'Saving...' : 'Save Product'),
               ),
             ],
           ),
-          SizedBox(height: 20),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    int maxLines = 1,
-    bool readOnly = false,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      maxLines: maxLines,
-      readOnly: readOnly,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.brown[600], size: 20),
-        suffixIcon: suffixIcon,
-        labelStyle: TextStyle(
-          color: Colors.brown[700],
-          fontWeight: FontWeight.w600,
         ),
-        hintStyle: TextStyle(color: Colors.grey[400]),
-        filled: true,
-        fillColor: readOnly ? Colors.grey[100] : Colors.brown[50],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.brown[100]!, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.brown[700]!, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red[300]!, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red[700]!, width: 2),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }

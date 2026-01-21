@@ -1,7 +1,12 @@
 class Stock {
+<<<<<<< HEAD
+  int? id;
+  int productId;
+=======
   String? id; // Changed from int? to String? untuk UUID
   String productId; // Changed from int to String untuk UUID
   String? productName; // untuk display, dari join
+>>>>>>> 8dfd70f4d769de21feeec897811d1e976ff67727
   int quantity;
   double hpp; // Harga Pokok Penjualan
   double trueProfit; // Profit yang dikalkulasi
@@ -27,9 +32,15 @@ class Stock {
 
   factory Stock.fromMap(Map<String, dynamic> map) {
     return Stock(
+<<<<<<< HEAD
+      id: map['id'] as int?,
+      productId: map['product_id'] as int? ?? 0,
+      product: product,
+=======
       id: map['id'] as String?, // Changed from int? to String?
       productId: map['product_id'] as String, // Changed from int to String
       productName: map['product_name'] as String?,
+>>>>>>> 8dfd70f4d769de21feeec897811d1e976ff67727
       quantity: map['quantity'] as int? ?? 0,
       hpp: map['hpp'] == null
           ? 0.0

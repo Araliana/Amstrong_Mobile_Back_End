@@ -14,12 +14,15 @@ class OrderFormPage extends StatefulWidget {
 class _OrderFormPageState extends State<OrderFormPage> {
   final customerNameCtrl = TextEditingController();
   final customerAddressCtrl = TextEditingController();
+
   final List<OrderItemInput> items = [];
 
   @override
   void initState() {
     super.initState();
-    context.read<ProductProvider>().loadProducts();
+    Future.microtask(
+      () => context.read<ProductProvider>().loadProducts(),
+    );
   }
 
   void addItem() {
@@ -29,7 +32,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
     setState(() {
       items.add(
         OrderItemInput(
-          productId: products.first.id,
+          productId: products.first.id, // ✅ int, no !
           quantity: 1,
         ),
       );
@@ -46,14 +49,13 @@ class _OrderFormPageState extends State<OrderFormPage> {
         total += product.sellingPrice * item.quantity;
       }
     }
-
     return total;
   }
 
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
-    final orderProvider = context.read<OrderProvider>();
+    final orderProvider = context.watch<OrderProvider>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Add Order')),
@@ -61,6 +63,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
+            /// CUSTOMER
             TextField(
               controller: customerNameCtrl,
               decoration: const InputDecoration(labelText: 'Customer Name'),
@@ -69,82 +72,90 @@ class _OrderFormPageState extends State<OrderFormPage> {
               controller: customerAddressCtrl,
               decoration: const InputDecoration(labelText: 'Customer Address'),
             ),
+
             const SizedBox(height: 16),
 
+            /// ITEM LIST
             Expanded(
-              child: ListView.builder(
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
+              child: items.isEmpty
+                  ? const Center(child: Text('No items'))
+                  : ListView.builder(
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
 
-                  return Card(
-                    child: ListTile(
-                      title: DropdownButton<int>(
-                        value: item.productId,
-                        isExpanded: true,
-                        items: productProvider.products
-                            .map(
-                              (p) => DropdownMenuItem<int>(
-                                value: p.id,
-                                child: Text(p.name),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (val) {
-                          if (val == null) return;
-                          setState(() {
-                            items[index] = OrderItemInput(
-                              productId: val,
-                              quantity: item.quantity,
-                            );
-                          });
-                        },
-                      ),
-                      subtitle: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove),
-                            onPressed: item.quantity <= 1
-                                ? null
-                                : () {
+                        return Card(
+                          child: ListTile(
+                            title: DropdownButton<int>(
+                              value: item.productId,
+                              isExpanded: true,
+                              items: productProvider.products
+                                  .map(
+                                    (p) => DropdownMenuItem<int>(
+                                      value: p.id,
+                                      child: Text(p.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (val) {
+                                if (val == null) return;
+                                setState(() {
+                                  items[index] = OrderItemInput(
+                                    productId: val,
+                                    quantity: item.quantity,
+                                  );
+                                });
+                              },
+                            ),
+                            subtitle: Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: item.quantity <= 1
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            items[index] = OrderItemInput(
+                                              productId: item.productId,
+                                              quantity: item.quantity - 1,
+                                            );
+                                          });
+                                        },
+                                ),
+                                Text(item.quantity.toString()),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () {
                                     setState(() {
                                       items[index] = OrderItemInput(
                                         productId: item.productId,
-                                        quantity: item.quantity - 1,
+                                        quantity: item.quantity + 1,
                                       );
                                     });
                                   },
+                                ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                setState(() => items.removeAt(index));
+                              },
+                            ),
                           ),
-                          Text(item.quantity.toString()),
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () {
-                              setState(() {
-                                items[index] = OrderItemInput(
-                                  productId: item.productId,
-                                  quantity: item.quantity + 1,
-                                );
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          setState(() => items.removeAt(index));
-                        },
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
 
+            /// TOTAL
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total', style: TextStyle(fontSize: 16)),
+                const Text(
+                  'Total',
+                  style: TextStyle(fontSize: 16),
+                ),
                 Text(
                   calculateTotal().toStringAsFixed(0),
                   style: const TextStyle(
@@ -157,6 +168,7 @@ class _OrderFormPageState extends State<OrderFormPage> {
 
             const SizedBox(height: 12),
 
+            /// BUTTONS
             Row(
               children: [
                 Expanded(
@@ -168,17 +180,29 @@ class _OrderFormPageState extends State<OrderFormPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: items.isEmpty
+                    onPressed: items.isEmpty || orderProvider.isLoading
                         ? null
                         : () async {
-                            await orderProvider.createOrder(
-                              items: items,
-                              customerName: customerNameCtrl.text,
-                              customerAddress: customerAddressCtrl.text,
-                            );
-                            if (mounted) Navigator.pop(context);
+                            try {
+                              await orderProvider.createOrder(
+                                items: items,
+                                customerName: customerNameCtrl.text,
+                                customerAddress: customerAddressCtrl.text,
+                              );
+                              if (mounted) Navigator.pop(context);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
                           },
-                    child: const Text('Add Order'),
+                    child: orderProvider.isLoading
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Add Order'),
                   ),
                 ),
               ],

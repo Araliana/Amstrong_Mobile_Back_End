@@ -117,12 +117,9 @@ class DBHelper {
       CREATE TABLE product(
         id TEXT PRIMARY KEY,
         name VARCHAR,
-        description TEXT,
-        img VARCHAR,
+        slug VARCHAR,
         profit_type VARCHAR,
-        profit_amount REAL,
-        discount_type VARCHAR,
-        discount_value REAL,
+        profit_value REAL,
         quantity INTEGER DEFAULT 0,
         ${DBHelper().renderTimestamp()}
         is_synced INTEGER DEFAULT 0

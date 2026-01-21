@@ -54,39 +54,16 @@ void showProductDetail(BuildContext context, Product product) {
 
               // --- NAMA PRODUK ---
               _buildDetailRow('Name', product.name),
-
-              // --- LOGIKA HARGA & DISKON ---
-              // Jika ada discountPrice (nominal potongan), kita hitung harga akhir
-              if (product.discountPrice != null &&
-                  product.discountPrice! > 0) ...[
-                // 1. Harga Asli
+              _buildDetailRow('Quantity', '${product.quantity}'),
+              if (product.profitType != null &&
+                  product.profitValue != null) ...[
                 _buildDetailRow(
-                  'Original Price',
-                  'IDR ${_formatPrice(product.price)}',
+                  'Profit',
+                  product.profitType == 'percent'
+                      ? '${product.profitValue}%'
+                      : 'IDR ${_formatPrice(product.profitValue!)}',
                 ),
-
-                // 2. Nominal Potongan (Diskon)
-                _buildDetailRow(
-                  'Discount',
-                  '- IDR ${_formatPrice(product.discountPrice!)}',
-                  textColor: Colors.red,
-                ),
-
-                // 3. Harga Akhir (Harga Asli - Potongan)
-                _buildDetailRow(
-                  'Final Price',
-                  'IDR ${_formatPrice(product.price - product.discountPrice!)}',
-                  highlight: true,
-                ),
-              ] else ...[
-                // Jika tidak ada diskon, tampilkan harga normal saja
-                _buildDetailRow('Price', 'IDR ${_formatPrice(product.price)}'),
               ],
-
-              // --- STOK ---
-              _buildDetailRow('Stock', '${product.stock} items'),
-
-              // --- DESKRIPSI ---
               if (product.description != null &&
                   product.description!.isNotEmpty)
                 Column(

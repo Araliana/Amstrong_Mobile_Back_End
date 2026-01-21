@@ -25,7 +25,7 @@ class UserAdmin {
 
   factory UserAdmin.fromMap(Map<String, dynamic> map) {
     return UserAdmin(
-      id: map['id'] as String,
+      id: map['id'].toString(), // Handle int atau String
       fullname: map['fullname'] as String,
       username: map['username'] as String,
       img: map['img'] as String?,
@@ -34,7 +34,7 @@ class UserAdmin {
           ? DateTime.parse(map['last_login'])
           : null,
       createdAt: DateTime.parse(map['created_at']),
-      roleId: map['role_id'],
+      roleId: map['role_id'].toString(), // Handle int atau String
       role: map['role'] == null
           ? null
           : Role.fromMap((map['role'] as Map).cast<String, dynamic>()),

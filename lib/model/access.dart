@@ -25,7 +25,7 @@ class Access {
 
   factory Access.fromMap(Map<String, dynamic> map) {
     return Access(
-      id: map['id'],
+      id: map['id'].toString(),
       name: map['name'],
       nameId: map['name_id'],
       accessPath: map['access_path'],

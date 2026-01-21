@@ -7,32 +7,30 @@ import 'package:flutter_application_1/components/image_picker.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../provider/product_provider.dart';
 import '../../utils/index.dart';
 
-class ProductFormPage extends StatefulWidget {
+class AddEditProductScreen extends StatefulWidget {
   final Product? editProduct;
 
-  const ProductFormPage({super.key, this.editProduct});
+  const AddEditProductScreen({super.key, this.editProduct});
 
   @override
-  State<ProductFormPage> createState() => _ProductFormPageState();
+  State<AddEditProductScreen> createState() => _AddEditProductScreenState();
 }
 
-class _ProductFormPageState extends State<ProductFormPage> {
+class _AddEditProductScreenState extends State<AddEditProductScreen> {
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
 
   // Controllers
   late TextEditingController _nameCtl;
-  late TextEditingController _priceCtl;
-  late TextEditingController _discountPriceCtl;
-  late TextEditingController _stockCtl;
+  late TextEditingController _profitValueCtl;
   late TextEditingController _descCtl;
 
   File? _pickedFile;
   String? _currentImageUrl;
+  String? _profitType;
   bool _isLoading = false;
 
   @override
@@ -43,38 +41,19 @@ class _ProductFormPageState extends State<ProductFormPage> {
     // [FIX] Menggunakan format yang aman untuk mengubah angka ke string
     // Menghilangkan .0 di belakang angka jika bilangan bulat (contoh: 10000.0 jadi 10000)
     _nameCtl = TextEditingController(text: product?.name ?? '');
-    _priceCtl = TextEditingController(
-      text: product != null ? _formatNumberValue(product.price) : '',
+    _profitValueCtl = TextEditingController(
+      text: product?.profitValue?.toString() ?? '',
     );
-    _discountPriceCtl = TextEditingController(
-      text: (product?.discountPrice != null)
-          ? _formatNumberValue(product!.discountPrice!)
-          : '',
-    );
-    _stockCtl = TextEditingController(text: product?.stock.toString() ?? '0');
     _descCtl = TextEditingController(text: product?.description ?? '');
 
+    _profitType = product?.profitType;
     _currentImageUrl = product?.img;
-
-    // Listen to discount and price changes to update preview
-    _discountPriceCtl.addListener(() => setState(() {}));
-    _priceCtl.addListener(() => setState(() {}));
-  }
-
-  // Helper untuk menghilangkan .0 pada textfield
-  String _formatNumberValue(num value) {
-    if (value % 1 == 0) {
-      return value.toInt().toString();
-    }
-    return value.toString();
   }
 
   @override
   void dispose() {
     _nameCtl.dispose();
-    _priceCtl.dispose();
-    _discountPriceCtl.dispose();
-    _stockCtl.dispose();
+    _profitValueCtl.dispose();
     _descCtl.dispose();
     super.dispose();
   }
@@ -97,27 +76,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
       final provider = Provider.of<ProductProvider>(context, listen: false);
 
-      // Persiapan data
-      final String name = _nameCtl.text.trim();
-      final double price = double.tryParse(_priceCtl.text.trim()) ?? 0.0;
-      final int stock =
-          int.tryParse(_stockCtl.text.trim()) ?? 0; // [FIX] Ambil nilai stok
-      final double? discountPrice = double.tryParse(
-        _discountPriceCtl.text.trim(),
-      );
-      final String description = _descCtl.text.trim().isEmpty
-          ? 'No description'
-          : _descCtl.text.trim();
-
       if (widget.editProduct == null) {
         // ADD NEW PRODUCT
         await provider.addProduct(
-          name: name,
-          price: price,
-          stock: stock, // [FIX] Masukkan stok
-          description: description,
+          name: _nameCtl.text.trim(),
+          description: _descCtl.text.trim().isEmpty
+              ? 'No description'
+              : _descCtl.text.trim(),
           img: imageUrl,
-          discountPrice: discountPrice,
+          profitType: _profitType,
+          profitValue: double.tryParse(_profitValueCtl.text.trim()),
         );
       } else {
         // EDIT EXISTING PRODUCT
@@ -125,12 +93,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
         if (productId != null) {
           await provider.editProduct(
             id: productId,
-            name: name,
-            price: price,
-            stock: stock, // [FIX] Masukkan stok
-            description: description,
+            name: _nameCtl.text.trim(),
+            description: _descCtl.text.trim().isEmpty
+                ? 'No description'
+                : _descCtl.text.trim(),
             img: imageUrl,
-            discountPrice: discountPrice,
+            profitType: _profitType,
+            profitValue: double.tryParse(_profitValueCtl.text.trim()),
           );
         } else {
           throw Exception('Product ID is required for editing');
@@ -239,92 +208,103 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   SizedBox(height: 16),
 
-                  // Pricing Card
+                  // Profit Card
                   _buildCard(
-                    title: 'Pricing',
-                    icon: Icons.attach_money_rounded,
+                    title: 'Profit Settings',
+                    icon: Icons.trending_up,
                     children: [
-                      _buildTextField(
-                        controller: _priceCtl,
-                        label: 'Selling Price',
-                        icon: Icons.local_offer_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Price is required';
-                          }
-                          if (double.tryParse(value) == null ||
-                              double.parse(value) <= 0) {
-                            return 'Invalid price';
-                          }
-                          return null;
-                        },
+                      Text(
+                        'Select profit type first, then enter the profit value',
+                        style: TextStyle(
+                          color: Colors.brown[600],
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: 12),
 
-                      _buildTextField(
-                        controller: _discountPriceCtl,
-                        label: 'Discount Price (Optional)',
-                        icon: Icons.discount_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                      ),
-                      // Preview Harga Akhir (Kalkulasi sederhana untuk info user)
-                      if (_discountPriceCtl.text.isNotEmpty &&
-                          double.tryParse(_discountPriceCtl.text) != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Builder(
-                            builder: (context) {
-                              double price =
-                                  double.tryParse(_priceCtl.text) ?? 0;
-                              double disc =
-                                  double.tryParse(_discountPriceCtl.text) ?? 0;
-                              // Jika diskon adalah harga coret (harga baru), maka hematnya adalah selisih
-                              double save = price - disc;
-                              return Text(
-                                'User saves: IDR ${_formatPrice(save > 0 ? save : 0)}',
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                      // Profit Type Dropdown
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.brown[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.brown[200]!),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _profitType,
+                            isExpanded: true,
+                            hint: Text('Select Profit Type'),
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.brown[600],
+                            ),
+                            style: TextStyle(
+                              color: Colors.brown[700],
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 'flat',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.attach_money,
+                                      size: 18,
+                                      color: Colors.green[700],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Flat (IDR)'),
+                                  ],
                                 ),
-                              );
+                              ),
+                              DropdownMenuItem(
+                                value: 'percent',
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.percent,
+                                      size: 18,
+                                      color: Colors.blue[700],
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Percent (%)'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() => _profitType = value);
                             },
                           ),
                         ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-
-                  // Stock Card
-                  _buildCard(
-                    title: 'Inventory',
-                    icon: Icons.inventory_2_outlined,
-                    children: [
-                      _buildTextField(
-                        controller: _stockCtl,
-                        label: 'Stock Quantity',
-                        icon: Icons.inventory_outlined,
-                        hint: '0',
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter stock quantity';
-                          }
-                          return null;
-                        },
                       ),
+
+                      // Profit Value - hanya muncul jika profit type sudah dipilih
+                      if (_profitType != null) ...[
+                        SizedBox(height: 16),
+                        _buildTextField(
+                          controller: _profitValueCtl,
+                          label: _profitType == 'percent'
+                              ? 'Profit Percentage'
+                              : 'Profit Amount (IDR)',
+                          icon: _profitType == 'percent'
+                              ? Icons.percent
+                              : Icons.attach_money,
+                          hint: '0',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d+\.?\d{0,2}'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                   SizedBox(height: 32),
@@ -471,10 +451,5 @@ class _ProductFormPageState extends State<ProductFormPage> {
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
-  }
-
-  String _formatPrice(double price) {
-    final formatter = NumberFormat('#,###', 'id_ID');
-    return formatter.format(price.toInt());
   }
 }

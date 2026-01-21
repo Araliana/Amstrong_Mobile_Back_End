@@ -1,1 +1,30 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"kjm-admin","appId":"1:45279726425:android:4ab8c51267236df096da48","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"kjm-admin","appId":"1:45279726425:ios:bdf6cd2dbad335ce96da48","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"kjm-admin","configurations":{"android":"1:45279726425:android:4ab8c51267236df096da48","ios":"1:45279726425:ios:bdf6cd2dbad335ce96da48"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "kjm-admin",
+          "appId": "1:45279726425:android:4ab8c51267236df096da48",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "kjm-admin",
+          "appId": "1:45279726425:ios:bdf6cd2dbad335ce96da48",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "kjm-admin",
+          "configurations": {
+            "android": "1:45279726425:android:4ab8c51267236df096da48",
+            "ios": "1:45279726425:ios:bdf6cd2dbad335ce96da48"
+          }
+        }
+      }
+    }
+  }
+}

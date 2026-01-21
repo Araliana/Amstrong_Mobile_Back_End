@@ -3,7 +3,6 @@ import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:flutter_application_1/model/stock.dart';
-import 'package:uuid/uuid.dart';
 
 class StockProvider with ChangeNotifier {
   final List<Stock> stocks = [];
@@ -11,7 +10,6 @@ class StockProvider with ChangeNotifier {
   final SyncManager sync = SyncManager();
   final Tables stockTable = Tables.stock;
   final Tables productTable = Tables.product;
-  final uuid = const Uuid();
 
   bool isLoading = false;
 
@@ -60,43 +58,33 @@ class StockProvider with ChangeNotifier {
     _setLoading(false);
   }
 
-  Future<void> addStock({
-    required int productId,
-    required int quantity,
-    required double hpp,
-    required double finalPrice,
-    double? trueProfit,
-  }) async {
-    _setLoading(true);
+  Future<void> updateStockQuantity(
+    Stock stock,
+    int newQuantity,
+  ) async {
+    if (newQuantity < 0) return;
 
-    await db.insert(stockTable, {
-      'id': uuid.v4(),
-      'product_id': productId,
-      'quantity': quantity,
-      'hpp': hpp,
-      'true_profit': trueProfit,
-      'final_Price': finalPrice,
-    });
-
-    await sync.syncTable(stockTable);
-    await loadStocks();
-  }
-
-  Future<void> updateStockQuantity({
-    required Stock oldStock,
-    required int newQuantity,
-  }) async {
     _setLoading(true);
 
     await db.update(
       stockTable,
-      id: oldStock.id.toString(),
+      id: stock.id.toString(),
+      data: {
+        'quantity': newQuantity,
+      },
+    );
+
+    await db.update(
+      productTable,
+      id: stock.productId.toString(),
       data: {
         'quantity': newQuantity,
       },
     );
 
     await sync.syncTable(stockTable);
+    await sync.syncTable(productTable);
+
     await loadStocks();
   }
 

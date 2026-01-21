@@ -103,6 +103,7 @@ class DBHelper {
       CREATE TABLE access(
         id TEXT PRIMARY KEY,
         name VARCHAR,
+        name_id VARCHAR,
         access_path VARCHAR,
         category VARCHAR,
         id_sort INTEGER,
@@ -142,12 +143,12 @@ class DBHelper {
     ''',
     Tables.order:
         '''
-      CREATE TABLE order(
+      CREATE TABLE orders(
         id TEXT PRIMARY KEY,
         total_price REAL,
         total_profit REAL,
         total_hpp REAL,
-        status VARCHAR, // PENDING, COMPLETE, CANCEL
+        status VARCHAR,
         customer_name VARCHAR,
         customer_address VARCHAR,
         ${DBHelper().renderTimestamp()}
@@ -234,7 +235,7 @@ class DBHelper {
     Tables.access: "access",
     Tables.product: "product",
     Tables.stock: "stock",
-    Tables.order: "order",
+    Tables.order: "orders",
     Tables.orderDetail: "order_detail",
     Tables.roleAccess: "role_access",
     Tables.gallery: "gallery",

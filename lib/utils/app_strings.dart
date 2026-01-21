@@ -11,7 +11,11 @@ class AppStrings {
       'gallery': 'Galeri',
       'reports': 'Laporan',
       'settings': 'Pengaturan',
-      
+      'today': 'Hari ini',
+      'week': 'Minggu ini',
+      'month': 'Bulan ini',
+      'year': 'Tahun ini',
+
       // --- Aksi Umum ---
       'add': 'Tambah',
       'edit': 'Ubah',
@@ -22,7 +26,7 @@ class AppStrings {
       'filter': 'Filter',
       'close': 'Tutup',
       'logout': 'Keluar',
-      
+
       // --- Produk & Form ---
       'product_list': 'Daftar Produk',
       'add_product': 'Tambah Produk',
@@ -35,7 +39,7 @@ class AppStrings {
       'image': 'Gambar',
       'discount': 'Diskon',
       'final_price': 'Harga Akhir',
-      
+
       // --- Pesan ---
       'confirm_delete': 'Apakah Anda yakin ingin menghapus ini?',
       'success_add': 'Berhasil menambahkan data',
@@ -59,7 +63,8 @@ class AppStrings {
       //changePass
       'change_password_title': 'Ganti Kata Sandi',
       'update_password_heading': 'Perbarui Kata Sandi',
-      'update_password_desc': 'Masukkan kata sandi saat ini dan buat kata sandi baru',
+      'update_password_desc':
+          'Masukkan kata sandi saat ini dan buat kata sandi baru',
       'current_password': 'Kata Sandi Saat Ini',
       'new_password': 'Kata Sandi Baru',
       'confirm_password': 'Konfirmasi Kata Sandi',
@@ -117,14 +122,6 @@ class AppStrings {
       'confirm_delete_post': 'Apakah Anda yakin ingin menghapus postingan ini?',
       'post_title': 'Postingan',
     },
-
-
-
-
-
-
-
-
     'en': {
       // --- Menu / Sidebar ---
       'dashboard': 'Dashboard',
@@ -136,7 +133,11 @@ class AppStrings {
       'gallery': 'Gallery',
       'reports': 'Reports',
       'settings': 'Settings',
-      
+      'today': 'Today',
+      'week': 'This Week',
+      'month': 'This Month',
+      'year': 'This Year',
+
       // --- General Actions ---
       'add': 'Add',
       'edit': 'Edit',
@@ -147,7 +148,7 @@ class AppStrings {
       'filter': 'Filter',
       'close': 'Close',
       'logout': 'Logout',
-      
+
       // --- Product & Form ---
       'product_list': 'Product List',
       'add_product': 'Add Product',
@@ -160,7 +161,7 @@ class AppStrings {
       'image': 'Image',
       'discount': 'Discount',
       'final_price': 'Final Price',
-      
+
       // --- Messages ---
       'confirm_delete': 'Are you sure you want to delete this?',
       'success_add': 'Data added successfully',
@@ -184,7 +185,8 @@ class AppStrings {
       //changePass
       'change_password_title': 'Change Password',
       'update_password_heading': 'Update Your Password',
-      'update_password_desc': 'Please enter your current password and choose a new password',
+      'update_password_desc':
+          'Please enter your current password and choose a new password',
       'current_password': 'Current Password',
       'new_password': 'New Password',
       'confirm_password': 'Confirm New Password',

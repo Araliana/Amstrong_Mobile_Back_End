@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class Access {
   final String id;
   final String name;
+  final String nameId;
   final String accessPath;
   final String category;
   final int idSort;
@@ -13,6 +14,7 @@ class Access {
   Access({
     required this.id,
     required this.name,
+    required this.nameId,
     required this.accessPath,
     required this.category,
     required this.idSort,
@@ -25,6 +27,7 @@ class Access {
     return Access(
       id: map['id'],
       name: map['name'],
+      nameId: map['name_id'],
       accessPath: map['access_path'],
       category: map['category'],
       idSort: map['id_sort'],

@@ -44,16 +44,19 @@ class SeedService {
       "ORDERS": [
         DataPermission(
           name: "All Orders",
+          nameId: "Semua Pesanan",
           accessPath: "/orders",
           icon: "orders",
         ),
         DataPermission(
           name: "Pending Orders",
+          nameId: "Pesanan Tertunda",
           accessPath: "/pending-order",
           icon: "orders_pending",
         ),
         DataPermission(
           name: "Completed Orders",
+          nameId: "Pesanan Selesai",
           accessPath: "/completed-orders",
           icon: "orders_completed",
         ),
@@ -61,16 +64,19 @@ class SeedService {
       "PRODUCTS & STOCK": [
         DataPermission(
           name: "Products",
+          nameId: "Produk",
           accessPath: "/products",
           icon: "products",
         ),
         DataPermission(
           name: "Categories",
+          nameId: "Kategori",
           accessPath: "/categories",
           icon: "categories",
         ),
         DataPermission(
           name: "Inventory",
+          nameId: "Inventaris",
           accessPath: "/inventory",
           icon: "inventory",
         ),
@@ -78,20 +84,33 @@ class SeedService {
       "FINANCE": [
         DataPermission(
           name: "Cash Flow",
+          nameId: "Arus Kas",
           accessPath: "/cash-flow",
           icon: "cashflow",
         ),
-        DataPermission(name: "Report", accessPath: "/report", icon: "report"),
+        DataPermission(
+          name: "Report",
+          nameId: "Laporan",
+          accessPath: "/report",
+          icon: "report",
+        ),
       ],
       "CONTENT & MEDIA": [
-        DataPermission(name: "Menu", accessPath: "/menu", icon: "menu_food"),
+        DataPermission(
+          name: "Menu",
+          nameId: "Menu",
+          accessPath: "/menu",
+          icon: "menu_food",
+        ),
         DataPermission(
           name: "Dish Types",
+          nameId: "Jenis Hidangan",
           accessPath: "/dish-types",
           icon: "dish_types",
         ),
         DataPermission(
           name: "Gallery",
+          nameId: "Galeri",
           accessPath: "/gallery",
           icon: "gallery",
         ),
@@ -99,12 +118,19 @@ class SeedService {
       "MANAGEMENT": [
         DataPermission(
           name: "Admin Users",
+          nameId: "Admin Pengguna",
           accessPath: "/user-admin",
           icon: "user_admin",
         ),
-        DataPermission(name: "Roles", accessPath: "/roles", icon: "roles"),
+        DataPermission(
+          name: "Roles",
+          nameId: "Peran",
+          accessPath: "/roles",
+          icon: "roles",
+        ),
         DataPermission(
           name: "Accesses",
+          nameId: "Akses",
           accessPath: "/accesses",
           icon: "accesses",
         ),
@@ -128,6 +154,7 @@ class SeedService {
             .set({
               'id': accessId,
               'name': access.name,
+              'name_id': access.nameId,
               'access_path': access.accessPath,
               'category': entry.key,
               'icon': access.icon,
@@ -171,11 +198,13 @@ class SeedService {
 
 class DataPermission {
   final String name;
+  final String nameId;
   final String accessPath;
   final String icon;
 
   DataPermission({
     required this.name,
+    required this.nameId,
     required this.accessPath,
     required this.icon,
   });

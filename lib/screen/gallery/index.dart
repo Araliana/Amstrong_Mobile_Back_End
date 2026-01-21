@@ -44,14 +44,20 @@ class _GalleryScreenState extends State<GalleryScreen> {
 
           return memos.isEmpty
               // [TRANSLATE] Empty state title
-              ? buildEmptyState(lang.getText('gallery_title'), Icons.photo_library_outlined)
+              ? buildEmptyState(
+                  lang.getText('gallery_title'),
+                  Icons.photo_library_outlined,
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: memos.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       // [TRANSLATE] Header title
-                      return buildHeader(lang.getText('gallery_title'), Icons.collections_rounded);
+                      return buildHeader(
+                        lang.getText('gallery_title'),
+                        Icons.collections_rounded,
+                      );
                     }
                     final memo = memos[index - 1];
                     // [MODIFIED] Pass lang provider to helper function
@@ -102,12 +108,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
             borderRadius: BorderRadius.circular(4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -142,7 +148,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                       color: Colors.brown[400],
                                       value: progress.expectedTotalBytes != null
                                           ? progress.cumulativeBytesLoaded /
-                                              progress.expectedTotalBytes!
+                                                progress.expectedTotalBytes!
                                           : null,
                                     ),
                                   ),
@@ -189,7 +195,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -197,7 +203,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         ),
                         child: Text(
                           // [TRANSLATE] Status Badge
-                          memo.isActive ? lang.getText('active') : lang.getText('inactive'),
+                          memo.isActive
+                              ? lang.getText('active')
+                              : lang.getText('inactive'),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -214,11 +222,11 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       right: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                             ),
                           ],
@@ -257,8 +265,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     // [TRANSLATE] Menu Toggle
-                                    memo.isActive 
-                                        ? lang.getText('deactivate') 
+                                    memo.isActive
+                                        ? lang.getText('deactivate')
                                         : lang.getText('activate'),
                                     style: const TextStyle(
                                       color: Colors.orange,
@@ -341,7 +349,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           Icon(
                             Icons.format_quote,
                             size: 24,
-                            color: categoryColor.withOpacity(0.5),
+                            color: categoryColor.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 8),
                           // Quote Text
@@ -362,7 +370,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             child: Icon(
                               Icons.format_quote,
                               size: 24,
-                              color: categoryColor.withOpacity(0.5),
+                              color: categoryColor.withValues(alpha: 0.5),
                             ),
                           ),
                         ],
@@ -377,7 +385,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         // Avatar
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor: categoryColor.withOpacity(0.1),
+                          backgroundColor: categoryColor.withValues(alpha: 0.1),
                           child: Icon(
                             categoryIcon,
                             size: 18,

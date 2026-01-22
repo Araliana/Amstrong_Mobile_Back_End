@@ -7,7 +7,7 @@ class Product {
   String description;
   String img;
   final String categoryId;
-  final Category category;
+  final Category? category;
   String profitType;
   double profitAmount;
   String? discountType;
@@ -46,9 +46,9 @@ class Product {
       name: map['name'] as String? ?? '',
       description: map['description'] as String? ?? '',
       img: map['img'] as String? ?? '',
-      category: Category.fromMap(
-        (map['category'] as Map).cast<String, dynamic>(),
-      ),
+      category: map['category'] != null
+          ? Category.fromMap((map['category'] as Map).cast<String, dynamic>())
+          : null,
       categoryId: map['category_id'] as String? ?? '',
       profitType: map['profit_type'] as String? ?? 'flat',
       profitAmount: map['profit_amount'] != null

@@ -4,6 +4,7 @@ import 'package:flutter_application_1/model/product.dart';
 import 'package:flutter_application_1/model/stock.dart';
 import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/provider/stock_provider.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -20,7 +21,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Product? _selectedProduct;
-  final _hppController = TextEditingController();
+  final _hppPerUnitController = TextEditingController();
   final _profitController = TextEditingController();
   final _finalPriceController = TextEditingController();
   final _quantityController = TextEditingController();
@@ -38,7 +39,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
     super.initState();
 
     // Listen to changes for auto-calculation
-    _hppController.addListener(_onHppChanged);
+    _hppPerUnitController.addListener(_onHppChanged);
     _profitController.addListener(_onProfitChanged);
     _finalPriceController.addListener(_onFinalPriceChanged);
   }
@@ -74,7 +75,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
       orElse: () => productProvider.products.first,
     );
 
-    _hppController.text = stock.hpp.toStringAsFixed(0);
+    _hppPerUnitController.text = stock.hpp.toStringAsFixed(0);
     _profitController.text = stock.trueProfit.toStringAsFixed(0);
     _finalPriceController.text = stock.finalPrice.toStringAsFixed(0);
     _quantityController.text = stock.quantity.toString();
@@ -84,63 +85,88 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
   }
 
   void _onHppChanged() {
-    if (_hppController.text.isEmpty) return;
+    if (_hppPerUnitController.text.isEmpty) return;
 
-    final hpp = double.tryParse(_hppController.text) ?? 0;
+    final hppPerUnit = double.tryParse(_hppPerUnitController.text) ?? 0;
 
-    // Auto-calculate profit dari product settings jika belum manual
-    if (!_isProfitManuallyChanged && _selectedProduct != null) {
-      double calculatedProfit = 0;
-      if (_selectedProduct!.hasProfit) {
+    setState(() {
+      // Auto-calculate profit dari product settings jika belum manual
+      if (!_isProfitManuallyChanged && _selectedProduct != null) {
+        double calculatedProfit = 0;
         if (_selectedProduct!.profitType == 'percent') {
-          calculatedProfit = hpp * (_selectedProduct!.profitAmount / 100);
+          calculatedProfit =
+              hppPerUnit * (_selectedProduct!.profitAmount / 100);
         } else if (_selectedProduct!.profitType == 'flat') {
+          // Flat profit langsung pakai nilai profitAmount
           calculatedProfit = _selectedProduct!.profitAmount;
         }
-      }
-      _profitController.text = calculatedProfit.toStringAsFixed(0);
-    }
 
-    // Auto-calculate final price jika belum manual
-    if (!_isFinalPriceManuallyChanged) {
-      final profit = double.tryParse(_profitController.text) ?? 0;
-      _finalPriceController.text = (hpp + profit).toStringAsFixed(0);
-    }
+        // Temporarily remove listener untuk avoid race condition
+        _profitController.removeListener(_onProfitChanged);
+        _profitController.text = calculatedProfit.toStringAsFixed(0);
+        _profitController.addListener(_onProfitChanged);
+      }
+
+      // Auto-calculate final price jika belum manual
+      if (!_isFinalPriceManuallyChanged) {
+        final profit = double.tryParse(_profitController.text) ?? 0;
+
+        // Temporarily remove listener untuk avoid race condition
+        _finalPriceController.removeListener(_onFinalPriceChanged);
+        _finalPriceController.text = (hppPerUnit + profit).toStringAsFixed(0);
+        _finalPriceController.addListener(_onFinalPriceChanged);
+      }
+    });
   }
 
   void _onProfitChanged() {
     if (_profitController.text.isEmpty) return;
 
-    // Mark as manually changed
-    if (_hppController.text.isNotEmpty) {
-      _isProfitManuallyChanged = true;
-    }
+    setState(() {
+      // Mark as manually changed (kecuali dipanggil dari _onFinalPriceChanged)
+      if (_hppPerUnitController.text.isNotEmpty &&
+          !_isFinalPriceManuallyChanged) {
+        _isProfitManuallyChanged = true;
+      }
 
-    // Auto-update final price jika belum manual
-    if (!_isFinalPriceManuallyChanged && _hppController.text.isNotEmpty) {
-      final hpp = double.tryParse(_hppController.text) ?? 0;
-      final profit = double.tryParse(_profitController.text) ?? 0;
-      _finalPriceController.text = (hpp + profit).toStringAsFixed(0);
-    }
+      // Auto-update final price jika belum manual
+      if (!_isFinalPriceManuallyChanged &&
+          _hppPerUnitController.text.isNotEmpty) {
+        final hppPerUnit = double.tryParse(_hppPerUnitController.text) ?? 0;
+        final profit = double.tryParse(_profitController.text) ?? 0;
+
+        // Temporarily remove listener untuk avoid race condition
+        _finalPriceController.removeListener(_onFinalPriceChanged);
+        _finalPriceController.text = (hppPerUnit + profit).toStringAsFixed(0);
+        _finalPriceController.addListener(_onFinalPriceChanged);
+      }
+    });
   }
 
   void _onFinalPriceChanged() {
     if (_finalPriceController.text.isEmpty) return;
 
-    // Mark as manually changed
-    if (_hppController.text.isNotEmpty) {
-      _isFinalPriceManuallyChanged = true;
-    }
+    setState(() {
+      // Mark as manually changed
+      if (_hppPerUnitController.text.isNotEmpty) {
+        _isFinalPriceManuallyChanged = true;
+      }
 
-    // Auto-update profit based on final price
-    if (_hppController.text.isNotEmpty) {
-      final hpp = double.tryParse(_hppController.text) ?? 0;
-      final finalPrice = double.tryParse(_finalPriceController.text) ?? 0;
-      final calculatedProfit = finalPrice - hpp;
-      _profitController.text = calculatedProfit.toStringAsFixed(0);
-      _isProfitManuallyChanged =
-          false; // Reset karena auto-calculated dari final price
-    }
+      // Auto-update profit based on final price
+      if (_hppPerUnitController.text.isNotEmpty) {
+        final hppPerUnit = double.tryParse(_hppPerUnitController.text) ?? 0;
+        final finalPrice = double.tryParse(_finalPriceController.text) ?? 0;
+        final calculatedProfit = finalPrice - hppPerUnit;
+
+        // Temporarily remove listener untuk avoid race condition
+        _profitController.removeListener(_onProfitChanged);
+        _profitController.text = calculatedProfit.toStringAsFixed(0);
+        _profitController.addListener(_onProfitChanged);
+
+        _isProfitManuallyChanged =
+            false; // Reset karena auto-calculated dari final price
+      }
+    });
   }
 
   void _onProductChanged(String? productId) {
@@ -176,7 +202,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
     try {
       final stockProvider = Provider.of<StockProvider>(context, listen: false);
-      final hpp = double.parse(_hppController.text);
+      final hppPerUnit = double.parse(_hppPerUnitController.text);
       final trueProfit = double.parse(_profitController.text);
       final finalPrice = double.parse(_finalPriceController.text);
       final quantity = int.parse(_quantityController.text);
@@ -185,7 +211,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
         await stockProvider.addStock(
           productId: _selectedProduct!.id,
           quantity: quantity,
-          hpp: hpp,
+          hpp: hppPerUnit,
           trueProfit: trueProfit,
           finalPrice: finalPrice,
         );
@@ -194,7 +220,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
           id: widget.editStock!.id,
           productId: _selectedProduct!.id,
           quantity: quantity,
-          hpp: hpp,
+          hpp: hppPerUnit,
           trueProfit: trueProfit,
           finalPrice: finalPrice,
         );
@@ -227,7 +253,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
   @override
   void dispose() {
-    _hppController.dispose();
+    _hppPerUnitController.dispose();
     _profitController.dispose();
     _finalPriceController.dispose();
     _quantityController.dispose();
@@ -286,13 +312,13 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
                     if (_selectedProduct != null) ...[
                       const SizedBox(height: 12),
                       _buildInfoCard(
-                        'Profit Setting: ${_selectedProduct!.hasProfit ? (_selectedProduct!.profitType == 'percent' ? '${_selectedProduct!.profitAmount}%' : 'Rp ${_formatPrice(_selectedProduct!.profitAmount)}') : 'Tidak ada'}',
+                        'Profit Setting: ${_selectedProduct!.profitType == 'percent' ? '${_selectedProduct!.profitAmount}%' : 'Rp ${formatCurrency(_selectedProduct!.profitAmount)}'}',
                         Colors.blue,
                       ),
                       if (_selectedProduct!.hasDiscount) ...[
                         const SizedBox(height: 8),
                         _buildInfoCard(
-                          'Discount Setting: ${_selectedProduct!.discountType == 'percent' ? '${_selectedProduct!.discountValue}%' : 'Rp ${_formatPrice(_selectedProduct!.discountValue!)}'}',
+                          'Discount Setting: ${_selectedProduct!.discountType == 'percent' ? '${_selectedProduct!.discountValue}%' : 'Rp ${formatCurrency(_selectedProduct!.discountValue!)}'}',
                           Colors.red,
                         ),
                       ],
@@ -300,10 +326,10 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
                     const SizedBox(height: 24),
 
-                    // HPP Input
+                    // HPP Per Unit Input
                     buildInput(
-                      controller: _hppController,
-                      label: 'HPP (Harga Pokok Penjualan)',
+                      controller: _hppPerUnitController,
+                      label: 'HPP Per Unit',
                       icon: Icons.attach_money,
                       isDark: _isDark,
                       mode: InputMode.number,
@@ -320,10 +346,10 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Profit Input (Adjustable)
+                    // Profit Per Unit Input (Adjustable)
                     buildInput(
                       controller: _profitController,
-                      label: 'Profit',
+                      label: 'Profit Per Unit',
                       icon: Icons.trending_up,
                       isDark: _isDark,
                       mode: InputMode.number,
@@ -338,10 +364,10 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
                     const SizedBox(height: 16),
 
-                    // Final Price Input (Adjustable)
+                    // Final Price Per Unit Input (Adjustable)
                     buildInput(
                       controller: _finalPriceController,
-                      label: 'Final Price',
+                      label: 'Final Price Per Unit',
                       icon: Icons.price_check,
                       isDark: _isDark,
                       mode: InputMode.number,
@@ -368,8 +394,9 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
                       isDark: _isDark,
                       mode: InputMode.number,
                       validator: (v) {
-                        if (v == null || v.isEmpty)
+                        if (v == null || v.isEmpty) {
                           return 'Quantity harus diisi';
+                        }
                         final qty = int.tryParse(v);
                         if (qty == null || qty <= 0) {
                           return 'Quantity harus lebih dari 0';
@@ -380,83 +407,97 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Summary Card
-                    if (_hppController.text.isNotEmpty &&
-                        _profitController.text.isNotEmpty &&
-                        _finalPriceController.text.isNotEmpty &&
-                        _quantityController.text.isNotEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.brown[50]!, Colors.brown[100]!],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.brown[300]!),
+                    // Summary Card - Always visible
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.brown[50]!, Colors.brown[100]!],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.calculate, color: Colors.brown[700]),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Ringkasan Kalkulasi',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.brown[900],
-                                  ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.brown[300]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.calculate, color: Colors.brown[700]),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Ringkasan Kalkulasi',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.brown[900],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildSummaryRow(
-                              'HPP per unit',
-                              'Rp ${_formatPrice(double.parse(_hppController.text))}',
-                            ),
-                            _buildSummaryRow(
-                              'Profit per unit',
-                              'Rp ${_formatPrice(double.parse(_profitController.text))}',
-                              color: double.parse(_profitController.text) >= 0
-                                  ? Colors.green[700]
-                                  : Colors.red[700],
-                            ),
-                            _buildSummaryRow(
-                              'Final Price per unit',
-                              'Rp ${_formatPrice(double.parse(_finalPriceController.text))}',
-                            ),
-                            const Divider(height: 24),
-                            _buildSummaryRow(
-                              'Quantity',
-                              '${_quantityController.text} pcs',
-                            ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _buildSummaryRow(
+                            'HPP per unit',
+                            _hppPerUnitController.text.isEmpty
+                                ? '-'
+                                : 'Rp ${formatCurrency(double.parse(_hppPerUnitController.text))}',
+                          ),
+                          _buildSummaryRow(
+                            'Profit per unit',
+                            _profitController.text.isEmpty
+                                ? '-'
+                                : 'Rp ${formatCurrency(double.parse(_profitController.text))}',
+                            color:
+                                _profitController.text.isNotEmpty &&
+                                    double.parse(_profitController.text) >= 0
+                                ? Colors.green[700]
+                                : Colors.red[700],
+                          ),
+                          _buildSummaryRow(
+                            'Final Price per unit',
+                            _finalPriceController.text.isEmpty
+                                ? '-'
+                                : 'Rp ${formatCurrency(double.parse(_finalPriceController.text))}',
+                          ),
+                          const Divider(height: 24),
+                          _buildSummaryRow(
+                            'Quantity',
+                            _quantityController.text.isEmpty
+                                ? '-'
+                                : '${_quantityController.text} pcs',
+                          ),
+                          if (_hppPerUnitController.text.isNotEmpty &&
+                              _quantityController.text.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             _buildSummaryRow(
-                              'Total HPP',
-                              'Rp ${_formatPrice(double.parse(_hppController.text) * int.parse(_quantityController.text))}',
+                              'Total Modal (HPP × Qty)',
+                              'Rp ${formatCurrency(double.parse(_hppPerUnitController.text) * int.parse(_quantityController.text))}',
                               bold: true,
                             ),
+                          ],
+                          if (_profitController.text.isNotEmpty &&
+                              _quantityController.text.isNotEmpty) ...[
                             _buildSummaryRow(
                               'Total Profit Potential',
-                              'Rp ${_formatPrice(double.parse(_profitController.text) * int.parse(_quantityController.text))}',
+                              'Rp ${formatCurrency(double.parse(_profitController.text) * int.parse(_quantityController.text))}',
                               bold: true,
                               color: double.parse(_profitController.text) >= 0
                                   ? Colors.green[700]
                                   : Colors.red[700],
                             ),
+                          ],
+                          if (_finalPriceController.text.isNotEmpty &&
+                              _quantityController.text.isNotEmpty) ...[
                             _buildSummaryRow(
-                              'Total Value (Final × Qty)',
-                              'Rp ${_formatPrice(double.parse(_finalPriceController.text) * int.parse(_quantityController.text))}',
+                              'Total Nilai Jual (Final Price × Qty)',
+                              'Rp ${formatCurrency(double.parse(_finalPriceController.text) * int.parse(_quantityController.text))}',
                               bold: true,
                               color: Colors.brown[900],
                             ),
                           ],
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                    ],
+                    ),
+                    const SizedBox(height: 24),
 
                     // Save Button
                     SizedBox(
@@ -502,9 +543,9 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -515,7 +556,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
               text,
               style: TextStyle(
                 fontSize: 13,
-                color: color.withOpacity(0.9),
+                color: color.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -555,10 +596,5 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
         ],
       ),
     );
-  }
-
-  String _formatPrice(double price) {
-    final formatter = NumberFormat('#,###', 'id_ID');
-    return formatter.format(price.toInt());
   }
 }

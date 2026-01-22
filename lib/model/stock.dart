@@ -7,7 +7,7 @@ class Stock {
   double hpp;
   double trueProfit;
   double finalPrice;
-  Product? product; // Join data from product table
+  Product? product;
   DateTime createdAt;
 
   Stock({
@@ -17,7 +17,7 @@ class Stock {
     required this.hpp,
     required this.trueProfit,
     required this.finalPrice,
-    this.product,
+    required this.product,
     required this.createdAt,
   });
 

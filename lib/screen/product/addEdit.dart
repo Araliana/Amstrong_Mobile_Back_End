@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/components/index.dart';
+import 'package:flutter_application_1/provider/category_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -30,25 +31,30 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   File? _pickedFile;
   String? _currentImageUrl;
-  String? _profitType = 'flat'; // Default: flat
-  String? _discountType = 'none'; // Default: none
+  String? _selectedCategoryId;
+  String? _profitType = 'flat';
+  String? _discountType = 'none';
   bool _isLoading = false;
   bool _isDark = false;
 
   @override
   void initState() {
     super.initState();
+    Future.microtask(() {
+      context.read<CategoryProvider>().loadCategories(CategoryType.product);
+    });
     final p = widget.editProduct;
 
     _nameCtl = TextEditingController(text: p?.name ?? '');
     _profitValueCtl = TextEditingController(
-      text: p?.profitAmount != null ? p!.profitAmount.toString() : '',
+      text: p != null ? p.profitAmount.toString() : '',
     );
     _discountValueCtl = TextEditingController(
-      text: p?.discountValue != null ? p!.discountValue.toString() : '',
+      text: p?.discountValue?.toString() ?? '',
     );
     _descCtl = TextEditingController(text: p?.description ?? '');
 
+    _selectedCategoryId = p?.categoryId;
     _profitType = p?.profitType ?? 'flat';
     _discountType = p?.discountType ?? 'none';
     _currentImageUrl = p?.img;
@@ -71,18 +77,18 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     try {
       final provider = context.read<ProductProvider>();
 
-      String? imageUrl = _currentImageUrl;
+      String imageUrl = _currentImageUrl ?? '';
       if (_pickedFile != null) {
         imageUrl = await uploadFile(_pickedFile!);
       }
 
-      // Profit amount wajib diisi (karena profit type tidak ada none)
-      final profitAmount = double.tryParse(_profitValueCtl.text);
+      // Profit amount wajib diisi
+      final profitAmount = double.parse(_profitValueCtl.text);
 
       // Discount value hanya diisi jika discount type != none
       final discountValue = _discountType == 'none'
           ? null
-          : double.tryParse(_discountValueCtl.text);
+          : double.parse(_discountValueCtl.text);
 
       final discountTypeToSave = _discountType == 'none' ? null : _discountType;
 
@@ -91,18 +97,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: _profitType,
+          categoryId: _selectedCategoryId!,
+          profitType: _profitType!,
           profitAmount: profitAmount,
           discountType: discountTypeToSave,
           discountValue: discountValue,
         );
       } else {
         await provider.editProduct(
-          id: widget.editProduct!.id!,
+          id: widget.editProduct!.id,
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: _profitType,
+          categoryId: _selectedCategoryId!,
+          profitType: _profitType!,
           profitAmount: profitAmount,
           discountType: discountTypeToSave,
           discountValue: discountValue,
@@ -169,6 +177,37 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 isDark: _isDark,
                 maxLines: 4,
                 minLines: 3,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Category Dropdown
+              Consumer<CategoryProvider>(
+                builder: (context, provider, _) {
+                  final items = provider.categories;
+
+                  return buildDropdownField(
+                    label: 'Category',
+                    isLoading: provider.isLoading,
+                    value: items.any((e) => e.id == _selectedCategoryId)
+                        ? _selectedCategoryId
+                        : null,
+                    items: items
+                        .map(
+                          (cat) => DropdownItem(label: cat.name, value: cat.id),
+                        )
+                        .toList(),
+                    prefixIcon: Icons.manage_accounts,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategoryId = value;
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Please select a category' : null,
+                    isDark: _isDark,
+                  );
+                },
               ),
               const SizedBox(height: 16),
 

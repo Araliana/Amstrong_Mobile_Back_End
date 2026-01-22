@@ -77,12 +77,10 @@ class Stock {
     double basePrice = hpp;
 
     // Apply profit
-    if (product!.profitType != null && product!.profitAmount != null) {
-      if (product!.profitType == 'percent') {
-        basePrice += (basePrice * product!.profitAmount! / 100);
-      } else if (product!.profitType == 'flat') {
-        basePrice += product!.profitAmount!;
-      }
+    if (product!.profitType == 'percent') {
+      basePrice += (basePrice * product!.profitAmount / 100);
+    } else if (product!.profitType == 'flat') {
+      basePrice += product!.profitAmount;
     }
 
     return basePrice;

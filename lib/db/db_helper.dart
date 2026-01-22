@@ -54,6 +54,7 @@ class Join {
   final JoinType joinType;
   final bool isList;
   final Tables? fromTable;
+  final String? alias;
 
   Join({
     required this.joinTable,
@@ -62,6 +63,7 @@ class Join {
     this.joinType = JoinType.inner,
     this.isList = true,
     this.fromTable,
+    this.alias,
   });
 }
 
@@ -119,6 +121,7 @@ class DBHelper {
         name VARCHAR,
         description VARCHAR,
         img VARCHAR,
+        category_id TEXT,
         profit_type VARCHAR,
         profit_amount REAL,
         discount_type VARCHAR,
@@ -366,16 +369,26 @@ class DBHelper {
 
     final joinTables = <String>[];
     final listTables = <String>[];
+    final aliasMap = <String, String>{}; // Map: alias -> actual table name
 
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
-        joinTables.add(jt);
-        if (j.isList) listTables.add(jt);
+        final tableAlias = j.alias ?? jt; // Gunakan alias jika ada
+
+        joinTables.add(tableAlias);
+        if (j.isList) listTables.add(tableAlias);
+
+        // Simpan mapping alias -> table name
+        if (j.alias != null) {
+          aliasMap[tableAlias] = jt;
+        }
 
         final jtCols = await _getColumns(jt);
         query.write(", ");
-        query.write(jtCols.map((c) => "$jt.$c AS ${jt}_$c").join(", "));
+        query.write(
+          jtCols.map((c) => "$tableAlias.$c AS ${tableAlias}_$c").join(", "),
+        );
       }
     }
 
@@ -384,11 +397,12 @@ class DBHelper {
     if (joins != null) {
       for (var j in joins) {
         final jt = tableNames[j.joinTable]!;
+        final tableAlias = j.alias ?? jt;
         final fromTbl = j.fromTable != null
             ? tableNames[j.fromTable]!
             : baseTable;
         query.write(
-          " ${j.joinType.sql} $jt ON $fromTbl.${j.fromKey} = $jt.${j.toKey}",
+          " ${j.joinType.sql} $jt AS $tableAlias ON $fromTbl.${j.fromKey} = $tableAlias.${j.toKey}",
         );
       }
     }

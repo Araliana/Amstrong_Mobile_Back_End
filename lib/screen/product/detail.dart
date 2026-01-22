@@ -27,7 +27,7 @@ void showProductDetail(BuildContext context, Product product) {
             mainAxisSize: MainAxisSize.min,
             children: [
               // --- GAMBAR PRODUK ---
-              if (product.img != null && product.img!.isNotEmpty)
+              if (product.img.isNotEmpty)
                 Container(
                   width: double.infinity,
                   height: 200,
@@ -38,7 +38,7 @@ void showProductDetail(BuildContext context, Product product) {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      product.img!,
+                      product.img,
                       fit: BoxFit.contain,
                       errorBuilder: (ctx, error, stackTrace) => Center(
                         child: Icon(
@@ -75,7 +75,7 @@ void showProductDetail(BuildContext context, Product product) {
                   'Profit',
                   product.profitType == 'percent'
                       ? '${product.profitAmount}%'
-                      : formatCurrency(product.profitAmount!),
+                      : formatCurrency(product.profitAmount),
                   textColor: Colors.green[700],
                 ),
               ],
@@ -118,8 +118,7 @@ void showProductDetail(BuildContext context, Product product) {
               ],
 
               // --- DESCRIPTION ---
-              if (product.description != null &&
-                  product.description!.isNotEmpty)
+              if (product.description.isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -134,7 +133,7 @@ void showProductDetail(BuildContext context, Product product) {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      product.description!,
+                      product.description,
                       style: TextStyle(
                         color: Colors.grey[700],
                         fontSize: 14,
@@ -145,7 +144,7 @@ void showProductDetail(BuildContext context, Product product) {
                 ),
 
               // --- STOCK DETAILS ---
-              if (product.hasStock && product.stocks!.isNotEmpty) ...[
+              if (product.hasStock && product.stocks.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(
                   'Stock Details',
@@ -156,7 +155,7 @@ void showProductDetail(BuildContext context, Product product) {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...product.stocks!
+                ...product.stocks
                     .where((s) => s.quantity > 0)
                     .map(
                       (stock) => Container(

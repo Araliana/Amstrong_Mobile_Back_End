@@ -1,52 +1,59 @@
+import 'package:flutter_application_1/model/category.dart';
 import 'package:flutter_application_1/model/stock.dart';
 
 class Product {
-  String? id;
+  String id;
   String name;
-  String? description;
-  String? img;
-  String? profitType; // 'percent' or 'flat'
-  double? profitAmount;
-  String? discountType; // 'percent' or 'flat' - OPTIONAL
-  double? discountValue; // OPTIONAL
-  int quantity; // total quantity dari semua stock
-  List<Stock>? stocks; // list of stocks
-  DateTime? createdAt;
+  String description;
+  String img;
+  final String categoryId;
+  final Category category;
+  String profitType;
+  double profitAmount;
+  String? discountType;
+  double? discountValue;
+  int quantity;
+  List<Stock> stocks;
+  DateTime createdAt;
 
   Product({
-    this.id,
+    required this.id,
     required this.name,
-    this.description,
-    this.img,
-    this.profitType,
-    this.profitAmount,
+    required this.description,
+    required this.img,
+    required this.categoryId,
+    required this.category,
+    required this.profitType,
+    required this.profitAmount,
     this.discountType,
     this.discountValue,
-    this.quantity = 0,
-    this.stocks,
-    this.createdAt,
+    required this.quantity,
+    required this.stocks,
+    required this.createdAt,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
     // Parse stocks jika ada
-    List<Stock>? stocksList;
-    if (map['stock'] != null) {
-      if (map['stock'] is List) {
-        stocksList = (map['stock'] as List)
-            .map((e) => Stock.fromMap(e as Map<String, dynamic>))
-            .toList();
-      }
+    List<Stock> stocksList = [];
+    if (map['stock'] != null && map['stock'] is List) {
+      stocksList = (map['stock'] as List)
+          .map((e) => Stock.fromMap(e as Map<String, dynamic>))
+          .toList();
     }
 
     return Product(
-      id: map['id'] as String?,
+      id: map['id'] as String? ?? '',
       name: map['name'] as String? ?? '',
-      description: map['description'] as String?,
-      img: map['img'] as String?,
-      profitType: map['profit_type'] as String?,
+      description: map['description'] as String? ?? '',
+      img: map['img'] as String? ?? '',
+      category: Category.fromMap(
+        (map['category'] as Map).cast<String, dynamic>(),
+      ),
+      categoryId: map['category_id'] as String? ?? '',
+      profitType: map['profit_type'] as String? ?? 'flat',
       profitAmount: map['profit_amount'] != null
           ? (map['profit_amount'] as num).toDouble()
-          : null,
+          : 0.0,
       discountType: map['discount_type'] as String?,
       discountValue: map['discount_value'] != null
           ? (map['discount_value'] as num).toDouble()
@@ -55,25 +62,20 @@ class Product {
       stocks: stocksList,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
-          : null,
+          : DateTime.now(),
     );
   }
 
   /// Get oldest stock yang masih ada quantity
   Stock? get oldestAvailableStock {
-    if (stocks == null || stocks!.isEmpty) return null;
+    if (stocks.isEmpty) return null;
 
     // Filter stock yang quantity > 0
-    final availableStocks = stocks!.where((s) => s.quantity > 0).toList();
+    final availableStocks = stocks.where((s) => s.quantity > 0).toList();
     if (availableStocks.isEmpty) return null;
 
     // Sort by created_at (oldest first)
-    availableStocks.sort((a, b) {
-      if (a.createdAt == null && b.createdAt == null) return 0;
-      if (a.createdAt == null) return 1;
-      if (b.createdAt == null) return -1;
-      return a.createdAt!.compareTo(b.createdAt!);
-    });
+    availableStocks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     return availableStocks.first;
   }
@@ -85,13 +87,11 @@ class Product {
 
     double basePrice = stock.hpp;
 
-    // Apply profit only
-    if (profitType != null && profitAmount != null) {
-      if (profitType == 'percent') {
-        basePrice += (basePrice * profitAmount! / 100);
-      } else if (profitType == 'flat') {
-        basePrice += profitAmount!;
-      }
+    // Apply profit (ALWAYS present)
+    if (profitType == 'percent') {
+      basePrice += (basePrice * profitAmount / 100);
+    } else if (profitType == 'flat') {
+      basePrice += profitAmount;
     }
 
     return basePrice;
@@ -128,8 +128,8 @@ class Product {
 
   /// Total quantity dari semua stock yang available
   int get totalAvailableQuantity {
-    if (stocks == null || stocks!.isEmpty) return 0;
-    return stocks!
+    if (stocks.isEmpty) return 0;
+    return stocks
         .where((s) => s.quantity > 0)
         .fold(0, (sum, s) => sum + s.quantity);
   }
@@ -137,12 +137,9 @@ class Product {
   // Helper untuk cek apakah ada discount
   bool get hasDiscount => discountType != null && discountValue != null;
 
-  // Helper untuk cek apakah ada profit
-  bool get hasProfit => profitType != null && profitAmount != null;
+  bool get hasProfit => profitAmount > 0;
 
-  // Helper untuk cek apakah ada stock
-  bool get hasStock => stocks != null && stocks!.isNotEmpty;
+  bool get hasStock => stocks.isNotEmpty;
 
-  // Helper untuk cek apakah stock available
   bool get isAvailable => totalAvailableQuantity > 0;
 }

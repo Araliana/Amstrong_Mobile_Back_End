@@ -93,9 +93,9 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
       double calculatedProfit = 0;
       if (_selectedProduct!.hasProfit) {
         if (_selectedProduct!.profitType == 'percent') {
-          calculatedProfit = hpp * (_selectedProduct!.profitAmount! / 100);
+          calculatedProfit = hpp * (_selectedProduct!.profitAmount / 100);
         } else if (_selectedProduct!.profitType == 'flat') {
-          calculatedProfit = _selectedProduct!.profitAmount!;
+          calculatedProfit = _selectedProduct!.profitAmount;
         }
       }
       _profitController.text = calculatedProfit.toStringAsFixed(0);
@@ -183,7 +183,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
 
       if (widget.editStock == null) {
         await stockProvider.addStock(
-          productId: _selectedProduct!.id!,
+          productId: _selectedProduct!.id,
           quantity: quantity,
           hpp: hpp,
           trueProfit: trueProfit,
@@ -192,7 +192,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
       } else {
         await stockProvider.editStock(
           id: widget.editStock!.id,
-          productId: _selectedProduct!.id!,
+          productId: _selectedProduct!.id,
           quantity: quantity,
           hpp: hpp,
           trueProfit: trueProfit,
@@ -243,7 +243,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
         .map(
           (product) => DropdownItem(
             label: product.name,
-            value: product.id!,
+            value: product.id,
             photo: product.img,
           ),
         )
@@ -286,7 +286,7 @@ class _AddEditStockScreenState extends State<AddEditStockScreen> {
                     if (_selectedProduct != null) ...[
                       const SizedBox(height: 12),
                       _buildInfoCard(
-                        'Profit Setting: ${_selectedProduct!.hasProfit ? (_selectedProduct!.profitType == 'percent' ? '${_selectedProduct!.profitAmount}%' : 'Rp ${_formatPrice(_selectedProduct!.profitAmount!)}') : 'Tidak ada'}',
+                        'Profit Setting: ${_selectedProduct!.hasProfit ? (_selectedProduct!.profitType == 'percent' ? '${_selectedProduct!.profitAmount}%' : 'Rp ${_formatPrice(_selectedProduct!.profitAmount)}') : 'Tidak ada'}',
                         Colors.blue,
                       ),
                       if (_selectedProduct!.hasDiscount) ...[

@@ -29,7 +29,7 @@ class _ProductScreenState extends State<ProductScreen> {
     final provider = Provider.of<ProductProvider>(context);
 
     return Scaffold(
-      body: FutureBuilder<void>(
+      body: FutureBuilder(
         future: _loadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -78,7 +78,7 @@ class _ProductScreenState extends State<ProductScreen> {
                               label: product.name,
                               isLoading: provider.isLoading,
                               onDelete: () async {
-                                await provider.deleteProduct(product.id!);
+                                await provider.deleteProduct(product.id);
                               },
                             );
                           },
@@ -142,7 +142,7 @@ class _ProductScreenState extends State<ProductScreen> {
                         colors: [Colors.brown[50]!, Colors.brown[100]!],
                       ),
                     ),
-                    child: product.img == null || product.img!.isEmpty
+                    child: product.img.isEmpty
                         ? Center(
                             child: Icon(
                               Icons.coffee_rounded,
@@ -151,7 +151,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             ),
                           )
                         : Image.network(
-                            product.img!,
+                            product.img,
                             fit: BoxFit.cover,
                             width: double.infinity,
                             height: double.infinity,
@@ -351,7 +351,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                 child: Text(
                                   product.profitType == 'percent'
                                       ? '+${product.profitAmount}%'
-                                      : '+${formatCurrency(product.profitAmount!)}',
+                                      : '+${formatCurrency(product.profitAmount)}',
                                   style: TextStyle(
                                     color: Colors.green[700],
                                     fontSize: isMobile ? 9 : 10,

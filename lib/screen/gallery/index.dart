@@ -4,6 +4,7 @@ import 'package:flutter_application_1/model/gallery.dart';
 import 'package:flutter_application_1/provider/gallery_provider.dart';
 import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPORT BARU]
 import 'package:go_router/go_router.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 class GalleryScreen extends StatefulWidget {
@@ -77,6 +78,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   // [MODIFIED] Menerima parameter LanguageProvider
   Widget _buildPolaroidCard(Memo memo, LanguageProvider lang) {
     final galleryProvider = Provider.of<GalleryProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
 
     // Tentukan icon dan color berdasarkan category
     IconData categoryIcon;
@@ -104,7 +107,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
         angle: (memo.id.hashCode % 3 - 1) * 0.02, // Slight random rotation
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: dark ? Colors.grey.shade900 : Colors.white,
             borderRadius: BorderRadius.circular(4),
             boxShadow: [
               BoxShadow(
@@ -141,7 +144,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 return Container(
                                   width: double.infinity,
                                   height: 280,
-                                  color: Colors.grey.shade100,
+                                  color: dark ? Colors.grey.shade600 : Colors.grey.shade100,
                                   child: Center(
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
@@ -158,7 +161,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 return Container(
                                   width: double.infinity,
                                   height: 280,
-                                  color: Colors.grey.shade100,
+                                  color: dark ? Colors.grey.shade600 : Colors.grey.shade100,
                                   child: Center(
                                     child: Icon(
                                       Icons.broken_image_outlined,
@@ -172,7 +175,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                           : Container(
                               width: double.infinity,
                               height: 280,
-                              color: Colors.grey.shade100,
+                              color: dark ? Colors.grey.shade600 : Colors.grey.shade100,
                               child: Icon(
                                 Icons.photo_library_outlined,
                                 size: 60,
@@ -222,7 +225,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       right: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: dark ? Colors.grey.shade300 : Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -400,10 +403,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                             children: [
                               Text(
                                 memo.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
+                                  color: dark ? Colors.white : Colors.black87,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

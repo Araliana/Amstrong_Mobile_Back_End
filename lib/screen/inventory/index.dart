@@ -4,6 +4,7 @@ import 'package:flutter_application_1/provider/stock_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/screen/inventory/addEdit.dart';
 import 'package:flutter_application_1/screen/inventory/detail.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -111,12 +112,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
     VoidCallback? onDelete,
     VoidCallback? onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: dark ? Colors.grey.shade200 : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: isActive
               ? Border.all(color: Colors.green[400]!, width: 2)

@@ -4,6 +4,7 @@ import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/screen/product/addEdit.dart';
 import 'package:flutter_application_1/screen/product/detail.dart';
+import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,7 @@ class _ProductScreenState extends State<ProductScreen> {
   void initState() {
     super.initState();
     final provider = Provider.of<ProductProvider>(context, listen: false);
+
     _loadFuture = provider.loadProducts();
   }
 
@@ -111,9 +113,11 @@ class _ProductScreenState extends State<ProductScreen> {
     VoidCallback? onEdit,
     VoidCallback? onDelete,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final dark = themeProvider.getTheme();
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: dark ? Colors.grey.shade900 :Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -187,7 +191,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     right: 8,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: dark ? Colors.grey.shade900.withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
@@ -246,7 +250,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.brown[900],
+                        color: dark ? Colors.white : Colors.brown[900],
                         fontSize: isMobile ? 14 : 16,
                         fontWeight: FontWeight.w700,
                         height: 1.3,
@@ -307,7 +311,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             Text(
                               '${formatCurrency(product.currentPrice!)}',
                               style: TextStyle(
-                                color: Colors.green[700],
+                                color: dark ? Colors.green[200] : Colors.green[700],
                                 fontSize: isMobile ? 13 : 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -332,7 +336,7 @@ class _ProductScreenState extends State<ProductScreen> {
                               'Stock: ${product.totalAvailableQuantity}',
                               style: TextStyle(
                                 color: product.isAvailable
-                                    ? Colors.brown[600]
+                                    ? Colors.brown[400]
                                     : Colors.red[600],
                                 fontSize: isMobile ? 11 : 12,
                                 fontWeight: FontWeight.w600,

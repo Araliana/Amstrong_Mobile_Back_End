@@ -13,6 +13,7 @@ class ProductProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables productTable = Tables.product;
   final Tables stockTable = Tables.stock;
+  final Tables categoryTable = Tables.productType;
   final uuid = const Uuid();
   final sync = SyncManager();
 
@@ -29,6 +30,7 @@ class ProductProvider with ChangeNotifier {
     _setLoading(true);
     await sync.syncTable(productTable);
     await sync.syncTable(stockTable);
+    await sync.syncTable(categoryTable);
 
     final res = await db.get(
       productTable,
@@ -38,6 +40,14 @@ class ProductProvider with ChangeNotifier {
           fromKey: "id",
           toKey: "product_id",
           isList: true,
+          joinType: JoinType.left,
+        ),
+        Join(
+          joinTable: categoryTable,
+          fromKey: "category_id",
+          toKey: "id",
+          isList: false,
+          alias: "category",
         ),
       ],
       orderBy: "product.created_at",
@@ -60,6 +70,7 @@ class ProductProvider with ChangeNotifier {
     _setLoading(true);
     await sync.syncTable(productTable);
     await sync.syncTable(stockTable);
+    await sync.syncTable(categoryTable);
 
     final res = await db.get(
       productTable,
@@ -69,6 +80,12 @@ class ProductProvider with ChangeNotifier {
           fromKey: "id",
           toKey: "product_id",
           isList: true,
+        ),
+        Join(
+          joinTable: categoryTable,
+          fromKey: "category_id",
+          toKey: "id",
+          isList: false,
         ),
       ],
       where: "product.id = ?",
@@ -90,9 +107,10 @@ class ProductProvider with ChangeNotifier {
   Future<void> addProduct({
     required String name,
     required String description,
-    String? img,
-    String? profitType,
-    double? profitAmount,
+    required String img,
+    required String categoryId,
+    required String profitType,
+    required double profitAmount,
     String? discountType,
     double? discountValue,
   }) async {
@@ -104,6 +122,7 @@ class ProductProvider with ChangeNotifier {
         'name': name,
         'description': description,
         'img': img,
+        'category_id': categoryId,
         'profit_type': profitType,
         'profit_amount': profitAmount,
         'discount_type': discountType,
@@ -112,20 +131,7 @@ class ProductProvider with ChangeNotifier {
       });
 
       await sync.syncTable(productTable);
-
-      products.add(
-        Product(
-          id: id,
-          name: name,
-          description: description,
-          img: img,
-          profitType: profitType,
-          profitAmount: profitAmount,
-          discountType: discountType,
-          discountValue: discountValue,
-          quantity: 0,
-        ),
-      );
+      await loadProducts();
 
       _setLoading(false);
 
@@ -133,9 +139,9 @@ class ProductProvider with ChangeNotifier {
         name: 'add_product',
         parameters: {
           'name': name,
-          'description': description,
-          'has_profit': profitType != null,
-          'has_discount': discountType != null,
+          'category_id': categoryId,
+          'profit_type': profitType,
+          'has_discount': (discountType != null).toString(),
         },
       );
     } catch (e) {
@@ -149,9 +155,10 @@ class ProductProvider with ChangeNotifier {
     required String id,
     required String name,
     required String description,
-    String? img,
-    String? profitType,
-    double? profitAmount,
+    required String img,
+    required String categoryId,
+    required String profitType,
+    required double profitAmount,
     String? discountType,
     double? discountValue,
   }) async {
@@ -164,6 +171,7 @@ class ProductProvider with ChangeNotifier {
           'name': name,
           'description': description,
           'img': img,
+          'category_id': categoryId,
           'profit_type': profitType,
           'profit_amount': profitAmount,
           'discount_type': discountType,
@@ -172,25 +180,7 @@ class ProductProvider with ChangeNotifier {
       );
 
       await sync.syncTable(productTable);
-
-      final index = products.indexWhere((item) => item.id == id);
-      if (index != -1) {
-        // Get existing product to preserve stocks data
-        final existingProduct = products[index];
-        products[index] = Product(
-          id: id,
-          name: name,
-          description: description,
-          img: img,
-          profitType: profitType,
-          profitAmount: profitAmount,
-          discountType: discountType,
-          discountValue: discountValue,
-          quantity: existingProduct.quantity,
-          stocks: existingProduct.stocks,
-          createdAt: existingProduct.createdAt,
-        );
-      }
+      await loadProducts(); // Reload to get complete data with category
 
       _setLoading(false);
 
@@ -199,9 +189,9 @@ class ProductProvider with ChangeNotifier {
         parameters: {
           'id': id,
           'name': name,
-          'description': description,
-          'has_profit': profitType != null,
-          'has_discount': discountType != null,
+          'category_id': categoryId,
+          'profit_type': profitType,
+          'has_discount': (discountType != null).toString(),
         },
       );
     } catch (e) {

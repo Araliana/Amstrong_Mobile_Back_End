@@ -32,6 +32,9 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
   @override
   void initState() {
     super.initState();
+    Future.microtask(() {
+      context.read<CategoryProvider>().loadCategories(CategoryType.menu);
+    });
     _loadData();
   }
 
@@ -76,7 +79,6 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final menuProvider = Provider.of<MenuProvider>(context);
-    final dishTypeProvider = Provider.of<CategoryProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final dark = themeProvider.getTheme();
     MaterialColor color = widget.menuId != null ? Colors.indigo : Colors.purple;
@@ -136,18 +138,17 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Category Dropdown
-            FutureBuilder(
-              future: _isLoading
-                  ? dishTypeProvider.loadCategories(CategoryType.menu)
-                  : null,
-              builder: (context, snapshot) {
+            Consumer<CategoryProvider>(
+              builder: (context, provider, _) {
+                final items = provider.categories;
+
                 return buildDropdownField(
                   label: 'Category',
-                  isLoading:
-                      snapshot.connectionState == ConnectionState.waiting,
-                  value: _selectedCategory?.toString(),
-                  items: dishTypeProvider.categories
+                  isLoading: provider.isLoading,
+                  value: items.any((e) => e.id == _selectedCategory)
+                      ? _selectedCategory
+                      : null,
+                  items: items
                       .map(
                         (cat) => DropdownItem(label: cat.name, value: cat.id),
                       )
@@ -158,16 +159,13 @@ class _AddEditMenuScreenState extends State<AddEditMenuScreen> {
                       _selectedCategory = value;
                     });
                   },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a category';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      value == null ? 'Please select a category' : null,
                   isDark: dark,
                 );
               },
             ),
+
             const SizedBox(height: 16),
 
             // Description Field

@@ -165,7 +165,7 @@ class _MenuScreenState extends State<MenuScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.category,
+                                Icons.fastfood_rounded,
                                 size: 12,
                                 color: Colors.orange.shade700,
                               ),
@@ -420,7 +420,7 @@ class _MenuScreenState extends State<MenuScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.category,
+                            Icons.fastfood_rounded,
                             size: 16,
                             color: Colors.orange.shade700,
                           ),

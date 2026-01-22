@@ -16,6 +16,7 @@ import 'package:flutter_application_1/screen/gallery/index.dart';
 import 'package:flutter_application_1/screen/inventory/index.dart';
 import 'package:flutter_application_1/screen/login/index.dart';
 import 'package:flutter_application_1/screen/menu/addEdit.dart';
+import 'package:flutter_application_1/screen/order/create.dart';
 import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
@@ -29,10 +30,6 @@ import 'package:flutter_application_1/screen/profile/index.dart';
 import 'package:flutter_application_1/screen/order/index.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/language_provider.dart';
-import 'package:flutter_application_1/screen/order/form_page.dart';
-import 'package:flutter_application_1/screen/order/detail.dart';
-import 'package:flutter_application_1/model/order_model.dart';
-import 'package:flutter_application_1/screen/order/index.dart';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
@@ -82,14 +79,14 @@ class AppRoute {
             ),
             //ORDERS
             GoRoute(
-              path: '/order',
+              path: '/completed-orders',
               builder: (context, state) => const OrderScreen(),
             ),
-
             GoRoute(
-              path: '/order/create',
-              builder: (context, state) => const OrderFormPage(),
+              path: '/add-order',
+              builder: (context, state) => const AddOrderScreen(),
             ),
+
             //PRODUCTS & STOCK
             GoRoute(
               path: '/products',

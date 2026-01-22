@@ -4,14 +4,14 @@ import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPO
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/category_provider.dart';
 
-class CategoryPage extends StatefulWidget {
-  const CategoryPage({super.key});
+class CategoryScreen extends StatefulWidget {
+  const CategoryScreen({super.key});
 
   @override
-  State<CategoryPage> createState() => _CategoryPageState();
+  State<CategoryScreen> createState() => _CategoryScreenState();
 }
 
-class _CategoryPageState extends State<CategoryPage> {
+class _CategoryScreenState extends State<CategoryScreen> {
   late Future<void> _loadFuture;
 
   @override
@@ -39,7 +39,10 @@ class _CategoryPageState extends State<CategoryPage> {
 
           return items.isEmpty
               // [TRANSLATE] Menggunakan 'categories' dari kamus
-              ? buildEmptyState(lang.getText('categories'), Icons.category_outlined)
+              ? buildEmptyState(
+                  lang.getText('categories'),
+                  Icons.category_outlined,
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
                   itemCount: items.length + 1,
@@ -55,7 +58,7 @@ class _CategoryPageState extends State<CategoryPage> {
                     final category = items[index - 1];
 
                     // Note: buildCategoryCard adalah widget external.
-                    // Jika teks Edit/Hapus di dalam card belum berubah, 
+                    // Jika teks Edit/Hapus di dalam card belum berubah,
                     // kita perlu mengedit file tempat buildCategoryCard berada.
                     return buildCategoryCard(
                       context,

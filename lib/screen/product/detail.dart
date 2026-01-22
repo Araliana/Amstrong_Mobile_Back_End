@@ -217,10 +217,10 @@ void showProductDetail(BuildContext context, Product product) {
                                 ),
                               ],
                             ),
-                            if (stock.createdAt != null) ...[
+                            ...[
                               const SizedBox(height: 4),
                               Text(
-                                'Added: ${formatDate(stock.createdAt!)}',
+                                'Added: ${formatDate(stock.createdAt)}',
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[600],
@@ -230,8 +230,7 @@ void showProductDetail(BuildContext context, Product product) {
                           ],
                         ),
                       ),
-                    )
-                    .toList(),
+                    ),
               ],
             ],
           ),

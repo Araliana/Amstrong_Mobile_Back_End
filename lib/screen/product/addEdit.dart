@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/components/index.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
@@ -28,8 +29,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   File? _pickedFile;
   String? _currentImageUrl;
-  String? _profitType;
+  String? _profitType = 'none'; // Default: none
   bool _isLoading = false;
+  bool _isDark = false; // Sesuaikan dengan theme app Anda
 
   @override
   void initState() {
@@ -37,11 +39,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final p = widget.editProduct;
 
     _nameCtl = TextEditingController(text: p?.name ?? '');
-    _profitValueCtl =
-        TextEditingController(text: p?.profitValue?.toString() ?? '');
+    _profitValueCtl = TextEditingController(
+      text: p?.profitAmount != null ? p!.profitAmount.toString() : '',
+    );
     _descCtl = TextEditingController(text: p?.description ?? '');
 
-    _profitType = p?.profitType;
+    _profitType = p?.profitType ?? 'none';
     _currentImageUrl = p?.img;
   }
 
@@ -66,31 +69,38 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         imageUrl = await uploadFile(_pickedFile!);
       }
 
+      // Jika profit type = none, set profitAmount ke null
+      final profitAmount = _profitType == 'none'
+          ? null
+          : double.tryParse(_profitValueCtl.text);
+
+      final profitTypeToSave = _profitType == 'none' ? null : _profitType;
+
       if (widget.editProduct == null) {
         await provider.addProduct(
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: _profitType,
-          profitValue: double.tryParse(_profitValueCtl.text),
+          profitType: profitTypeToSave,
+          profitAmount: profitAmount,
         );
       } else {
         await provider.editProduct(
-          id: widget.editProduct!.id,
+          id: widget.editProduct!.id!,
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: _profitType,
-          profitValue: double.tryParse(_profitValueCtl.text),
+          profitType: profitTypeToSave,
+          profitAmount: profitAmount,
         );
       }
 
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -99,10 +109,14 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Detect dark mode
+    _isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(widget.editProduct == null ? 'Add Product' : 'Edit Product'),
+        title: Text(
+          widget.editProduct == null ? 'Add Product' : 'Edit Product',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
@@ -115,54 +129,94 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Image Picker
               ImageSelector(
                 initValue: _currentImageUrl,
                 onChanged: (file) => setState(() => _pickedFile = file),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              // Product Name
+              buildInput(
                 controller: _nameCtl,
-                decoration:
-                    const InputDecoration(labelText: 'Product Name'),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Required' : null,
+                label: 'Product Name',
+                icon: Icons.shopping_bag,
+                isDark: _isDark,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
+              const SizedBox(height: 16),
+
+              // Description
+              buildInput(
+                controller: _descCtl,
+                label: 'Description',
+                icon: Icons.description,
+                isDark: _isDark,
+                maxLines: 4,
+                minLines: 3,
+              ),
+              const SizedBox(height: 16),
+
+              // Profit Type Dropdown
+              buildDropdownField(
+                label: 'Profit Type',
                 value: _profitType,
-                decoration:
-                    const InputDecoration(labelText: 'Profit Type'),
-                items: const [
-                  DropdownMenuItem(value: 'flat', child: Text('Flat')),
-                  DropdownMenuItem(value: 'percent', child: Text('Percent')),
-                ],
-                onChanged: (v) => setState(() => _profitType = v),
+                prefixIcon: Icons.trending_up,
+                isDark: _isDark,
+                simpleItems: const ['none', 'flat', 'percent'],
+                onChanged: (v) {
+                  setState(() {
+                    _profitType = v;
+                    // Clear profit value jika dikembalikan ke none
+                    if (v == 'none') {
+                      _profitValueCtl.clear();
+                    }
+                  });
+                },
+                validator: (v) => v == null ? 'Required' : null,
               ),
-              if (_profitType != null) ...[
-                const SizedBox(height: 12),
-                TextFormField(
+
+              // Profit Value (hanya muncul jika profit type != none)
+              if (_profitType != null && _profitType != 'none') ...[
+                const SizedBox(height: 16),
+                buildInput(
                   controller: _profitValueCtl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                  ],
-                  decoration:
-                      const InputDecoration(labelText: 'Profit Value'),
+                  label: 'Profit Value',
+                  icon: Icons.attach_money,
+                  isDark: _isDark,
+                  mode: InputMode.number,
+                  prefixText: _profitType == 'percent' ? '% ' : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (double.tryParse(v) == null) return 'Invalid number';
+                    return null;
+                  },
                 ),
               ],
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descCtl,
-                maxLines: 3,
-                decoration:
-                    const InputDecoration(labelText: 'Description'),
-              ),
+
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _saveProduct,
-                child: Text(
-                    _isLoading ? 'Saving...' : 'Save Product'),
+
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _saveProduct,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    _isLoading ? 'Saving...' : 'Save Product',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

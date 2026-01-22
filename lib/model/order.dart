@@ -34,19 +34,6 @@ class Order {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'total_price': totalPrice,
-      'total_profit': totalProfit,
-      'total_hpp': totalHpp,
-      'status': status,
-      'customer_name': customerName,
-      'customer_address': customerAddress,
-      'created_at': createdAt?.toIso8601String(),
-    };
-  }
-
   static double _toDouble(dynamic v) {
     if (v == null) return 0;
     if (v is int) return v.toDouble();

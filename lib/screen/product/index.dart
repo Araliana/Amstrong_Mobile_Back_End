@@ -7,14 +7,14 @@ import 'package:flutter_application_1/screen/product/detail.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class ProductPage extends StatefulWidget {
-  const ProductPage({super.key});
+class ProductScreen extends StatefulWidget {
+  const ProductScreen({super.key});
 
   @override
-  State<ProductPage> createState() => _ProductPageState();
+  State<ProductScreen> createState() => _ProductScreenState();
 }
 
-class _ProductPageState extends State<ProductPage> {
+class _ProductScreenState extends State<ProductScreen> {
   late Future<void> _loadFuture;
 
   @override
@@ -55,7 +55,7 @@ class _ProductPageState extends State<ProductPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: SizedBox(
-                        height: isMobile ? 280 : 320,
+                        height: isMobile ? 300 : 340,
                         child: _buildProductCard(
                           product: product,
                           isMobile: isMobile,
@@ -94,7 +94,7 @@ class _ProductPageState extends State<ProductPage> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => AddEditProductScreen()),
+            MaterialPageRoute(builder: (_) => const AddEditProductScreen()),
           );
           if (result == true) {
             provider.loadProducts();
@@ -119,7 +119,7 @@ class _ProductPageState extends State<ProductPage> {
           BoxShadow(
             color: Colors.brown.withAlpha(10),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
             spreadRadius: 0,
           ),
         ],
@@ -193,7 +193,7 @@ class _ProductPageState extends State<ProductPage> {
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 8,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -252,47 +252,70 @@ class _ProductPageState extends State<ProductPage> {
                         height: 1.3,
                       ),
                     ),
-                    Row(
-                      children: List.generate(
-                        5,
-                        (index) => Icon(
-                          Icons.star_rounded,
-                          color: Colors.amber[600],
-                          size: isMobile ? 14 : 16,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 4),
+                    // Price Section
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tampilkan profit info
-                        if (product.profitType != null &&
-                            product.profitValue != null) ...[
-                          Row(
-                            children: [
-                              Text(
-                                'Profit: ',
-                                style: TextStyle(
-                                  color: Colors.brown[700],
-                                  fontSize: isMobile ? 11 : 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                        if (product.currentPrice != null) ...[
+                          // Show discounted price with strikethrough
+                          if (product.hasDiscount &&
+                              product.discountedPrice != null) ...[
+                            Text(
+                              'IDR ${_formatPrice(product.currentPrice!)}',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: isMobile ? 11 : 12,
+                                decoration: TextDecoration.lineThrough,
+                                fontWeight: FontWeight.w500,
                               ),
-                              Text(
-                                product.profitType == 'percent'
-                                    ? '${product.profitValue}%'
-                                    : 'IDR ${_formatPrice(product.profitValue!)}',
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontSize: isMobile ? 12 : 13,
-                                  fontWeight: FontWeight.w700,
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Text(
+                                  'IDR ${_formatPrice(product.discountedPrice!)}',
+                                  style: TextStyle(
+                                    color: Colors.red[700],
+                                    fontSize: isMobile ? 13 : 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'DISC',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontSize: isMobile ? 9 : 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            // No discount, show normal price
+                            Text(
+                              'IDR ${_formatPrice(product.currentPrice!)}',
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontSize: isMobile ? 13 : 14,
+                                fontWeight: FontWeight.w700,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ] else ...[
                           Text(
-                            'No profit set',
+                            'No stock',
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: isMobile ? 11 : 12,
@@ -300,15 +323,43 @@ class _ProductPageState extends State<ProductPage> {
                             ),
                           ),
                         ],
-                        SizedBox(height: 4),
-                        // Tampilkan quantity
-                        Text(
-                          'Qty: ${product.quantity}',
-                          style: TextStyle(
-                            color: Colors.brown[600],
-                            fontSize: isMobile ? 11 : 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        const SizedBox(height: 6),
+                        // Stock info
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Stock: ${product.totalAvailableQuantity}',
+                              style: TextStyle(
+                                color: product.isAvailable
+                                    ? Colors.brown[600]
+                                    : Colors.red[600],
+                                fontSize: isMobile ? 11 : 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (product.hasProfit)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[50],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  product.profitType == 'percent'
+                                      ? '+${product.profitAmount}%'
+                                      : '+${_formatPrice(product.profitAmount!)}',
+                                  style: TextStyle(
+                                    color: Colors.green[700],
+                                    fontSize: isMobile ? 9 : 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -331,8 +382,8 @@ class _ProductPageState extends State<ProductPage> {
       icon: Icon(icon, size: 20),
       color: color,
       onPressed: onPressed,
-      padding: EdgeInsets.all(8),
-      constraints: BoxConstraints(),
+      padding: const EdgeInsets.all(8),
+      constraints: const BoxConstraints(),
       splashRadius: 20,
     );
   }

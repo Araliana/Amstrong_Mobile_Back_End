@@ -52,9 +52,11 @@ class _InventoryPageState extends State<InventoryPage> {
                     }
 
                     final stock = items[index - 1];
+                    final isActive = stock.isActiveStock(items);
 
                     return _buildStockCard(
                       stock: stock,
+                      isActive: isActive,
                       onEdit: () async {
                         final result = await Navigator.push(
                           context,
@@ -71,17 +73,18 @@ class _InventoryPageState extends State<InventoryPage> {
                         showDeleteConfirmation(
                           context,
                           title: "Stock",
-                          label: stock.productName ?? 'Stock #${stock.id}',
+                          label: stock.productName,
                           isLoading: provider.isLoading,
                           onDelete: () async {
-                            if (stock.id != null) {
-                              await provider.deleteStock(stock.id!);
-                            }
+                            await provider.deleteStock(
+                              stock.id,
+                              productId: stock.productId,
+                            );
                           },
                         );
                       },
                       onTap: () {
-                        showStockDetail(context, stock);
+                        showStockDetail(context, stock, items);
                       },
                     );
                   },
@@ -106,6 +109,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Widget _buildStockCard({
     required Stock stock,
+    required bool isActive,
     VoidCallback? onEdit,
     VoidCallback? onDelete,
     VoidCallback? onTap,
@@ -117,9 +121,14 @@ class _InventoryPageState extends State<InventoryPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: isActive
+              ? Border.all(color: Colors.green[400]!, width: 2)
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.brown.withAlpha(10),
+              color: isActive
+                  ? Colors.green.withAlpha(20)
+                  : Colors.brown.withAlpha(10),
               blurRadius: 12,
               offset: const Offset(0, 4),
               spreadRadius: 0,
@@ -134,7 +143,9 @@ class _InventoryPageState extends State<InventoryPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.brown[50]!, Colors.brown[100]!],
+                  colors: isActive
+                      ? [Colors.green[50]!, Colors.green[100]!]
+                      : [Colors.brown[50]!, Colors.brown[100]!],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
@@ -143,31 +154,65 @@ class _InventoryPageState extends State<InventoryPage> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.inventory_2, color: Colors.brown[700], size: 24),
+                  Icon(
+                    Icons.inventory_2,
+                    color: isActive ? Colors.green[700] : Colors.brown[700],
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          stock.productName ?? 'Unknown Product',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.brown[900],
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                stock.productName,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isActive
+                                      ? Colors.green[900]
+                                      : Colors.brown[900],
+                                ),
+                              ),
+                            ),
+                            if (isActive)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[700],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'ACTIVE',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _formatDate(stock.createdAt),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.brown[600],
+                            color: isActive
+                                ? Colors.green[600]
+                                : Colors.brown[600],
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.9),
@@ -236,8 +281,8 @@ class _InventoryPageState extends State<InventoryPage> {
                       ),
                       Expanded(
                         child: _buildInfoItem(
-                          'Selling Price',
-                          'IDR ${_formatPrice(stock.sellingPrice)}',
+                          'Final Price',
+                          'IDR ${_formatPrice(stock.finalPrice)}',
                           Icons.sell,
                           Colors.purple,
                         ),
@@ -245,43 +290,9 @@ class _InventoryPageState extends State<InventoryPage> {
                     ],
                   ),
 
-                  // Discount badge if exists
-                  if (stock.discount > 0) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.local_offer,
-                            color: Colors.red[700],
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Diskon: IDR ${_formatPrice(stock.discount)} (${stock.discountPercentage.toStringAsFixed(1)}%)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.red[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-
                   const SizedBox(height: 12),
 
-                  // Final price
+                  // Total value info
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -294,7 +305,7 @@ class _InventoryPageState extends State<InventoryPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Harga Akhir',
+                          'Total Value',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -302,9 +313,9 @@ class _InventoryPageState extends State<InventoryPage> {
                           ),
                         ),
                         Text(
-                          'IDR ${_formatPrice(stock.finalPrice)}',
+                          'IDR ${_formatPrice(stock.totalValue)}',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -385,8 +396,7 @@ class _InventoryPageState extends State<InventoryPage> {
     return formatter.format(price.toInt());
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return '-';
+  String _formatDate(DateTime date) {
     final formatter = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
     return formatter.format(date);
   }

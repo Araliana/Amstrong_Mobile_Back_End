@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/model/stock.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_application_1/utils/index.dart';
 
-void showStockDetail(BuildContext context, Stock stock) {
+void showStockDetail(BuildContext context, Stock stock, List<Stock> allStocks) {
+  final isActive = stock.isActiveStock(allStocks);
+
   showDialog(
     context: context,
     builder: (context) => Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500),
         child: SingleChildScrollView(
@@ -21,7 +21,9 @@ void showStockDetail(BuildContext context, Stock stock) {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.brown[700]!, Colors.brown[900]!],
+                    colors: isActive
+                        ? [Colors.green[700]!, Colors.green[900]!]
+                        : [Colors.brown[700]!, Colors.brown[900]!],
                   ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(20),
@@ -49,6 +51,26 @@ void showStockDetail(BuildContext context, Stock stock) {
                             ),
                           ),
                         ),
+                        if (isActive)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'ACTIVE',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.white),
                           onPressed: () => Navigator.pop(context),
@@ -57,7 +79,7 @@ void showStockDetail(BuildContext context, Stock stock) {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      stock.productName ?? 'Unknown Product',
+                      stock.productName,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white70,
@@ -79,14 +101,14 @@ void showStockDetail(BuildContext context, Stock stock) {
                     _buildDetailRow('Product ID', '#${stock.productId}'),
                     _buildDetailRow('Quantity', '${stock.quantity} pcs'),
                     _buildDetailRow(
-                      'Tanggal Dibuat',
-                      _formatDate(stock.createdAt),
+                      'Status',
+                      stock.isAvailable ? 'Available' : 'Out of Stock',
+                      highlight: stock.isAvailable,
                     ),
-                    if (stock.updatedAt != null)
-                      _buildDetailRow(
-                        'Terakhir Update',
-                        _formatDate(stock.updatedAt),
-                      ),
+                    _buildDetailRow(
+                      'Tanggal Dibuat',
+                      formatDate(stock.createdAt),
+                    ),
 
                     const SizedBox(height: 24),
                     _buildSectionTitle('Breakdown Harga'),
@@ -101,9 +123,9 @@ void showStockDetail(BuildContext context, Stock stock) {
                     ),
                     const SizedBox(height: 8),
 
-                    // Profit
+                    // True Profit
                     _buildPriceRow(
-                      'Profit',
+                      'True Profit',
                       stock.trueProfit,
                       Colors.green,
                       Icons.trending_up,
@@ -114,16 +136,17 @@ void showStockDetail(BuildContext context, Stock stock) {
                     const Divider(thickness: 1),
                     const SizedBox(height: 8),
 
-                    // Selling Price
-                    _buildPriceRow(
-                      'Harga Jual (Kalkulasi)',
-                      stock.sellingPrice,
-                      Colors.blue,
-                      Icons.sell,
-                    ),
+                    // Current Price (from product settings)
+                    if (stock.currentPrice != null)
+                      _buildPriceRow(
+                        'Current Price (HPP + Product Profit)',
+                        stock.currentPrice!,
+                        Colors.blue,
+                        Icons.price_change,
+                      ),
 
-                    // Discount if exists
-                    if (stock.discount > 0) ...[
+                    // Discounted Price if exists
+                    if (stock.discountedPrice != null) ...[
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -141,7 +164,7 @@ void showStockDetail(BuildContext context, Stock stock) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Diskon',
+                                    'Discounted Price',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.red[700],
@@ -150,18 +173,11 @@ void showStockDetail(BuildContext context, Stock stock) {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'IDR ${_formatPrice(stock.discount)}',
+                                    '${formatCurrency(stock.discountedPrice!)}',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.red[700],
-                                    ),
-                                  ),
-                                  Text(
-                                    '${stock.discountPercentage.toStringAsFixed(1)}% dari harga jual',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.red[600],
                                     ),
                                   ),
                                 ],
@@ -193,7 +209,7 @@ void showStockDetail(BuildContext context, Stock stock) {
                               Icon(Icons.price_check, color: Colors.white),
                               SizedBox(width: 12),
                               Text(
-                                'Harga Akhir',
+                                'Final Price',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -203,7 +219,7 @@ void showStockDetail(BuildContext context, Stock stock) {
                             ],
                           ),
                           Text(
-                            'IDR ${_formatPrice(stock.finalPrice)}',
+                            '${formatCurrency(stock.finalPrice)}',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -215,12 +231,59 @@ void showStockDetail(BuildContext context, Stock stock) {
                     ),
 
                     const SizedBox(height: 24),
+                    _buildSectionTitle('Analytics'),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Profit Margin',
+                            '${formatCurrency(stock.profitMargin)}',
+                            Colors.green,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Profit %',
+                            '${stock.profitPercentage.toStringAsFixed(1)}%',
+                            Colors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Total Value',
+                            '${formatCurrency(stock.totalValue)}',
+                            Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Potential Profit',
+                            '${formatCurrency(stock.totalPotentialProfit)}',
+                            Colors.purple,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
                     _buildSectionTitle('Kalkulasi'),
                     const SizedBox(height: 8),
                     Text(
-                      'HPP + Profit = Harga Jual\n'
-                      'IDR ${_formatPrice(stock.hpp)} + IDR ${_formatPrice(stock.trueProfit)} = IDR ${_formatPrice(stock.sellingPrice)}\n\n'
-                      '${stock.discount > 0 ? 'Harga Jual - Diskon = Harga Akhir\nIDR ${_formatPrice(stock.sellingPrice)} - IDR ${_formatPrice(stock.discount)} = IDR ${_formatPrice(stock.finalPrice)}' : 'Harga Akhir = Harga Jual (Tanpa Diskon)'}',
+                      'HPP: ${formatCurrency(stock.hpp)}\n'
+                      '+ True Profit: ${formatCurrency(stock.trueProfit)}\n'
+                      '= Final Price: ${formatCurrency(stock.finalPrice)}\n\n'
+                      'Profit Margin: ${stock.profitPercentage.toStringAsFixed(1)}%\n'
+                      'Total Stock Value: ${formatCurrency(stock.totalValue)}\n'
+                      'Total Potential Profit: ${formatCurrency(stock.totalPotentialProfit)}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[700],
@@ -249,7 +312,7 @@ Widget _buildSectionTitle(String title) {
   );
 }
 
-Widget _buildDetailRow(String label, String value) {
+Widget _buildDetailRow(String label, String value, {bool highlight = false}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
@@ -259,19 +322,17 @@ Widget _buildDetailRow(String label, String value) {
           width: 140,
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
           ),
         ),
         const Text(': ', style: TextStyle(fontSize: 13)),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
+              color: highlight ? Colors.green[700] : Colors.black,
             ),
           ),
         ),
@@ -303,7 +364,7 @@ Widget _buildPriceRow(String label, double value, Color color, IconData icon) {
           ),
         ),
         Text(
-          'IDR ${_formatPrice(value)}',
+          formatCurrency(value),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.bold,
@@ -315,13 +376,31 @@ Widget _buildPriceRow(String label, double value, Color color, IconData icon) {
   );
 }
 
-String _formatPrice(double price) {
-  final formatter = NumberFormat('#,###', 'id_ID');
-  return formatter.format(price.toInt());
-}
-
-String _formatDate(DateTime? date) {
-  if (date == null) return '-';
-  final formatter = DateFormat('dd MMMM yyyy, HH:mm', 'id_ID');
-  return formatter.format(date);
+Widget _buildStatCard(String label, String value, Color color) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: color.withOpacity(0.3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    ),
+  );
 }

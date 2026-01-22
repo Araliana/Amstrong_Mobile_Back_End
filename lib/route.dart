@@ -85,7 +85,7 @@ class AppRoute {
             //PRODUCTS & STOCK
             GoRoute(
               path: '/products',
-              builder: (context, state) => const ProductPage(),
+              builder: (context, state) => const ProductScreen(),
             ),
             GoRoute(
               path: '/stocks',
@@ -220,11 +220,6 @@ class _AppShellState extends State<_AppShell> {
   Widget build(BuildContext context) {
     final langProvider = Provider.of<LanguageProvider>(context);
 
-    // Set default value jika masih null
-    if (selectedPeriod == null) {
-      selectedPeriod = langProvider.getText('today');
-    }
-
     List<Widget> actions = [];
     switch (widget.state.uri.path) {
       case '/':
@@ -232,7 +227,7 @@ class _AppShellState extends State<_AppShell> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: DropdownButton<String>(
-              value: selectedPeriod!,
+              value: selectedPeriod,
               dropdownColor: Colors.brown[700],
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               underline: Container(),
@@ -647,8 +642,10 @@ class _AppShellState extends State<_AppShell> {
                                   icon: access.icon,
                                   title:
                                       langProvider.appLocale.languageCode ==
-                                              "id"
-                                      ? (access.nameId.isNotEmpty ? access.nameId : access.name)
+                                          "id"
+                                      ? (access.nameId.isNotEmpty
+                                            ? access.nameId
+                                            : access.name)
                                       : access.name,
                                   path: access.accessPath,
                                   isSelected: currentPath == access.accessPath,

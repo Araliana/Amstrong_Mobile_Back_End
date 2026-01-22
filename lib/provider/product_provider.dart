@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
+import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/product.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,8 +11,10 @@ class ProductProvider with ChangeNotifier {
   final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   final List<Product> products = [];
   final DBHelper db = DBHelper();
-  final Tables productTables = Tables.product;
+  final Tables productTable = Tables.product;
+  final Tables stockTable = Tables.stock;
   final uuid = const Uuid();
+  final sync = SyncManager();
 
   bool isLoading = false;
 
@@ -22,33 +27,28 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> loadProducts() async {
     _setLoading(true);
-    try {
-      final res = await db.get(
-        productTables,
-        orderBy: "created_at",
-        orderType: OrderType.asc,
-      );
+    await sync.syncTable(productTable);
+    await sync.syncTable(stockTable);
 
-      print('=== FETCH PRODUCTS ===');
-      print('Raw data from DB: $res');
-      print('Total rows: ${res.length}');
+    final res = await db.get(
+      productTable,
+      joins: [
+        Join(
+          joinTable: stockTable,
+          fromKey: "id",
+          toKey: "product_id",
+          isList: true,
+        ),
+      ],
+      orderBy: "product.created_at",
+      orderType: OrderType.desc,
+    );
 
-      products
-        ..clear()
-        ..addAll(res.map((e) => Product.fromMap(e)).toList());
+    products
+      ..clear()
+      ..addAll(res.map((e) => Product.fromMap(e)).toList());
 
-      print('Products list after mapping: ${products.length} items');
-      for (var product in products) {
-        print('Product: ${product.name} (ID: ${product.id})');
-      }
-      print('======================');
-
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Error loading products: $e");
-    } finally {
-      _setLoading(false);
-    }
+    _setLoading(false);
 
     await analytics.logEvent(
       name: 'load_product',
@@ -56,84 +56,167 @@ class ProductProvider with ChangeNotifier {
     );
   }
 
+  Future<Product?> getProductById(String id) async {
+    _setLoading(true);
+    await sync.syncTable(productTable);
+    await sync.syncTable(stockTable);
+
+    final res = await db.get(
+      productTable,
+      joins: [
+        Join(
+          joinTable: stockTable,
+          fromKey: "id",
+          toKey: "product_id",
+          isList: true,
+        ),
+      ],
+      where: "product.id = ?",
+      whereArgs: [id],
+    );
+
+    _setLoading(false);
+
+    if (res.isEmpty) return null;
+
+    await analytics.logEvent(
+      name: 'get_product_detail',
+      parameters: {'product_id': id},
+    );
+
+    return Product.fromMap(res[0]);
+  }
+
   Future<void> addProduct({
     required String name,
     required String description,
-    required String? img,
+    String? img,
     String? profitType,
-    double? profitValue,
+    double? profitAmount,
+    String? discountType,
+    double? discountValue,
   }) async {
     _setLoading(true);
     try {
-      const uuid = Uuid();
-      await db.insert(productTables, {
-        'id': uuid.v4(),
+      final id = uuid.v4();
+      await db.insert(productTable, {
+        'id': id,
         'name': name,
-        'profit_type': profitType,
-        'profit_value': profitValue,
-        'quantity': 0,
         'description': description,
         'img': img,
+        'profit_type': profitType,
+        'profit_amount': profitAmount,
+        'discount_type': discountType,
+        'discount_value': discountValue,
+        'quantity': 0,
       });
 
-      // Reload products dari database untuk memastikan sinkronisasi
-      await loadProducts();
+      await sync.syncTable(productTable);
+
+      products.add(
+        Product(
+          id: id,
+          name: name,
+          description: description,
+          img: img,
+          profitType: profitType,
+          profitAmount: profitAmount,
+          discountType: discountType,
+          discountValue: discountValue,
+          quantity: 0,
+        ),
+      );
+
+      _setLoading(false);
 
       await analytics.logEvent(
         name: 'add_product',
-        parameters: {'name': name, 'description': description},
+        parameters: {
+          'name': name,
+          'description': description,
+          'has_profit': profitType != null,
+          'has_discount': discountType != null,
+        },
       );
-    } finally {
+    } catch (e) {
+      debugPrint('Error adding product: $e');
       _setLoading(false);
+      rethrow;
     }
   }
 
   Future<void> editProduct({
+    required String id,
     required String name,
     required String description,
-    required String? img,
-    required String id, // Changed from int to String for UUID
+    String? img,
     String? profitType,
-    double? profitValue,
-    int? quantity,
+    double? profitAmount,
+    String? discountType,
+    double? discountValue,
   }) async {
     _setLoading(true);
-    final product = Product.fromMap(
-      (await db.get(productTables, where: "id = ?", whereArgs: [id]))[0],
-    );
+    try {
+      await db.update(
+        productTable,
+        id: id,
+        data: {
+          'name': name,
+          'description': description,
+          'img': img,
+          'profit_type': profitType,
+          'profit_amount': profitAmount,
+          'discount_type': discountType,
+          'discount_value': discountValue,
+        },
+      );
 
-    await db.update(
-      productTables,
-      id: id, // Already a String, no need for toString()
-      data: {
-        'name': name,
-        'profit_type': profitType,
-        'profit_value': profitValue,
-        'quantity': quantity ?? product.quantity,
-        'description': description,
-        'img': img ?? product.img,
-      },
-    );
+      await sync.syncTable(productTable);
 
-    // Reload products dari database untuk memastikan sinkronisasi
-    await loadProducts();
+      final index = products.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        // Get existing product to preserve stocks data
+        final existingProduct = products[index];
+        products[index] = Product(
+          id: id,
+          name: name,
+          description: description,
+          img: img,
+          profitType: profitType,
+          profitAmount: profitAmount,
+          discountType: discountType,
+          discountValue: discountValue,
+          quantity: existingProduct.quantity,
+          stocks: existingProduct.stocks,
+          createdAt: existingProduct.createdAt,
+        );
+      }
 
-    await analytics.logEvent(
-      name: 'edit_product',
-      parameters: {'name': name, 'description': description},
-    );
+      _setLoading(false);
+
+      await analytics.logEvent(
+        name: 'edit_product',
+        parameters: {
+          'id': id,
+          'name': name,
+          'description': description,
+          'has_profit': profitType != null,
+          'has_discount': discountType != null,
+        },
+      );
+    } catch (e) {
+      debugPrint('Error editing product: $e');
+      _setLoading(false);
+      rethrow;
+    }
   }
 
   Future<void> deleteProduct(String id) async {
-    // Changed from int to String for UUID
     _setLoading(true);
-    await db.delete(
-      productTables,
-      id: id,
-    ); // Already a String, no need for toString()
-
-    // Reload products dari database untuk memastikan sinkronisasi
-    await loadProducts();
+    await db.delete(productTable, id: id);
+    await sync.syncTable(productTable);
+    products.removeWhere((item) => item.id == id);
+    _setLoading(false);
 
     await analytics.logEvent(name: 'delete_product', parameters: {'id': id});
   }

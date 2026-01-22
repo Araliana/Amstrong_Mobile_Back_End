@@ -1,132 +1,207 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
-import 'package:flutter_application_1/model/order.dart';
-import 'package:flutter_application_1/model/stock.dart';
-import 'package:flutter_application_1/screen/order/item_input.dart';
+import 'package:flutter_application_1/model/order_model.dart';
+import 'package:flutter_application_1/model/product.dart';
+import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class OrderProvider with ChangeNotifier {
-  final DBHelper db = DBHelper();
-  final uuid = const Uuid();
+  final DBHelper _db = DBHelper();
+  final Uuid _uuid = const Uuid();
 
-  final Tables orderTable = Tables.order;
-  final Tables orderDetailTable = Tables.orderDetail;
-  final Tables stockTable = Tables.stock;
-  final Tables productTable = Tables.product;
+  // --- STATE CART (KERANJANG) ---
+  List<OrderItem> _cart = [];
+  List<OrderItem> get cart => _cart;
 
-  final List<Order> orders = [];
-  bool isLoading = false;
+  // --- STATE HISTORY ORDERS ---
+  List<OrderModel> _orders = [];
+  List<OrderModel> get orders => _orders;
 
-  Future<void> loadOrders() async {
-    isLoading = true;
-    notifyListeners();
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
-    final res = await db.get(
-      orderTable,
-      orderBy: 'created_at',
-      orderType: OrderType.desc,
-    );
+  double get totalCartPrice => _cart.fold(0, (sum, item) => sum + item.totalPrice);
 
-    orders
-      ..clear()
-      ..addAll(res.map((e) => Order.fromMap(e)));
+  // --- FETCH ORDERS (ADDITION) ---
+  // Fungsi ini dipindahkan dari UI ke Provider agar bisa diakses global
+  Future<void> fetchOrders() async {
+    _isLoading = true;
+    notifyListeners(); // Memberitahu UI bahwa sedang loading
 
-    isLoading = false;
+    try {
+      final data = await _db.get(
+        Tables.order,
+        orderBy: 'created_at',
+        orderType: OrderType.desc,
+      );
+
+      _orders = data.map((item) {
+        return OrderModel(
+          id: item['id'] as String,
+          customerName: item['customer_name'] as String,
+          customerAddress: item['customer_address'] ?? '-',
+          totalPrice: (item['total_price'] as num).toDouble(),
+          totalProfit: (item['total_profit'] as num).toDouble(),
+          totalHpp: (item['total_hpp'] as num).toDouble(),
+          status: item['status'] as String,
+          createdAt: item['created_at'] as String,
+          isSynced: item['is_synced'] as int? ?? 0,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint("Error fetching orders: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners(); // Memberitahu UI data sudah siap
+    }
+  }
+
+  // --- CEK STOK ---
+  int checkStockAvailability(Product product, int reqQty) {
+    if (reqQty > product.stock) {
+      return 1; // Warning: Stok kurang
+    }
+    return 0; // Aman
+  }
+
+  // --- ADD TO CART ---
+  void addToCart({
+    required Product product,
+    required int qty,
+    required bool isPreOrder,
+  }) {
+    // Asumsi HPP 0 jika tidak ada data modal
+    double hppPerItem = 0; 
+    
+    double totalItemPrice = product.price * qty;
+    double totalItemHpp = hppPerItem * qty;
+    double totalItemProfit = totalItemPrice - totalItemHpp;
+
+    final index = _cart.indexWhere((item) => item.productId == product.id);
+
+    if (index != -1) {
+      final oldItem = _cart[index];
+      int newQty = oldItem.quantity + qty;
+      
+      _cart[index] = OrderItem(
+        id: oldItem.id,
+        orderId: '',
+        productId: product.id,
+        stockId: '',
+        quantity: newQty,
+        totalPrice: product.price * newQty,
+        totalProfit: (product.price * newQty) - (hppPerItem * newQty),
+        totalHpp: hppPerItem * newQty,
+        createdAt: DateTime.now().toIso8601String(),
+        productName: product.name,
+        isPreOrder: isPreOrder || oldItem.isPreOrder,
+      );
+    } else {
+      _cart.add(OrderItem(
+        id: _uuid.v4(),
+        orderId: '',
+        productId: product.id,
+        stockId: '',
+        quantity: qty,
+        totalPrice: totalItemPrice,
+        totalProfit: totalItemProfit,
+        totalHpp: totalItemHpp,
+        createdAt: DateTime.now().toIso8601String(),
+        productName: product.name,
+        isPreOrder: isPreOrder,
+      ));
+    }
     notifyListeners();
   }
 
-  Future<void> createOrder({
-    required List<OrderItemInput> items,
-    String? customerName,
-    String? customerAddress,
+  void removeFromCart(String itemId) {
+    _cart.removeWhere((item) => item.id == itemId);
+    notifyListeners();
+  }
+
+  void clearCart() {
+    _cart.clear();
+    notifyListeners();
+  }
+
+  // --- CHECKOUT ---
+  Future<bool> createOrder({
+    required String customerName,
+    required String address,
+    required ProductProvider productProvider,
   }) async {
-    double totalPrice = 0;
-    double totalProfit = 0;
-    double totalHpp = 0;
+    if (_cart.isEmpty) return false;
+    _isLoading = true;
+    notifyListeners();
 
-    final orderId = uuid.v4();
+    try {
+      final orderId = _uuid.v4();
+      final now = DateTime.now().toIso8601String();
+      
+      double grandTotalProfit = _cart.fold(0, (sum, item) => sum + item.totalProfit);
+      double grandTotalHpp = _cart.fold(0, (sum, item) => sum + item.totalHpp);
+      bool isPreOrderOrder = _cart.any((item) => item.isPreOrder);
 
-    for (final item in items) {
-      int remainingQty = item.quantity;
-
-      final stockRes = await db.get(
-        stockTable,
-        where: 'product_id = ? AND quantity > 0',
-        whereArgs: [item.productId],
-        orderBy: 'created_at',
-        orderType: OrderType.asc,
+      final order = OrderModel(
+        id: orderId,
+        customerName: customerName,
+        customerAddress: address,
+        totalPrice: totalCartPrice,
+        totalProfit: grandTotalProfit,
+        totalHpp: grandTotalHpp,
+        status: isPreOrderOrder ? 'PRE_ORDER' : 'COMPLETED',
+        createdAt: now,
+        isSynced: 0,
       );
 
-      final totalStock = stockRes.fold<int>(
-        0,
-        (sum, s) => sum + (s['quantity'] as int),
-      );
+      // [FIX] Menggunakan Tables.order (Enum), bukan String 'orders'
+      await _db.insert(Tables.order, order.toMap());
 
-      if (totalStock < remainingQty) {
-        throw Exception('Stock tidak cukup');
-      }
-
-      for (final stockMap in stockRes) {
-        if (remainingQty <= 0) break;
-
-        final stock = Stock.fromMap(stockMap);
-
-        final takeQty =
-            remainingQty > stock.quantity ? stock.quantity : remainingQty;
-
-        final hpp = stock.hpp * takeQty;
-        final price = stock.finalPrice * takeQty;
-        final profit = price - hpp;
-
-        await db.insert(orderDetailTable, {
-          'id': uuid.v4(),
-          'order_id': orderId,
-          'product_id': item.productId,
-          'stock_id': stock.id,
-          'quantity': takeQty,
-          'total_price': price,
-          'total_profit': profit,
-          'total_hpp': hpp,
-        });
-
-        await db.update(
-          stockTable,
-          id: stock.id.toString(),
-          data: {'quantity': stock.quantity - takeQty},
+      for (var item in _cart) {
+        final finalItem = OrderItem(
+          id: item.id,
+          orderId: orderId,
+          productId: item.productId,
+          stockId: item.stockId,
+          quantity: item.quantity,
+          totalPrice: item.totalPrice,
+          totalProfit: item.totalProfit,
+          totalHpp: item.totalHpp,
+          createdAt: now,
         );
 
-        totalPrice += price;
-        totalProfit += profit;
-        totalHpp += hpp;
+        // [FIX] Menggunakan Tables.orderDetail (Enum)
+        await _db.insert(Tables.orderDetail, finalItem.toMap());
 
-        remainingQty -= takeQty;
+        // Update Stock via ProductProvider
+        final product = productProvider.products.firstWhere((p) => p.id == item.productId);
+        
+        int newStock = product.stock - item.quantity;
+        if (newStock < 0) newStock = 0; 
+
+        await productProvider.editProduct(
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          stock: newStock,
+          description: product.description ?? '',
+          img: product.img,
+          discountPrice: product.discountPrice
+        );
       }
 
-      final productRes = await db.get(
-        productTable,
-        where: 'id = ?',
-        whereArgs: [item.productId],
-      );
-
-      final currentQty = productRes.first['quantity'] as int;
-
-      await db.update(
-        productTable,
-        id: item.productId.toString(),
-        data: {'quantity': currentQty - item.quantity},
-      );
+      _cart.clear();
+      
+      // [ADDITION] Refresh list order setelah berhasil checkout
+      await fetchOrders();
+      
+      return true;
+    } catch (e) {
+      debugPrint("Error create order: $e");
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    await db.insert(orderTable, {
-      'id': orderId,
-      'total_price': totalPrice,
-      'total_profit': totalProfit,
-      'total_hpp': totalHpp,
-      'status': 'completed',
-      'customer_name': customerName,
-      'customer_address': customerAddress,
-    });
-
-    await loadOrders();
   }
 }

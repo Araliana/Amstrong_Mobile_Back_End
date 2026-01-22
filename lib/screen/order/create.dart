@@ -6,6 +6,7 @@ import 'package:flutter_application_1/provider/order_provider.dart';
 import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/provider/theme_provider.dart';
 import 'package:flutter_application_1/utils/index.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class AddOrderScreen extends StatefulWidget {
@@ -102,7 +103,7 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
         cartItems: _cartItems,
       );
 
-      if (success && mounted) Navigator.pop(context);
+      if (success && mounted) context.replace("/completed-orders");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

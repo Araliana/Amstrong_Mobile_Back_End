@@ -4,7 +4,7 @@ import 'package:flutter_application_1/provider/product_provider.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:flutter_application_1/screen/product/addEdit.dart';
 import 'package:flutter_application_1/screen/product/detail.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_application_1/utils/index.dart';
 import 'package:provider/provider.dart';
 
 class ProductScreen extends StatefulWidget {
@@ -262,7 +262,7 @@ class _ProductScreenState extends State<ProductScreen> {
                           if (product.hasDiscount &&
                               product.discountedPrice != null) ...[
                             Text(
-                              'IDR ${_formatPrice(product.currentPrice!)}',
+                              '${formatCurrency(product.currentPrice!)}',
                               style: TextStyle(
                                 color: Colors.grey[500],
                                 fontSize: isMobile ? 11 : 12,
@@ -274,7 +274,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             Row(
                               children: [
                                 Text(
-                                  'IDR ${_formatPrice(product.discountedPrice!)}',
+                                  '${formatCurrency(product.discountedPrice!)}',
                                   style: TextStyle(
                                     color: Colors.red[700],
                                     fontSize: isMobile ? 13 : 14,
@@ -305,7 +305,7 @@ class _ProductScreenState extends State<ProductScreen> {
                           ] else ...[
                             // No discount, show normal price
                             Text(
-                              'IDR ${_formatPrice(product.currentPrice!)}',
+                              '${formatCurrency(product.currentPrice!)}',
                               style: TextStyle(
                                 color: Colors.green[700],
                                 fontSize: isMobile ? 13 : 14,
@@ -351,7 +351,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                 child: Text(
                                   product.profitType == 'percent'
                                       ? '+${product.profitAmount}%'
-                                      : '+${_formatPrice(product.profitAmount!)}',
+                                      : '+${formatCurrency(product.profitAmount!)}',
                                   style: TextStyle(
                                     color: Colors.green[700],
                                     fontSize: isMobile ? 9 : 10,
@@ -386,10 +386,5 @@ class _ProductScreenState extends State<ProductScreen> {
       constraints: const BoxConstraints(),
       splashRadius: 20,
     );
-  }
-
-  String _formatPrice(double price) {
-    final formatter = NumberFormat('#,###', 'id_ID');
-    return formatter.format(price.toInt());
   }
 }

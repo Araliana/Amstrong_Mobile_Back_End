@@ -7,14 +7,14 @@ import 'package:flutter_application_1/screen/inventory/detail.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class InventoryPage extends StatefulWidget {
-  const InventoryPage({super.key});
+class InventoryScreen extends StatefulWidget {
+  const InventoryScreen({super.key});
 
   @override
-  State<InventoryPage> createState() => _InventoryPageState();
+  State<InventoryScreen> createState() => _InventoryScreenState();
 }
 
-class _InventoryPageState extends State<InventoryPage> {
+class _InventoryScreenState extends State<InventoryScreen> {
   late Future<void> _loadFuture;
 
   @override

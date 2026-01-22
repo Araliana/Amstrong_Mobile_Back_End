@@ -20,7 +20,6 @@ import 'package:flutter_application_1/screen/product/index.dart';
 import 'package:flutter_application_1/screen/role/addEdit.dart';
 import 'package:flutter_application_1/screen/role/index.dart';
 import 'package:flutter_application_1/screen/setting/index.dart';
-import 'package:flutter_application_1/screen/stock/index.dart';
 import 'package:flutter_application_1/screen/userAdmin/index.dart';
 import 'package:flutter_application_1/utils/index.dart';
 import 'package:go_router/go_router.dart';
@@ -80,7 +79,7 @@ class AppRoute {
             //ORDERS
             GoRoute(
               path: '/orders',
-              builder: (context, state) => const OrderPage(),
+              builder: (context, state) => const OrderScreen(),
             ),
             //PRODUCTS & STOCK
             GoRoute(
@@ -88,16 +87,12 @@ class AppRoute {
               builder: (context, state) => const ProductScreen(),
             ),
             GoRoute(
-              path: '/stocks',
-              builder: (context, state) => const StockPage(),
-            ),
-            GoRoute(
               path: '/categories',
-              builder: (context, state) => const CategoryPage(),
+              builder: (context, state) => const CategoryScreen(),
             ),
             GoRoute(
               path: '/inventory',
-              builder: (context, state) => const InventoryPage(),
+              builder: (context, state) => const InventoryScreen(),
             ),
 
             //FINANCE
@@ -115,7 +110,7 @@ class AppRoute {
             ),
             GoRoute(
               path: '/dish-types',
-              builder: (context, state) => const DishTypePage(),
+              builder: (context, state) => const DishTypeScreen(),
             ),
             GoRoute(
               path: '/gallery',
@@ -154,7 +149,10 @@ class AppRoute {
       ],
       initialLocation: '/',
       errorBuilder: (context, state) => Scaffold(
-        appBar: AppBar(title: const Text("Page Not Found"), centerTitle: true),
+        appBar: AppBar(
+          title: const Text("Screen Not Found"),
+          centerTitle: true,
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

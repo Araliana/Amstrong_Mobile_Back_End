@@ -4,14 +4,14 @@ import 'package:flutter_application_1/provider/language_provider.dart'; // [IMPO
 import 'package:provider/provider.dart';
 import 'package:flutter_application_1/provider/category_provider.dart';
 
-class DishTypePage extends StatefulWidget {
-  const DishTypePage({super.key});
+class DishTypeScreen extends StatefulWidget {
+  const DishTypeScreen({super.key});
 
   @override
-  State<DishTypePage> createState() => _CategoryPageState();
+  State<DishTypeScreen> createState() => _CategoryPageState();
 }
 
-class _CategoryPageState extends State<DishTypePage> {
+class _CategoryPageState extends State<DishTypeScreen> {
   late Future<void> _loadFuture;
 
   @override
@@ -39,14 +39,20 @@ class _CategoryPageState extends State<DishTypePage> {
 
           return items.isEmpty
               // [TRANSLATE] Empty state title
-              ? buildEmptyState(lang.getText('dish_types'), Icons.fastfood_outlined)
+              ? buildEmptyState(
+                  lang.getText('dish_types'),
+                  Icons.fastfood_outlined,
+                )
               : ListView.builder(
                   padding: const EdgeInsets.all(8),
                   itemCount: items.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       // [TRANSLATE] Header title
-                      return buildHeader(lang.getText('dish_types'), Icons.category);
+                      return buildHeader(
+                        lang.getText('dish_types'),
+                        Icons.category,
+                      );
                     }
 
                     final category = items[index - 1];

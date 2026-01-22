@@ -1,6 +1,6 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_application_1/components/index.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -25,13 +25,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   late TextEditingController _nameCtl;
   late TextEditingController _profitValueCtl;
+  late TextEditingController _discountValueCtl;
   late TextEditingController _descCtl;
 
   File? _pickedFile;
   String? _currentImageUrl;
-  String? _profitType = 'none'; // Default: none
+  String? _profitType = 'flat'; // Default: flat
+  String? _discountType = 'none'; // Default: none
   bool _isLoading = false;
-  bool _isDark = false; // Sesuaikan dengan theme app Anda
+  bool _isDark = false;
 
   @override
   void initState() {
@@ -42,9 +44,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _profitValueCtl = TextEditingController(
       text: p?.profitAmount != null ? p!.profitAmount.toString() : '',
     );
+    _discountValueCtl = TextEditingController(
+      text: p?.discountValue != null ? p!.discountValue.toString() : '',
+    );
     _descCtl = TextEditingController(text: p?.description ?? '');
 
-    _profitType = p?.profitType ?? 'none';
+    _profitType = p?.profitType ?? 'flat';
+    _discountType = p?.discountType ?? 'none';
     _currentImageUrl = p?.img;
   }
 
@@ -52,6 +58,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   void dispose() {
     _nameCtl.dispose();
     _profitValueCtl.dispose();
+    _discountValueCtl.dispose();
     _descCtl.dispose();
     super.dispose();
   }
@@ -69,20 +76,25 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         imageUrl = await uploadFile(_pickedFile!);
       }
 
-      // Jika profit type = none, set profitAmount ke null
-      final profitAmount = _profitType == 'none'
-          ? null
-          : double.tryParse(_profitValueCtl.text);
+      // Profit amount wajib diisi (karena profit type tidak ada none)
+      final profitAmount = double.tryParse(_profitValueCtl.text);
 
-      final profitTypeToSave = _profitType == 'none' ? null : _profitType;
+      // Discount value hanya diisi jika discount type != none
+      final discountValue = _discountType == 'none'
+          ? null
+          : double.tryParse(_discountValueCtl.text);
+
+      final discountTypeToSave = _discountType == 'none' ? null : _discountType;
 
       if (widget.editProduct == null) {
         await provider.addProduct(
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: profitTypeToSave,
+          profitType: _profitType,
           profitAmount: profitAmount,
+          discountType: discountTypeToSave,
+          discountValue: discountValue,
         );
       } else {
         await provider.editProduct(
@@ -90,8 +102,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           name: _nameCtl.text.trim(),
           description: _descCtl.text.trim(),
           img: imageUrl,
-          profitType: profitTypeToSave,
+          profitType: _profitType,
           profitAmount: profitAmount,
+          discountType: discountTypeToSave,
+          discountValue: discountValue,
         );
       }
 
@@ -109,7 +123,6 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Detect dark mode
     _isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -159,35 +172,63 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Profit Type Dropdown
+              // Profit Type Dropdown (flat/percent only)
               buildDropdownField(
                 label: 'Profit Type',
                 value: _profitType,
                 prefixIcon: Icons.trending_up,
                 isDark: _isDark,
+                simpleItems: const ['flat', 'percent'],
+                onChanged: (v) => setState(() => _profitType = v),
+                validator: (v) => v == null ? 'Required' : null,
+              ),
+              const SizedBox(height: 16),
+
+              // Profit Value (wajib diisi)
+              buildInput(
+                controller: _profitValueCtl,
+                label: 'Profit Value',
+                icon: Icons.attach_money,
+                isDark: _isDark,
+                mode: InputMode.number,
+                prefixText: _profitType == 'percent' ? '% ' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Required';
+                  if (double.tryParse(v) == null) return 'Invalid number';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Discount Type Dropdown (none/flat/percent)
+              buildDropdownField(
+                label: 'Discount Type',
+                value: _discountType,
+                prefixIcon: Icons.discount,
+                isDark: _isDark,
                 simpleItems: const ['none', 'flat', 'percent'],
                 onChanged: (v) {
                   setState(() {
-                    _profitType = v;
-                    // Clear profit value jika dikembalikan ke none
+                    _discountType = v;
+                    // Clear discount value jika dikembalikan ke none
                     if (v == 'none') {
-                      _profitValueCtl.clear();
+                      _discountValueCtl.clear();
                     }
                   });
                 },
                 validator: (v) => v == null ? 'Required' : null,
               ),
 
-              // Profit Value (hanya muncul jika profit type != none)
-              if (_profitType != null && _profitType != 'none') ...[
+              // Discount Value (hanya muncul jika discount type != none)
+              if (_discountType != null && _discountType != 'none') ...[
                 const SizedBox(height: 16),
                 buildInput(
-                  controller: _profitValueCtl,
-                  label: 'Profit Value',
-                  icon: Icons.attach_money,
+                  controller: _discountValueCtl,
+                  label: 'Discount Value',
+                  icon: Icons.money_off,
                   isDark: _isDark,
                   mode: InputMode.number,
-                  prefixText: _profitType == 'percent' ? '% ' : null,
+                  prefixText: _discountType == 'percent' ? '% ' : null,
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Required';
                     if (double.tryParse(v) == null) return 'Invalid number';

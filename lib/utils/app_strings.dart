@@ -121,6 +121,27 @@ class AppStrings {
       'deactivate': 'Nonaktifkan',
       'confirm_delete_post': 'Apakah Anda yakin ingin menghapus postingan ini?',
       'post_title': 'Postingan',
+
+      //order
+      'order_menu': 'Menu Pesanan',
+      'customer_info': 'Info Pelanggan',
+      'customer_name': 'Nama Pelanggan',
+      'customer_address': 'Alamat Pelanggan',
+      'add_items': 'Tambah Barang',
+      'cart': 'Keranjang Belanja',
+      'checkout': 'Proses Pesanan',
+      'stock_warning': 'Peringatan Stok!',
+      'stock_not_enough': 'Stok saat ini hanya tersedia',
+      'req_qty': 'Jumlah diminta',
+      'pre_order_option': 'Apakah Anda ingin Pre-Order sisanya?',
+      'btn_pre_order': 'Ya, Pre-Order Semua',
+      'btn_use_stock': 'Tidak, Sesuai Stok Saja',
+      'item_added': 'Barang ditambahkan',
+      'order_success': 'Pesanan berhasil dibuat!',
+      'total': 'Total',
+      'status_po': 'Pre-Order',
+      'status_ready': 'Ready Stock',
+
     },
     'en': {
       // --- Menu / Sidebar ---
@@ -243,6 +264,26 @@ class AppStrings {
       'deactivate': 'Deactivate',
       'confirm_delete_post': 'Are you sure you want to delete this post?',
       'post_title': 'Post',
+
+      //order
+      'order_menu': 'Order Menu',
+      'customer_info': 'Customer Info',
+      'customer_name': 'Customer Name',
+      'customer_address': 'Customer Address',
+      'add_items': 'Add Items',
+      'cart': 'Shopping Cart',
+      'checkout': 'Checkout',
+      'stock_warning': 'Stock Warning!',
+      'stock_not_enough': 'Current stock available is only',
+      'req_qty': 'Requested',
+      'pre_order_option': 'Do you want to Pre-Order the rest?',
+      'btn_pre_order': 'Yes, Pre-Order All',
+      'btn_use_stock': 'No, Use Available Stock',
+      'item_added': 'Item added',
+      'order_success': 'Order created successfully!',
+      'total': 'Total',
+      'status_po': 'Pre-Order',
+      'status_ready': 'Ready Stock',
     },
   };
 }

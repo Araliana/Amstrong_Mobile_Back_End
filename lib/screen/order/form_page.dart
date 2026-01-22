@@ -1,8 +1,11 @@
 // import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
+// import 'package:flutter_application_1/provider/language_provider.dart';
 // import 'package:flutter_application_1/provider/order_provider.dart';
 // import 'package:flutter_application_1/provider/product_provider.dart';
 // import 'package:flutter_application_1/screen/order/item_input.dart';
+// import 'package:flutter_application_1/utils/index.dart';
+// import 'package:provider/provider.dart';
+// import 'package:go_router/go_router.dart';
 
 // class OrderFormPage extends StatefulWidget {
 //   const OrderFormPage({super.key});
@@ -12,203 +15,222 @@
 // }
 
 // class _OrderFormPageState extends State<OrderFormPage> {
-//   final customerNameCtrl = TextEditingController();
-//   final customerAddressCtrl = TextEditingController();
-
-//   final List<OrderItemInput> items = [];
+//   final _formKey = GlobalKey<FormState>();
+//   final _nameController = TextEditingController();
+//   final _addressController = TextEditingController();
+//   int _currentStep = 0; // 0: Customer Info, 1: Add Items
 
 //   @override
 //   void initState() {
 //     super.initState();
-//     Future.microtask(
-//       () => context.read<ProductProvider>().loadProducts(),
-//     );
-//   }
-
-//   void addItem() {
-//     final products = context.read<ProductProvider>().products;
-//     if (products.isEmpty) return;
-
-//     setState(() {
-//       items.add(
-//         OrderItemInput(
-//           productId: products.first.id, // ✅ int, no !
-//           quantity: 1,
-//         ),
-//       );
+//     Future.microtask(() {
+//       context.read<ProductProvider>().loadProducts();
+//       context.read<OrderProvider>().clearCart();
 //     });
 //   }
 
-//   double calculateTotal() {
-//     final productProvider = context.read<ProductProvider>();
-//     double total = 0;
-
-//     for (final item in items) {
-//       final product = productProvider.getById(item.productId);
-//       if (product != null) {
-//         total += product.sellingPrice * item.quantity;
-//       }
-//     }
-//     return total;
+//   void _showProductInputSheet(BuildContext context) {
+//     showModalBottomSheet(
+//       context: context,
+//       isScrollControlled: true,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//       ),
+//       builder: (context) => const OrderProductInput(),
+//     );
 //   }
 
 //   @override
 //   Widget build(BuildContext context) {
-//     final productProvider = context.watch<ProductProvider>();
-//     final orderProvider = context.watch<OrderProvider>();
+//     final orderProvider = Provider.of<OrderProvider>(context);
+//     final productProvider = Provider.of<ProductProvider>(context);
+//     final lang = Provider.of<LanguageProvider>(context);
 
 //     return Scaffold(
-//       appBar: AppBar(title: const Text('Add Order')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(12),
+//       appBar: AppBar(
+//         title: Text(lang.getText('add_post')),
+//         backgroundColor: Colors.brown,
+//         foregroundColor: Colors.white,
+//       ),
+//       body: Column(
+//         children: [
+//           // Step Indicator
+//           Container(
+//             padding: const EdgeInsets.symmetric(vertical: 12),
+//             color: Colors.brown[50],
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 _stepIcon(0, lang.getText('customer_info')),
+//                 const Icon(Icons.arrow_forward, color: Colors.grey),
+//                 _stepIcon(1, lang.getText('add_items')),
+//               ],
+//             ),
+//           ),
+
+//           Expanded(
+//             child: _currentStep == 0
+//                 ? _buildCustomerForm(lang)
+//                 : _buildCartList(lang, orderProvider),
+//           ),
+//         ],
+//       ),
+//       bottomNavigationBar: _currentStep == 1
+//           ? _buildCheckoutBar(lang, orderProvider, productProvider)
+//           : null,
+//     );
+//   }
+
+//   Widget _stepIcon(int step, String title) {
+//     bool isActive = _currentStep == step;
+//     return Column(
+//       children: [
+//         CircleAvatar(
+//           radius: 12,
+//           backgroundColor: isActive ? Colors.brown : Colors.grey,
+//           child: Text(
+//             '${step + 1}',
+//             style: const TextStyle(fontSize: 12, color: Colors.white),
+//           ),
+//         ),
+//         Text(
+//           title,
+//           style: TextStyle(
+//             color: isActive ? Colors.brown : Colors.grey,
+//             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildCustomerForm(LanguageProvider lang) {
+//     return Padding(
+//       padding: const EdgeInsets.all(16),
+//       child: Form(
+//         key: _formKey,
 //         child: Column(
 //           children: [
-//             /// CUSTOMER
-//             TextField(
-//               controller: customerNameCtrl,
-//               decoration: const InputDecoration(labelText: 'Customer Name'),
+//             TextFormField(
+//               controller: _nameController,
+//               decoration: InputDecoration(
+//                 labelText: lang.getText('customer_name'),
+//                 border: const OutlineInputBorder(),
+//               ),
+//               validator: (val) =>
+//                   val!.isEmpty ? lang.getText('error_required') : null,
 //             ),
-//             TextField(
-//               controller: customerAddressCtrl,
-//               decoration: const InputDecoration(labelText: 'Customer Address'),
-//             ),
-
 //             const SizedBox(height: 16),
-
-//             /// ITEM LIST
-//             Expanded(
-//               child: items.isEmpty
-//                   ? const Center(child: Text('No items'))
-//                   : ListView.builder(
-//                       itemCount: items.length,
-//                       itemBuilder: (context, index) {
-//                         final item = items[index];
-
-//                         return Card(
-//                           child: ListTile(
-//                             title: DropdownButton<int>(
-//                               value: item.productId,
-//                               isExpanded: true,
-//                               items: productProvider.products
-//                                   .map(
-//                                     (p) => DropdownMenuItem<int>(
-//                                       value: p.id,
-//                                       child: Text(p.name),
-//                                     ),
-//                                   )
-//                                   .toList(),
-//                               onChanged: (val) {
-//                                 if (val == null) return;
-//                                 setState(() {
-//                                   items[index] = OrderItemInput(
-//                                     productId: val,
-//                                     quantity: item.quantity,
-//                                   );
-//                                 });
-//                               },
-//                             ),
-//                             subtitle: Row(
-//                               children: [
-//                                 IconButton(
-//                                   icon: const Icon(Icons.remove),
-//                                   onPressed: item.quantity <= 1
-//                                       ? null
-//                                       : () {
-//                                           setState(() {
-//                                             items[index] = OrderItemInput(
-//                                               productId: item.productId,
-//                                               quantity: item.quantity - 1,
-//                                             );
-//                                           });
-//                                         },
-//                                 ),
-//                                 Text(item.quantity.toString()),
-//                                 IconButton(
-//                                   icon: const Icon(Icons.add),
-//                                   onPressed: () {
-//                                     setState(() {
-//                                       items[index] = OrderItemInput(
-//                                         productId: item.productId,
-//                                         quantity: item.quantity + 1,
-//                                       );
-//                                     });
-//                                   },
-//                                 ),
-//                               ],
-//                             ),
-//                             trailing: IconButton(
-//                               icon: const Icon(Icons.delete),
-//                               onPressed: () {
-//                                 setState(() => items.removeAt(index));
-//                               },
-//                             ),
-//                           ),
-//                         );
-//                       },
-//                     ),
+//             TextFormField(
+//               controller: _addressController,
+//               decoration: InputDecoration(
+//                 labelText: lang.getText('customer_address'),
+//                 border: const OutlineInputBorder(),
+//               ),
+//               validator: (val) =>
+//                   val!.isEmpty ? lang.getText('error_required') : null,
 //             ),
-
-//             /// TOTAL
-//             Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 const Text(
-//                   'Total',
-//                   style: TextStyle(fontSize: 16),
+//             const SizedBox(height: 24),
+//             SizedBox(
+//               width: double.infinity,
+//               height: 50,
+//               child: ElevatedButton(
+//                 onPressed: () {
+//                   if (_formKey.currentState!.validate())
+//                     setState(() => _currentStep = 1);
+//                 },
+//                 style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+//                 child: const Text(
+//                   'NEXT',
+//                   style: TextStyle(color: Colors.white),
 //                 ),
-//                 Text(
-//                   calculateTotal().toStringAsFixed(0),
-//                   style: const TextStyle(
-//                     fontSize: 16,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//               ],
-//             ),
-
-//             const SizedBox(height: 12),
-
-//             /// BUTTONS
-//             Row(
-//               children: [
-//                 Expanded(
-//                   child: ElevatedButton(
-//                     onPressed: addItem,
-//                     child: const Text('Add Item'),
-//                   ),
-//                 ),
-//                 const SizedBox(width: 12),
-//                 Expanded(
-//                   child: ElevatedButton(
-//                     onPressed: items.isEmpty || orderProvider.isLoading
-//                         ? null
-//                         : () async {
-//                             try {
-//                               await orderProvider.createOrder(
-//                                 items: items,
-//                                 customerName: customerNameCtrl.text,
-//                                 customerAddress: customerAddressCtrl.text,
-//                               );
-//                               if (mounted) Navigator.pop(context);
-//                             } catch (e) {
-//                               ScaffoldMessenger.of(context).showSnackBar(
-//                                 SnackBar(content: Text(e.toString())),
-//                               );
-//                             }
-//                           },
-//                     child: orderProvider.isLoading
-//                         ? const SizedBox(
-//                             height: 18,
-//                             width: 18,
-//                             child: CircularProgressIndicator(strokeWidth: 2),
-//                           )
-//                         : const Text('Add Order'),
-//                   ),
-//                 ),
-//               ],
+//               ),
 //             ),
 //           ],
 //         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildCartList(LanguageProvider lang, OrderProvider provider) {
+//     return Column(
+//       children: [
+//         Padding(
+//           padding: const EdgeInsets.all(16),
+//           child: ElevatedButton.icon(
+//             onPressed: () => _showProductInputSheet(context),
+//             icon: const Icon(Icons.add),
+//             label: Text(lang.getText('add_items')),
+//             style: ElevatedButton.styleFrom(
+//               minimumSize: const Size(double.infinity, 45),
+//             ),
+//           ),
+//         ),
+//         Expanded(
+//           child: provider.cart.isEmpty
+//               ? Center(child: Text(lang.getText('cart') + " Empty"))
+//               : ListView.builder(
+//                   itemCount: provider.cart.length,
+//                   itemBuilder: (ctx, i) {
+//                     final item = provider.cart[i];
+//                     return ListTile(
+//                       title: Text(item.productName),
+//                       subtitle: Text(
+//                         '${item.quantity} x ${formatPrice(item.price)}',
+//                       ),
+//                       trailing: IconButton(
+//                         icon: const Icon(Icons.delete, color: Colors.red),
+//                         onPressed: () => provider.removeFromCart(item.id),
+//                       ),
+//                     );
+//                   },
+//                 ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildCheckoutBar(
+//     LanguageProvider lang,
+//     OrderProvider order,
+//     ProductProvider product,
+//   ) {
+//     return Container(
+//       padding: const EdgeInsets.all(16),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+//       ),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//         children: [
+//           Text(
+//             formatPrice(order.totalCartPrice),
+//             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//           ),
+//           ElevatedButton(
+//             onPressed: order.cart.isEmpty
+//                 ? null
+//                 : () async {
+//                     final success = await order.createOrder(
+//                       customerName: _nameController.text,
+//                       address: _addressController.text,
+//                       productProvider: product,
+//                     );
+//                     if (success && mounted) {
+//                       context.pop();
+//                       ScaffoldMessenger.of(context).showSnackBar(
+//                         SnackBar(content: Text(lang.getText('order_success'))),
+//                       );
+//                     }
+//                   },
+//             style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+//             child: Text(
+//               lang.getText('checkout'),
+//               style: const TextStyle(color: Colors.white),
+//             ),
+//           ),
+//         ],
 //       ),
 //     );
 //   }

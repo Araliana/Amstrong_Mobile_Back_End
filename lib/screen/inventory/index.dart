@@ -76,10 +76,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           label: stock.productName,
                           isLoading: provider.isLoading,
                           onDelete: () async {
-                            await provider.deleteStock(
-                              stock.id,
-                              productId: stock.productId,
-                            );
+                            await provider.deleteStock(stock.id);
                           },
                         );
                       },

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/db/db_helper.dart';
 import 'package:flutter_application_1/db/sync_manager.dart';
 import 'package:flutter_application_1/model/stock.dart';
+import 'package:flutter_application_1/model/product.dart';
 import 'package:uuid/uuid.dart';
 
 class StockProvider with ChangeNotifier {
@@ -13,6 +14,7 @@ class StockProvider with ChangeNotifier {
   final DBHelper db = DBHelper();
   final Tables stockTable = Tables.stock;
   final Tables productTable = Tables.product;
+  final Tables categoryTable = Tables.productType;
   final uuid = const Uuid();
   final sync = SyncManager();
 
@@ -29,6 +31,7 @@ class StockProvider with ChangeNotifier {
     _setLoading(true);
     await sync.syncTable(stockTable);
     await sync.syncTable(productTable);
+    await sync.syncTable(categoryTable);
 
     try {
       String? where;
@@ -46,14 +49,13 @@ class StockProvider with ChangeNotifier {
             joinTable: productTable,
             fromKey: 'product_id',
             toKey: 'id',
-            joinType: JoinType.left,
             isList: false,
           ),
         ],
         where: where,
         whereArgs: whereArgs,
         orderBy: "stock.created_at",
-        orderType: OrderType.asc, // ASC untuk FIFO (oldest first)
+        orderType: OrderType.asc,
       );
 
       stocks
@@ -77,6 +79,7 @@ class StockProvider with ChangeNotifier {
     _setLoading(true);
     await sync.syncTable(stockTable);
     await sync.syncTable(productTable);
+    await sync.syncTable(categoryTable);
 
     try {
       final res = await db.get(
@@ -88,6 +91,16 @@ class StockProvider with ChangeNotifier {
             toKey: 'id',
             joinType: JoinType.left,
             isList: false,
+            alias: 'product',
+          ),
+          Join(
+            joinTable: categoryTable,
+            fromKey: 'category_id',
+            toKey: 'id',
+            joinType: JoinType.left,
+            isList: false,
+            fromTable: productTable,
+            alias: 'category',
           ),
         ],
         where: "stock.id = ?",
@@ -111,6 +124,33 @@ class StockProvider with ChangeNotifier {
     }
   }
 
+  /// Get product with category by ID
+  Future<Product?> _getProductById(String productId) async {
+    try {
+      final res = await db.get(
+        productTable,
+        joins: [
+          Join(
+            joinTable: categoryTable,
+            fromKey: 'category_id',
+            toKey: 'id',
+            joinType: JoinType.left,
+            isList: false,
+            alias: 'category',
+          ),
+        ],
+        where: "product.id = ?",
+        whereArgs: [productId],
+      );
+
+      if (res.isEmpty) return null;
+      return Product.fromMap(res[0]);
+    } catch (e) {
+      debugPrint("Error getting product: $e");
+      return null;
+    }
+  }
+
   /// Get oldest stock dengan quantity > 0 untuk product tertentu
   Future<Stock?> getOldestAvailableStock(String productId) async {
     await sync.syncTable(stockTable);
@@ -123,8 +163,16 @@ class StockProvider with ChangeNotifier {
             joinTable: productTable,
             fromKey: 'product_id',
             toKey: 'id',
-            joinType: JoinType.left,
             isList: false,
+            alias: 'product',
+          ),
+          Join(
+            joinTable: categoryTable,
+            fromKey: 'category_id',
+            toKey: 'id',
+            isList: false,
+            fromTable: productTable,
+            alias: 'category',
           ),
         ],
         where: "stock.product_id = ? AND stock.quantity > 0",
@@ -163,8 +211,27 @@ class StockProvider with ChangeNotifier {
 
       await sync.syncTable(stockTable);
 
-      // Reload stocks
-      await loadStocks(productId: productId);
+      // Get product with category
+      final product = await _getProductById(productId);
+      if (product == null) {
+        throw Exception('Product not found');
+      }
+
+      // Add to list manually
+      stocks.add(
+        Stock(
+          id: id,
+          productId: productId,
+          product: product,
+          quantity: quantity,
+          hpp: hpp,
+          trueProfit: trueProfit,
+          finalPrice: finalPrice,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      _setLoading(false);
 
       await analytics.logEvent(
         name: 'add_stock',
@@ -201,8 +268,29 @@ class StockProvider with ChangeNotifier {
 
       await sync.syncTable(stockTable);
 
-      // Reload stocks
-      await loadStocks(productId: productId);
+      // Get product with category
+      final product = await _getProductById(productId);
+      if (product == null) {
+        throw Exception('Product not found');
+      }
+
+      // Update list manually
+      final index = stocks.indexWhere((item) => item.id == id);
+      if (index != -1) {
+        final existingStock = stocks[index];
+        stocks[index] = Stock(
+          id: id,
+          productId: productId,
+          product: product,
+          quantity: quantity,
+          hpp: hpp,
+          trueProfit: trueProfit,
+          finalPrice: finalPrice,
+          createdAt: existingStock.createdAt,
+        );
+      }
+
+      _setLoading(false);
 
       await analytics.logEvent(name: 'edit_stock', parameters: {'id': id});
     } catch (e) {
@@ -212,18 +300,16 @@ class StockProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteStock(String id, {String? productId}) async {
+  Future<void> deleteStock(String id) async {
     _setLoading(true);
     try {
       await db.delete(stockTable, id: id);
       await sync.syncTable(stockTable);
 
-      // Reload stocks
-      if (productId != null) {
-        await loadStocks(productId: productId);
-      } else {
-        await loadStocks();
-      }
+      // Remove from list manually
+      stocks.removeWhere((item) => item.id == id);
+
+      _setLoading(false);
 
       await analytics.logEvent(name: 'delete_stock', parameters: {'id': id});
     } catch (e) {
@@ -240,8 +326,10 @@ class StockProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      final stock = await getStockById(stockId);
-      if (stock == null) throw Exception('Stock not found');
+      final index = stocks.indexWhere((s) => s.id == stockId);
+      if (index == -1) throw Exception('Stock not found');
+
+      final stock = stocks[index];
 
       if (stock.quantity < quantityToReduce) {
         throw Exception('Insufficient stock quantity');
@@ -253,8 +341,19 @@ class StockProvider with ChangeNotifier {
 
       await sync.syncTable(stockTable);
 
-      // Reload stocks
-      await loadStocks(productId: stock.productId);
+      // Update list manually
+      stocks[index] = Stock(
+        id: stock.id,
+        productId: stock.productId,
+        product: stock.product,
+        quantity: newQuantity,
+        hpp: stock.hpp,
+        trueProfit: stock.trueProfit,
+        finalPrice: stock.finalPrice,
+        createdAt: stock.createdAt,
+      );
+
+      _setLoading(false);
 
       await analytics.logEvent(
         name: 'reduce_stock',
